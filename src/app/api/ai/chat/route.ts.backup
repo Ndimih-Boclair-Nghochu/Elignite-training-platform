@@ -1,0 +1,194 @@
+import { NextRequest, NextResponse } from "next/server";
+
+// Knowledge base for AI responses
+const KNOWLEDGE_BASE = {
+  // Conversational patterns
+  greetings: {
+    keywords: ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "howdy", "greetings"],
+    responses: [
+      "Hello! I'm here to help you with anything related to our school management system. What can I assist you with today?",
+      "Hi there! Welcome to EduManage. I'm your AI assistant. How can I help you navigate our system?",
+      "Hey! Great to see you. I'm here to guide you through all the features of our school platform. What would you like to know?",
+      "Good day! I'm your EduManage assistant. Whether you need help with courses, grades, or system navigation, I'm here to help!"
+    ]
+  },
+
+  thanks: {
+    keywords: ["thank you", "thanks", "thank", "appreciate", "grateful"],
+    responses: [
+      "You're welcome! I'm always here if you need more help with the system.",
+      "Happy to help! Don't hesitate to ask if you have more questions about EduManage.",
+      "My pleasure! Feel free to reach out anytime for assistance with our school platform.",
+      "Glad I could help! I'm here whenever you need guidance with the system."
+    ]
+  },
+
+  smallTalk: {
+    keywords: ["how are you", "how do you do", "what's up", "how's it going", "nice day"],
+    responses: [
+      "I'm doing well, thank you! I'm here and ready to help you with anything related to our school management system. What can I assist you with?",
+      "I'm great! As your AI assistant, I'm always ready to help with EduManage features. How can I support you today?",
+      "Doing fantastic! I'm designed to make your experience with our school platform smooth and easy. What would you like to know?"
+    ]
+  },
+
+  programming: {
+    keywords: ["javascript", "python", "java", "typescript", "react", "code", "function", "variable", "loop", "array", "object", "class"],
+    responses: [
+      {
+        question: /javascript|js/i,
+        answer: "JavaScript is a versatile programming language. It's great for web development. Would you like to know about variables, functions, or DOM manipulation?",
+      },
+      {
+        question: /python/i,
+        answer: "Python is excellent for beginners and professionals. It's used in web development, data science, and automation. What aspect interests you?",
+      },
+      {
+        question: /function/i,
+        answer: "Functions are reusable blocks of code. Basic syntax:\n\nfunction myFunction() {\n  // code here\n}\n\nmyFunction(); // call the function",
+      },
+      {
+        question: /loop|for|while/i,
+        answer: "Loops repeat code. Common types:\n\nFor loop: for (let i = 0; i < 5; i++) { }\nWhile loop: while (condition) { }\n\nUse them to iterate over arrays or repeat actions.",
+      },
+      {
+        question: /array/i,
+        answer: "Arrays store multiple values:\n\nlet items = [1, 2, 3];\nlet first = items[0];\nitems.push(4); // add element\n\nArrays are useful for managing collections of data.",
+      },
+      {
+        question: /object/i,
+        answer: "Objects store key-value pairs:\n\nlet person = {\n  name: 'John',\n  age: 30\n};\n\nconsole.log(person.name);",
+      },
+    ],
+  },
+  html: {
+    keywords: ["html", "tag", "div", "button", "form", "input", "css", "markup"],
+    responses: [
+      {
+        question: /html\s+tutorial|learn\s+html/i,
+        answer: "HTML is the structure of web pages. Basic template:\n\n<!DOCTYPE html>\n<html>\n<head>\n  <title>My Page</title>\n</head>\n<body>\n  <h1>Hello World</h1>\n</body>\n</html>",
+      },
+      {
+        question: /button/i,
+        answer: "Create a button:\n\n<button>Click me</button>\n\nWith attributes:\n<button id=\"myBtn\" class=\"btn\">Click</button>\n\nIn React:\n<button onClick={handleClick}>Click</button>",
+      },
+      {
+        question: /form|input/i,
+        answer: "HTML form example:\n\n<form>\n  <label>Name:</label>\n  <input type=\"text\" name=\"name\" />\n  <button type=\"submit\">Submit</button>\n</form>",
+      },
+      {
+        question: /div|container/i,
+        answer: "Div is a container element:\n\n<div class=\"container\">\n  <h2>Content</h2>\n  <p>This is inside a div</p>\n</div>\n\nUse divs to group and style content.",
+      },
+      {
+        question: /table/i,
+        answer: "Create a table:\n\n<table border=\"1\">\n  <tr>\n    <th>Name</th>\n    <th>Age</th>\n  </tr>\n  <tr>\n    <td>John</td>\n    <td>30</td>\n  </tr>\n</table>",
+      },
+    ],
+  },
+  officeTools: {
+    keywords: ["word", "excel", "powerpoint", "office", "document", "spreadsheet", "presentation"],
+    responses: [
+      {
+        question: /microsoft\s+word|word\s+tutorial|use\s+word/i,
+        answer: "Microsoft Word - Quick Start:\n\n1. Create document: File > New\n2. Format text: Select text, use Home tab\n3. Font: Click font dropdown in toolbar\n4. Save: Ctrl+S or File > Save\n5. Print: Ctrl+P\n\nTip: Use Styles for consistent formatting.",
+      },
+      {
+        question: /microsoft\s+excel|excel\s+tutorial|use\s+excel/i,
+        answer: "Microsoft Excel - Quick Start:\n\n1. Enter data in cells\n2. Use formulas: =SUM(A1:A10)\n3. Create charts: Select data > Insert > Chart\n4. Sort: Select data > Data > Sort\n5. Save: Ctrl+S\n\nTip: Use functions like AVERAGE, COUNT, MAX, MIN.",
+      },
+      {
+        question: /microsoft\s+powerpoint|powerpoint\s+tutorial|use\s+powerpoint|presentation/i,
+        answer: "Microsoft PowerPoint - Quick Start:\n\n1. Add slide: Home > New Slide\n2. Add text: Click text box and type\n3. Insert image: Insert > Pictures\n4. Design: Use Design tab for themes\n5. Animations: Animation tab for effects\n6. Present: F5 to start slideshow\n\nTip: Keep slides clean with bullet points.",
+      },
+      {
+        question: /spreadsheet|formula|sum|average/i,
+        answer: "Common Excel formulas:\n\n=SUM(A1:A10) - Add range\n=AVERAGE(A1:A10) - Calculate average\n=COUNT(A1:A10) - Count numbers\n=IF(A1>10,\"Yes\",\"No\") - Conditional\n=VLOOKUP(...) - Find value in table",
+      },
+    ],
+  },
+  system: {
+    keywords: ["system", "dashboard", "enrollment", "attendance", "grade", "fee", "course", "student", "teacher", "program"],
+    responses: [
+      {
+        question: /dashboard/i,
+        answer: "Dashboard Overview:\n\n• Student: View grades, attendance, courses\n• Teacher: Manage courses, attendance, grades\n• CEO: Full system control\n\nEach dashboard shows relevant information for your role.",
+      },
+      {
+        question: /enrollment|apply/i,
+        answer: "Enrollment Process:\n\n1. Go to Enroll page\n2. Select program\n3. Fill in personal info\n4. Submit application\n5. Wait for CEO approval\n6. Activate account\n7. Start learning!\n\nContact support if issues occur.",
+      },
+      {
+        question: /attendance/i,
+        answer: "Attendance Tracking:\n\n• Teachers mark attendance\n• Students can view their record\n• Tracked per course per date\n• Status: Present, Absent, Late\n\nGood attendance is important!",
+      },
+      {
+        question: /grade|result/i,
+        answer: "Grade System:\n\n• Based on CA (Continuous Assessment) and Exams\n• Formula: Total = CA + Exam Score\n• Letter grades: A, B, C, D, F\n• View your transcript in dashboard\n\nWork hard to improve grades!",
+      },
+      {
+        question: /fee|payment|tuition/i,
+        answer: "Fee Management:\n\n• View fees due in Finance section\n• Payment tracking available\n• CEO manages payments\n• Receipt numbers provided\n\nPay on time to avoid issues.",
+      },
+      {
+        question: /help|how\s+to|guide/i,
+        answer: "I can help you with:\n\n✓ Programming basics (JavaScript, Python, etc.)\n✓ HTML code examples\n✓ Office tools (Word, Excel, PowerPoint)\n✓ System features (enrollment, attendance, grades)\n✓ General questions\n\nAsk me anything!",
+      },
+    ],
+  },
+};
+
+function findBestMatch(
+  message: string,
+  category: any
+): string | null {
+  for (const item of category.responses) {
+    if (item.question.test(message)) {
+      return item.answer;
+    }
+  }
+  return null;
+}
+
+function generateAIResponse(userMessage: string): string {
+  const lowerMessage = userMessage.toLowerCase();
+
+  // Search through knowledge base
+  for (const category of Object.values(KNOWLEDGE_BASE)) {
+    const answer = findBestMatch(lowerMessage, category);
+    if (answer) return answer;
+  }
+
+  // Default responses for unknown questions
+  const defaultResponses = [
+    "That's an interesting question! I know about programming, HTML, Office tools, and system features. Can you rephrase or ask about one of these topics?",
+    "I'm not sure about that specific topic, but I'm knowledgeable about:\n• JavaScript, Python, and other programming languages\n• HTML and web development\n• Microsoft Word, Excel, and PowerPoint\n• Our school management system\n\nTry asking about these!",
+    "Great question! While I might not have that specific answer, feel free to contact your teacher or administrator. In the meantime, I can help with programming, office tools, or system guidance.",
+    "Hmm, that's outside my current knowledge base. But I can definitely help you with programming, HTML, office tools, and how to use our system. What would you like to know?",
+  ];
+
+  return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const { message } = await req.json();
+
+    if (!message || typeof message !== "string") {
+      return NextResponse.json(
+        { error: "Invalid message" },
+        { status: 400 }
+      );
+    }
+
+    const response = generateAIResponse(message);
+
+    return NextResponse.json({ response });
+  } catch (error) {
+    console.error("AI Chat Error:", error);
+    return NextResponse.json(
+      { error: "Failed to process your message" },
+      { status: 500 }
+    );
+  }
+}

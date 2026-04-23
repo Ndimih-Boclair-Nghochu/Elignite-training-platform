@@ -1,0 +1,38 @@
+"use client";
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Send, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+export default function TeacherMessagesPage() {
+  const { toast } = useToast();
+  const [messages, setMessages] = useState<{id:number;fromName:string;fromRole:string;subject:string;body:string;createdAt:string}[]>([]);
+  const [selected, setSelected] = useState<typeof messages[0]|null>(null);
+  const [reply, setReply] = useState("");
+  useEffect(() => { fetch("/api/messages").then(r=>r.json()).then(d=>{setMessages(Array.isArray(d)?d:[]);}).catch(()=>{}); }, []);
+  function sendReply(e: React.FormEvent) { e.preventDefault(); toast({title:"Reply sent"}); setReply(""); }
+  return (
+    <div className="p-6 space-y-4">
+      <h1 className="text-2xl font-bold">Messages</h1>
+      <div className="grid md:grid-cols-3 gap-4 h-[550px]">
+        <Card className="overflow-y-auto"><CardContent className="p-2 space-y-1">
+          {messages.map(m=>(
+            <button key={m.id} onClick={()=>setSelected(m)} className={`w-full text-left p-3 rounded-lg transition-colors ${selected?.id===m.id?"bg-primary/10":"hover:bg-gray-50"}`}>
+              <div className="flex justify-between"><span className="text-sm font-medium">{m.fromName}</span><span className="text-xs text-gray-400">{new Date(m.createdAt).toLocaleDateString()}</span></div>
+              <p className="text-xs text-gray-500 truncate">{m.subject}</p>
+            </button>
+          ))}
+          {messages.length===0&&<p className="text-center text-gray-400 text-sm py-6">No messages</p>}
+        </CardContent></Card>
+        <Card className="md:col-span-2 flex flex-col">
+          {selected?(<>
+            <CardHeader className="border-b pb-3"><CardTitle className="text-base">{selected.subject}</CardTitle><p className="text-sm text-gray-400">From: {selected.fromName}</p></CardHeader>
+            <CardContent className="flex-1 p-4"><p className="text-sm text-gray-600">{selected.body}</p></CardContent>
+            <div className="p-4 border-t"><form onSubmit={sendReply} className="flex gap-2"><Textarea placeholder="Reply..." value={reply} onChange={e=>setReply(e.target.value)} rows={2} className="resize-none flex-1"/><Button type="submit" className="self-end"><Send className="h-4 w-4"/></Button></form></div>
+          </>):<div className="flex items-center justify-center h-full text-gray-400">Select a message</div>}
+        </Card>
+      </div>
+    </div>
+  );
+}
