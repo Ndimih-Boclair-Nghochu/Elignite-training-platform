@@ -14,6 +14,12 @@ export async function GET(
     }
 
     const teacherId = parseInt(params.id);
+    if (session.role === "teacher" && session.teacherId !== teacherId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    if (!["teacher", "ceo"].includes(session.role || "")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     // Get courses for this teacher
     const courses = await prisma.course.findMany({

@@ -5,7 +5,9 @@ import { getSession } from "@/lib/session";
 
 export async function GET() {
   const session = await getSession();
-  if (!session.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session.userId || session.role !== "ceo") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const teachers = await prisma.teacher.findMany({
     include: { user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } } },
     orderBy: { joinDate: "desc" },
@@ -31,29 +33,17 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
-  
-  // Debug logging
-  console.log("[POST /api/teachers] Session:", {
-    userId: session.userId,
-    email: session.email,
-    role: session.role,
-  });
-  
+
   if (!session.userId) {
     return NextResponse.json(
-      { error: "Unauthorized - Please login first", details: "No session found" },
+      { error: "Unauthorized - Please login first" },
       { status: 401 }
     );
   }
   
   if (session.role !== "ceo") {
     return NextResponse.json(
-      { 
-        error: "Unauthorized - Only CEO can add staff",
-        details: `Your role is '${session.role}', but 'ceo' is required`,
-        yourRole: session.role,
-        requiredRole: "ceo"
-      },
+      { error: "Unauthorized - Only CEO can add staff" },
       { status: 403 }
     );
   }
@@ -69,7 +59,7 @@ export async function POST(req: NextRequest) {
     quotes,
   } = await req.json();
 
-  if (!firstName || !lastName || !email || !occupation) {
+  if (!firstName || !lastName || !email || !occupation || !department) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
@@ -94,7 +84,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const teacherId = `TEA${Date.now().toString().slice(-6)}`;
+  const teacherId = `TCH${Date.now().toString().slice(-6)}`;
   const matricle = `MAT${Date.now().toString().slice(-8)}`;
 
   const teacher = await prisma.teacher.create({
@@ -106,7 +96,7 @@ export async function POST(req: NextRequest) {
       profession,
       quotes,
       department,
-      status: "active",
+      status: "inactive",
       
     },
   });

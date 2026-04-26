@@ -5,7 +5,9 @@ import { getSession } from "@/lib/session";
 
 export async function GET() {
   const session = await getSession();
-  if (!session.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session.userId || session.role !== "ceo") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const students = await prisma.student.findMany({
     include: {
@@ -53,10 +55,11 @@ export async function POST(req: NextRequest) {
 
   // Create user first
   const { default: bcrypt } = await import("bcryptjs");
-  const password = await bcrypt.hash("student123", 10);
+  const tempPassword = `Stu${Math.random().toString(36).slice(2, 10)}A1!`;
+  const password = await bcrypt.hash(tempPassword, 10);
 
   const user = await prisma.user.create({
-    data: { firstName, lastName, email, password, role: "student", phone },
+    data: { firstName, lastName, email, password, role: "student", phone, isActivated: false },
   });
 
   const student = await prisma.student.create({

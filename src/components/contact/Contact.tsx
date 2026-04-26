@@ -53,7 +53,7 @@ export function ContactForm() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3 text-slate-600">
             <Mail className="h-4 w-4" />
-            <span>info@edumanage.cm</span>
+            <span>admissions@elignite.cm</span>
           </div>
           <div className="flex items-center gap-3 text-slate-600">
             <Phone className="h-4 w-4" />

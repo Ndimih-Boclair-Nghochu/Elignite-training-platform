@@ -4,12 +4,16 @@ import { prisma } from "@/lib/prisma";
 import PDFDocument from "pdfkit";
 import path from "path";
 import QRCode from "qrcode";
+import { getSession } from "@/lib/session";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getSession();
+    const { searchParams } = new URL(req.url);
+    const token = searchParams.get("token");
     const enrollment = await prisma.enrollment.findUnique({
       where: { id: parseInt(params.id) },
     });
@@ -19,6 +23,14 @@ export async function GET(
         { error: "Enrollment not found" },
         { status: 404 }
       );
+    }
+
+    const isAuthorized =
+      (session.userId && session.role === "ceo") ||
+      (token && token === enrollment.publicAccessToken);
+
+    if (!isAuthorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const pdfBuffer = await generateEnrollmentPDF(enrollment);

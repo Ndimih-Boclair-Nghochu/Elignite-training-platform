@@ -133,7 +133,7 @@ export default function AttendancePage() {
           {/* Today's Attendance */}
           <Card>
             <CardHeader>
-              <CardTitle>Today's Attendance</CardTitle>
+              <CardTitle>Today&apos;s Attendance</CardTitle>
             </CardHeader>
             <CardContent>
               {todaysRecords.length === 0 ? (

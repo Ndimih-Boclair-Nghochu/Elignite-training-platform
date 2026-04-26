@@ -1,10 +1,11 @@
 "use client";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { GraduationCap, Loader2, CheckCircle } from "lucide-react";
+import { CheckCircle, GraduationCap, Loader2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export default function RegisterPage() {
   const [form, setForm] = useState({
     matricule: "",
+    email: "",
     password: "",
     confirmPassword: "",
   });
@@ -26,9 +28,8 @@ export default function RegisterPage() {
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
-    
-    // Clear password error when user changes password fields
+    setForm((current) => ({ ...current, [name]: value }));
+
     if (name === "password" || name === "confirmPassword") {
       setPasswordError("");
     }
@@ -37,8 +38,7 @@ export default function RegisterPage() {
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
 
-    // Validation
-    if (!form.matricule || !form.password || !form.confirmPassword) {
+    if (!form.matricule || !form.email || !form.password || !form.confirmPassword) {
       toast({
         title: "All fields are required",
         variant: "destructive",
@@ -63,9 +63,9 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           matricule: form.matricule,
+          email: form.email,
           password: form.password,
           confirmPassword: form.confirmPassword,
-          role: "student",
         }),
       });
 
@@ -80,8 +80,8 @@ export default function RegisterPage() {
       }
 
       toast({
-        title: "Account created successfully!",
-        description: "Redirecting to your dashboard...",
+        title: "Account created",
+        description: "Your student portal is ready.",
       });
 
       await refresh();
@@ -89,7 +89,7 @@ export default function RegisterPage() {
     } catch (error) {
       toast({
         title: "Network error",
-        description: "Please try again",
+        description: "Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -98,105 +98,128 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-600 flex items-center justify-center px-4 py-10">
-      <Card className="w-full max-w-md shadow-2xl">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-2">
-            <div className="bg-primary rounded-full p-3">
-              <GraduationCap className="h-8 w-8 text-white" />
+    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-10">
+      <div className="grid w-full max-w-5xl overflow-hidden border border-white/10 bg-white shadow-2xl lg:grid-cols-[0.95fr_1.05fr]">
+        <div className="hidden bg-[linear-gradient(145deg,#082f49,#0f172a)] p-10 text-white lg:flex lg:flex-col lg:justify-between">
+          <div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-md bg-white/10">
+              <GraduationCap className="h-6 w-6 text-sky-300" />
             </div>
-          </div>
-          <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>Register for your student portal</CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <form onSubmit={handleRegister} className="space-y-5">
-            {/* Matricule Field */}
-            <div className="space-y-2">
-              <Label htmlFor="matricule">Matricule Number *</Label>
-              <Input
-                id="matricule"
-                name="matricule"
-                placeholder="Enter your matricule"
-                value={form.matricule}
-                onChange={handleChange}
-                required
-                disabled={loading}
-                maxLength={20}
-              />
-            </div>
-
-            {/* Password Field */}
-            <div className="space-y-2">
-              <Label htmlFor="password">Password *</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Min. 6 characters"
-                value={form.password}
-                onChange={handleChange}
-                required
-                disabled={loading}
-              />
-            </div>
-
-            {/* Confirm Password Field */}
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password *</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                placeholder="Repeat password"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                required
-                disabled={loading}
-              />
-              {passwordError && (
-                <p className="text-sm text-red-600">{passwordError}</p>
-              )}
-            </div>
-
-            {/* Submit Button */}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Account...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Create Account
-                </>
-              )}
-            </Button>
-          </form>
-
-          {/* Sign In Link */}
-          <div className="mt-4 text-center text-sm text-gray-500">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="text-primary font-medium hover:underline"
-            >
-              Sign In
-            </Link>
-          </div>
-
-          {/* Info Box */}
-          <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
-            <p className="font-semibold mb-1">ℹ️ Student Registration</p>
-            <p>
-              Use the matricule number from your enrollment approval letter. Your password must be at least 6 characters.
+            <h1 className="mt-8 text-4xl font-semibold leading-tight">
+              Create your student portal with your approved school record.
+            </h1>
+            <p className="mt-5 max-w-md text-sm leading-7 text-slate-300">
+              Use the matricule from your admission letter and the same email address
+              used during application review.
             </p>
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="space-y-4 text-sm text-slate-300">
+            <div className="rounded-md border border-white/10 bg-white/5 p-4">
+              Your dashboard unlocks fees, results, timetable, projects, and school communication.
+            </div>
+            <div className="rounded-md border border-white/10 bg-white/5 p-4">
+              Registration is available only for approved student records.
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 sm:p-8 lg:p-10">
+          <Card className="border-0 shadow-none">
+            <CardHeader className="px-0 pt-0">
+              <CardTitle className="text-3xl">Create Account</CardTitle>
+              <CardDescription>
+                Match your approved matricule and email to activate student access.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="px-0">
+              <form onSubmit={handleRegister} className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="matricule">Matricule Number</Label>
+                  <Input
+                    id="matricule"
+                    name="matricule"
+                    placeholder="Enter your matricule"
+                    value={form.matricule}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Application Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="Enter the email used during application"
+                      value={form.email}
+                      onChange={handleChange}
+                      required
+                      disabled={loading}
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="At least 6 characters"
+                    value={form.password}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    placeholder="Repeat password"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                  {passwordError && <p className="text-sm text-red-600">{passwordError}</p>}
+                </div>
+
+                <Button type="submit" className="h-11 w-full" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Create Account
+                    </>
+                  )}
+                </Button>
+              </form>
+
+              <div className="mt-5 text-sm text-slate-500">
+                Already have an account?{" "}
+                <Link href="/login" className="font-medium text-sky-700 hover:underline">
+                  Sign in
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
-

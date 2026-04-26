@@ -271,12 +271,16 @@ async function buildIntentResponse(intent: Intent, message: string, userId?: num
 export async function POST(req: NextRequest) {
   try {
     const { message } = await req.json();
+    const session = await getSession();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Invalid message" }, { status: 400 });
     }
 
-    const session = await getSession();
+    if (!session.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const intent = detectIntent(message);
     const response = await buildIntentResponse(intent, message, session.userId, session.role);
 

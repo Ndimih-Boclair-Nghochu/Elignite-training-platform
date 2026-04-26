@@ -116,7 +116,7 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">What you'll learn</p>
+                    <p className="text-sm font-semibold text-gray-900">What you&apos;ll learn</p>
                     <p className="mt-2 text-sm text-gray-600">{program.outcomes || "Gain a strong foundation and practical experience for a successful career."}</p>
                   </div>
                   <div>

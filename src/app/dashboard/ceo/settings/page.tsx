@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Save, School, Bell, Upload, Lock, Settings as SettingsIcon, Image } from "lucide-react";
+import { Save, School, Bell, Upload, Lock, Settings as SettingsIcon, ImageIcon } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -471,7 +471,7 @@ export default function Page() {
                   />
                 ) : (
                   <div className="h-16 w-16 rounded-lg bg-gray-200 flex items-center justify-center">
-                    <Image className="h-8 w-8 text-gray-400" />
+                    <ImageIcon className="h-8 w-8 text-gray-400" />
                   </div>
                 )}
                 <div className="flex-1">

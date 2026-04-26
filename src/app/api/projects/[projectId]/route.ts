@@ -15,9 +15,41 @@ export async function GET(
     }
 
     const projectId = parseInt(params.projectId);
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    if (session.role === "teacher" && project.teacherId !== session.teacherId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (session.role === "student") {
+      const student = await prisma.student.findUnique({
+        where: { userId: session.userId },
+      });
+
+      if (!student || student.program !== project.program) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    } else if (!["teacher", "ceo"].includes(session.role || "")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const student = session.role === "student"
+      ? await prisma.student.findUnique({
+          where: { userId: session.userId },
+        })
+      : null;
 
     const scores = await prisma.projectScore.findMany({
-      where: { projectId },
+      where: {
+        projectId,
+        ...(student ? { studentId: student.id } : {}),
+      },
       include: {
         student: {
           select: {

@@ -44,7 +44,7 @@ export default function ContactPage() {
                 <Mail className="h-5 w-5 text-sky-600 mt-1" />
                 <div>
                   <p className="font-semibold">Email</p>
-                  <p className="text-sm text-slate-600">info@edumanage.cm</p>
+                  <p className="text-sm text-slate-600">admissions@elignite.cm</p>
                 </div>
               </div>
             </CardContent>

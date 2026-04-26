@@ -1,6 +1,12 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/lib/session";
 export async function POST(req: NextRequest) {
+  const session = await getSession();
+  if (!session.userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { document: doc } = await req.json();
   const words = doc.split(/\s+/).length;
   const sentences = doc.split(/[.!?]+/).filter(Boolean);

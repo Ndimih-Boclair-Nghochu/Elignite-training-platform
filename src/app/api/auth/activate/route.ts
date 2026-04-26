@@ -5,12 +5,14 @@ import { default as bcrypt } from "bcryptjs";
 
 export async function POST(req: NextRequest) {
   try {
-    const { matricle, password, confirmPassword } = await req.json();
+    const { identifier, email, password, confirmPassword } = await req.json();
+    const loginValue = String(identifier || "").trim();
+    const normalizedEmail = String(email || "").trim().toLowerCase();
 
     // Validate inputs
-    if (!matricle || !password || !confirmPassword) {
+    if (!loginValue || !normalizedEmail || !password || !confirmPassword) {
       return NextResponse.json(
-        { error: "Matricle and password fields are required" },
+        { error: "Identifier, email, and password fields are required" },
         { status: 400 }
       );
     }
@@ -33,8 +35,8 @@ export async function POST(req: NextRequest) {
     const student = await prisma.student.findFirst({
       where: {
         OR: [
-          { matricle },
-          { studentId: matricle },
+          { matricle: loginValue },
+          { studentId: loginValue },
         ],
       },
       include: {
@@ -49,8 +51,8 @@ export async function POST(req: NextRequest) {
       teacherRecord = await prisma.teacher.findFirst({
         where: {
           OR: [
-            { matricle },
-            { teacherId: matricle },
+            { matricle: loginValue },
+            { teacherId: loginValue },
           ],
         },
         include: {
@@ -62,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     if (!targetUser) {
       const directUser = await prisma.user.findUnique({
-        where: { matricule: matricle },
+        where: { matricule: loginValue },
       });
       targetUser = directUser || undefined;
     }
@@ -71,6 +73,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Invalid matricle" },
         { status: 404 }
+      );
+    }
+
+    if ((targetUser.email || "").toLowerCase() !== normalizedEmail) {
+      return NextResponse.json(
+        { error: "Email does not match this account." },
+        { status: 403 }
       );
     }
 

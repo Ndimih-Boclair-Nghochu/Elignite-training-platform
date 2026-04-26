@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import PDFDocument from "pdfkit";
+import { getSession } from "@/lib/session";
 
 export async function GET(
   req: NextRequest,
@@ -9,6 +10,9 @@ export async function GET(
 ) {
   try {
     const enrollmentId = parseInt(params.id);
+    const session = await getSession();
+    const { searchParams } = new URL(req.url);
+    const token = searchParams.get("token");
     if (isNaN(enrollmentId)) {
       return NextResponse.json({ error: "Invalid enrollment ID" }, { status: 400 });
     }
@@ -29,6 +33,14 @@ export async function GET(
         { error: "Only approved enrollments can download admission letters" },
         { status: 403 }
       );
+    }
+
+    const isAuthorized =
+      (session.userId && session.role === "ceo") ||
+      (token && token === enrollment.publicAccessToken);
+
+    if (!isAuthorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Find the program and its teacher
@@ -289,10 +301,6 @@ export async function GET(
         { align: "center" }
       );
 
-    // Finalize PDF
-    doc.end();
-
-    // Finalize PDF
     doc.end();
 
     // Wait for PDF to finish

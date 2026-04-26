@@ -18,10 +18,14 @@ export interface SessionData {
 
 /* -------------------- CONFIG -------------------- */
 
+const sessionSecret =
+  process.env.SESSION_SECRET ||
+  (process.env.NODE_ENV === "production"
+    ? ""
+    : "development-only-session-secret-with-at-least-32-characters");
+
 const sessionOptions = {
-  password:
-    process.env.SESSION_SECRET ||
-    "very-secure-secret-key-with-at-least-32-characters",
+  password: sessionSecret,
   cookieName: "school-session",
   cookieOptions: {
     secure: process.env.NODE_ENV === "production",
@@ -35,6 +39,10 @@ const sessionOptions = {
 /* -------------------- GET SESSION -------------------- */
 
 export async function getSession(): Promise<IronSession<SessionData>> {
+  if (process.env.NODE_ENV === "production" && !sessionSecret) {
+    throw new Error("SESSION_SECRET must be set in production");
+  }
+
   const session = await getIronSession<SessionData>(
     cookies(),
     sessionOptions

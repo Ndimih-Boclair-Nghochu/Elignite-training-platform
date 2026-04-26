@@ -125,7 +125,7 @@ export default function TestimoniesPage() {
                     </div>
 
                     <blockquote className="text-gray-700 italic">
-                      "{testimony.text}"
+                      &ldquo;{testimony.text}&rdquo;
                     </blockquote>
 
                     <div className="mt-4 pt-4 border-t border-gray-100">

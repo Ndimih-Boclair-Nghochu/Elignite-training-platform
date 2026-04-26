@@ -9,16 +9,16 @@ export async function GET(req: NextRequest) {
   const statusFilter = searchParams.get("status");
 
   try {
-    // If CEO, show all or filter by status; otherwise show only approved ones OR user's own testimonies
-    const where =
-      session.role === "ceo"
+    const where = !session.userId
+      ? { status: "approved" as const }
+      : session.role === "ceo"
         ? statusFilter
           ? { status: statusFilter }
           : {}
         : {
             OR: [
-              { status: "approved" },
-              { userId: session.userId } // Allow users to see their own testimonies
+              { status: "approved" as const },
+              { userId: session.userId }
             ]
           };
 

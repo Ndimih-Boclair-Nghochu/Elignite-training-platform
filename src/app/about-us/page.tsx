@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 const defaultAbout = {
-  vision: "To become the leading school management platform in the region by delivering accessible, trusted, and technology-driven learning experiences to every student.",
+  vision: "To become the leading training platform in the region by delivering accessible, trusted, and technology-driven learning experiences to every student.",
   visionImageUrl: "https://placehold.co/640x480?text=Vision",
   mission: "To equip learners with the skills, knowledge, and support they need to succeed in school and beyond through quality programs, caring faculty, and seamless administrative systems.",
   missionImageUrl: "https://placehold.co/640x480?text=Mission",
@@ -43,7 +43,7 @@ export default async function AboutUsPage() {
           </p>
           <h1 className="text-4xl md:text-5xl font-semibold tracking-tight mb-6">Modern education for every learner.</h1>
           <p className="mx-auto max-w-3xl text-lg text-slate-200">
-            EduManage blends innovation, strong academics, and community support to create a school management system that empowers students, teachers, and administrators.
+            ELIGNITE blends innovation, strong academics, and community support to create a modern training experience that empowers students, teachers, and administrators.
           </p>
         </div>
       </section>
@@ -88,7 +88,7 @@ export default async function AboutUsPage() {
                       <p className="text-sm text-slate-400">{member.occupation || "Staff"}</p>
                     </div>
                     <a
-                      href={`https://wa.me/${member.user.phone ?? ""}?text=${encodeURIComponent(`Hello ${member.user.firstName}, I would like to discuss enrollment and admissions at EduManage.`)}`}
+                      href={`https://wa.me/${member.user.phone ?? ""}?text=${encodeURIComponent(`Hello ${member.user.firstName}, I would like to discuss enrollment and admissions at ELIGNITE.`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex w-full items-center justify-center rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400"

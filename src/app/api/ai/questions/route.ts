@@ -1,6 +1,12 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/lib/session";
 export async function POST(req: NextRequest) {
+  const session = await getSession();
+  if (!session.userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { topic, subject, difficulty, count } = await req.json();
   const questions = Array.from({ length: Number(count) || 5 }, (_, i) => ({
     question: `Question ${i + 1}: In the context of ${topic} in ${subject}, what is the ${["primary", "main", "core", "fundamental", "essential"][i % 5]} principle that ${["governs", "defines", "characterizes", "distinguishes", "underlies"][i % 5]} this concept at the ${difficulty} level?`,

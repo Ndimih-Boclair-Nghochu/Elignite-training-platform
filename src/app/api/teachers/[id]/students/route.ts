@@ -14,6 +14,12 @@ export async function GET(
     }
 
     const teacherId = parseInt(params.id);
+    if (session.role === "teacher" && session.teacherId !== teacherId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    if (!["teacher", "ceo"].includes(session.role || "")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     // Get teacher with user info
     const teacher = await prisma.teacher.findUnique({
@@ -34,9 +40,6 @@ export async function GET(
     if (courses.length === 0) {
       return NextResponse.json([]);
     }
-
-    const courseIds = courses.map((c) => c.id);
-
     const programs = Array.from(new Set(courses.map((course) => course.program)));
 
     // Get all students enrolled in programs taught by this teacher

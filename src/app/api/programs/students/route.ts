@@ -20,6 +20,19 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    if (session.role === "teacher") {
+      const assignedCourse = await prisma.course.findFirst({
+        where: {
+          program,
+          teacherId: session.teacherId,
+        },
+      });
+
+      if (!assignedCourse) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     // Get all students in this program
     const students = await prisma.student.findMany({
       where: { program: program },

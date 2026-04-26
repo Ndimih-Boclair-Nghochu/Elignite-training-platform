@@ -1,8 +1,10 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, GraduationCap, Download, Clock, AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Download, GraduationCap } from "lucide-react";
 
 interface EnrollmentData {
   id: number;
@@ -12,49 +14,65 @@ interface EnrollmentData {
   program: string;
   status: string;
   address?: string | null;
-  matricle?: string;
-  approvedAt?: string;
+  matricle?: string | null;
+  approvedAt?: string | null;
   createdAt: string;
 }
 
-function SuccessPageContent({
-  enrollmentId,
-}: {
-  enrollmentId: string;
-}) {
+function SuccessPageContent() {
+  const searchParams = useSearchParams();
+  const enrollmentId = searchParams.get("id") || "";
+  const token = searchParams.get("token") || "";
   const [enrollment, setEnrollment] = useState<EnrollmentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloadingLetter, setDownloadingLetter] = useState(false);
 
   useEffect(() => {
-    if (!enrollmentId) return;
+    if (!enrollmentId || !token) {
+      setLoading(false);
+      return;
+    }
 
-    fetch(`/api/enrollments/${enrollmentId}`)
-      .then((r) => r.json())
+    fetch(`/api/enrollments/${enrollmentId}?token=${encodeURIComponent(token)}`)
+      .then((response) => response.json())
       .then(setEnrollment)
-      .catch((err) => console.error("Error fetching enrollment:", err))
+      .catch((error) => console.error("Error fetching enrollment:", error))
       .finally(() => setLoading(false));
-  }, [enrollmentId]);
+  }, [enrollmentId, token]);
 
   const isApproved = enrollment?.status === "approved";
+  const applicationDate = useMemo(() => {
+    if (!enrollment?.createdAt) return "";
+    return new Date(enrollment.createdAt).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }, [enrollment?.createdAt]);
 
   async function downloadAdmissionLetter() {
-    if (!enrollmentId || !isApproved) return;
+    if (!enrollmentId || !token || !isApproved) return;
     setDownloadingLetter(true);
+
     try {
-      const res = await fetch(`/api/enrollments/${enrollmentId}/admission-letter`);
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `admission-letter-${enrollment?.matricle}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-      } else {
+      const res = await fetch(
+        `/api/enrollments/${enrollmentId}/admission-letter?token=${encodeURIComponent(token)}`
+      );
+
+      if (!res.ok) {
         alert("Failed to download admission letter");
+        return;
       }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `admission-letter-${enrollment?.matricle}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+      anchor.remove();
     } catch (error) {
       console.error("Error downloading letter:", error);
     } finally {
@@ -64,9 +82,9 @@ function SuccessPageContent({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-600 flex items-center justify-center px-4 py-8">
-        <div className="bg-white rounded-2xl shadow-2xl p-10 max-w-md w-full text-center">
-          <p className="text-gray-500">Loading enrollment details...</p>
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-10">
+        <div className="w-full max-w-md border border-white/10 bg-white p-10 text-center shadow-2xl">
+          <p className="text-slate-500">Loading application details...</p>
         </div>
       </div>
     );
@@ -74,21 +92,19 @@ function SuccessPageContent({
 
   if (!enrollment) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-600 flex items-center justify-center px-4 py-8">
-        <div className="bg-white rounded-2xl shadow-2xl p-10 max-w-md w-full">
-          <div className="flex justify-center mb-6">
-            <div className="bg-red-100 rounded-full p-5">
-              <AlertCircle className="h-14 w-14 text-red-500" />
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-10">
+        <div className="w-full max-w-md border border-white/10 bg-white p-10 shadow-2xl">
+          <div className="mb-6 flex justify-center">
+            <div className="rounded-full bg-red-100 p-4">
+              <AlertCircle className="h-10 w-10 text-red-500" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3 text-center">
-            Enrollment Not Found
-          </h1>
-          <p className="text-gray-500 mb-6 text-center">
-            We couldn't find your enrollment record.
+          <h1 className="text-center text-2xl font-semibold text-slate-950">Application Not Found</h1>
+          <p className="mt-3 text-center text-sm leading-6 text-slate-600">
+            We could not verify your application link. Use the latest confirmation link from your submission.
           </p>
-          <Button asChild className="w-full">
-            <Link href="/enroll">Go Back to Enrollment</Link>
+          <Button asChild className="mt-6 w-full">
+            <Link href="/enroll">Back to Application</Link>
           </Button>
         </div>
       </div>
@@ -96,225 +112,131 @@ function SuccessPageContent({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-600 flex items-center justify-center px-4 py-8">
-      <div className="bg-white rounded-2xl shadow-2xl p-10 max-w-md w-full">
-        <div className="flex justify-center mb-6">
-          <div className={`${isApproved ? "bg-green-100" : "bg-orange-100"} rounded-full p-5`}>
-            {isApproved ? (
-              <CheckCircle className="h-14 w-14 text-green-500" />
-            ) : (
-              <Clock className="h-14 w-14 text-orange-500" />
+    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-10">
+      <div className="w-full max-w-4xl overflow-hidden border border-white/10 bg-white shadow-2xl lg:grid lg:grid-cols-[0.92fr_1.08fr]">
+        <div className="bg-[linear-gradient(145deg,#082f49,#0f172a)] p-8 text-white sm:p-10">
+          <div className={`inline-flex rounded-full p-3 ${isApproved ? "bg-emerald-400/15 text-emerald-300" : "bg-amber-300/15 text-amber-200"}`}>
+            {isApproved ? <CheckCircle className="h-8 w-8" /> : <Clock className="h-8 w-8" />}
+          </div>
+          <h1 className="mt-6 text-3xl font-semibold leading-tight">
+            {isApproved ? "Application approved." : "Application received."}
+          </h1>
+          <p className="mt-4 text-sm leading-7 text-slate-300">
+            {isApproved
+              ? `Congratulations ${enrollment.firstName}. Your application has been approved and your onboarding is ready.`
+              : "Your application has been submitted successfully and is now under review by admissions."}
+          </p>
+
+          <div className="mt-8 space-y-3 rounded-md border border-white/10 bg-white/5 p-5 text-sm">
+            <div className="flex items-start justify-between gap-4">
+              <span className="text-slate-400">Applicant</span>
+              <span className="text-right font-medium text-white">
+                {enrollment.firstName} {enrollment.lastName}
+              </span>
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <span className="text-slate-400">Program</span>
+              <span className="text-right font-medium text-white">{enrollment.program}</span>
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <span className="text-slate-400">Email</span>
+              <span className="text-right font-medium text-white">{enrollment.email}</span>
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <span className="text-slate-400">Submitted</span>
+              <span className="text-right font-medium text-white">{applicationDate}</span>
+            </div>
+            {isApproved && enrollment.matricle && (
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-slate-400">Matricle</span>
+                <span className="text-right font-medium text-white">{enrollment.matricle}</span>
+              </div>
             )}
           </div>
+
+          <div className="mt-8 rounded-md border border-white/10 bg-white/5 p-5 text-sm leading-7 text-slate-300">
+            {isApproved
+              ? "Next step: create or activate your portal account, then continue with school onboarding, fees, and timetable access."
+              : "You can keep this page for reference while admissions reviews your application."}
+          </div>
         </div>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-3 text-center">
-          {isApproved ? "Application Approved! 🎓" : "Application Submitted!"}
-        </h1>
+        <div className="p-6 sm:p-8 lg:p-10">
+          {isApproved ? (
+            <div>
+              <h2 className="text-2xl font-semibold text-slate-950">Admission Ready</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-600">
+                Your admission letter is available for download and your portal access can be completed right away.
+              </p>
 
-        <p className="text-gray-500 mb-6 text-center">
-          {isApproved
-            ? `Congratulations ${enrollment.firstName}! Your application has been approved.`
-            : "Thank you for applying to EduManage. Your application is under review. You will be contacted within 3–5 business days."}
-        </p>
-
-        {isApproved && (
-          <div className="bg-green-50 rounded-xl p-4 mb-6 text-left space-y-2 text-sm text-green-700">
-            <div className="flex items-start">
-              <span className="mr-2 text-lg">✅</span>
-              <span>
-                <strong>Matricle:</strong> {enrollment.matricle}
-              </span>
-            </div>
-            <div className="flex items-start">
-              <span className="mr-2 text-lg">📚</span>
-              <span>
-                <strong>Program:</strong> {enrollment.program}
-              </span>
-            </div>
-            <div className="flex items-start">
-              <span className="mr-2 text-lg">📧</span>
-              <span>
-                <strong>Email:</strong> {enrollment.email}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {isApproved && (
-          <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6 text-left">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-              📄 Admission Letter Preview
-            </h3>
-            <div className="text-sm text-gray-700 space-y-3 border border-gray-200 rounded-lg p-4 bg-gray-50">
-              <div className="text-center border-b pb-3 mb-3">
-                <p className="font-bold text-xl text-blue-900">🎓 EduManage Computer Training Center</p>
-                <p className="text-xs text-gray-600">Excellence in Education • Innovation in Technology</p>
-                <p className="text-xs text-gray-500">Buea, Cameroon</p>
-                <p className="text-xs text-gray-500">Email: info@edumanage.cm | Phone: +237 677 000 000</p>
-              </div>
-              <div className="text-right text-xs text-gray-500">
-                Date: {new Date().toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </div>
-              <div>
-                <p><strong>{enrollment.firstName} {enrollment.lastName}</strong></p>
-                <p>{enrollment.address || "Address not provided"}</p>
-                <p>Buea, Cameroon</p>
-              </div>
-              <div className="text-center font-bold text-base text-blue-900 border-t border-b py-2 my-2">
-                OFFICIAL ADMISSION LETTER
-              </div>
-              <div>
-                <p>Dear {enrollment.firstName} {enrollment.lastName},</p>
-                <p className="mt-2">
-                  We are delighted to extend our warmest congratulations on your admission to the{" "}
-                  <strong>{enrollment.program}</strong> program at EduManage Computer Training Center.
-                </p>
-                <p className="mt-2">
-                  Your application has been carefully reviewed, and we are pleased to inform you that you have been selected for admission based on your qualifications and potential.
-                </p>
-                <div className="bg-blue-50 border border-blue-200 rounded p-3 my-3">
-                  <p className="font-semibold text-blue-900 text-sm mb-2">ADMISSION DETAILS</p>
-                  <p className="text-xs">Matriculation Number: <strong>{enrollment.matricle}</strong></p>
-                  <p className="text-xs">Program: <strong>{enrollment.program}</strong></p>
-                  <p className="text-xs">Enrollment Date: <strong>{new Date(enrollment.createdAt).toLocaleDateString()}</strong></p>
-                  <p className="text-xs">Admission Date: <strong>{new Date(enrollment.approvedAt!).toLocaleDateString()}</strong></p>
-                </div>
-                <p className="mt-2 font-semibold text-blue-900">Thank You for Choosing EduManage</p>
-                <p className="mt-1 text-xs">
-                  We thank you for choosing EduManage Computer Training Center for your educational needs. Your decision to join our institution reflects our shared commitment to excellence in education and professional development.
-                </p>
-                <p className="mt-2 font-semibold text-blue-900">Next Steps & Important Information:</p>
-                <ul className="list-disc list-inside mt-1 ml-4 text-xs space-y-1">
-                  <li>Bring this admission letter and your matriculation number to registration</li>
-                  <li>Complete all required documentation and fee payments within 7 days</li>
-                  <li>Attend the mandatory orientation session scheduled for the first week of classes</li>
-                  <li>Contact the administration office if you have any questions or need assistance</li>
-                  <li>Keep this letter safe as it serves as your official proof of admission</li>
+              <div className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-5">
+                <p className="text-sm font-semibold text-slate-950">What to do next</p>
+                <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">
+                  <li>Download your admission letter and keep it for registration.</li>
+                  <li>Create your student account with your approved matricule and application email.</li>
+                  <li>Use your dashboard to track fees, timetable, and academic records.</li>
                 </ul>
-                <p className="mt-3 text-xs">
-                  We wish you every success in your studies and look forward to supporting your academic and professional growth.
-                </p>
-                <p className="mt-3">Best regards,</p>
-                <div className="mt-4 flex justify-between">
-                  <div className="text-left">
-                    <p className="font-bold">Emmanuel Ngum</p>
-                    <p className="text-xs">CEO & Director</p>
-                    <p className="text-xs">EduManage Computer Training Center</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold">Program Coordinator</p>
-                    <p className="text-xs">{enrollment.program} Program</p>
-                  </div>
-                </div>
+              </div>
+
+              <div className="mt-6 grid gap-3">
+                <Button onClick={downloadAdmissionLetter} disabled={downloadingLetter} className="h-11">
+                  <Download className="mr-2 h-4 w-4" />
+                  {downloadingLetter ? "Downloading..." : "Download Admission Letter"}
+                </Button>
+                <Button asChild variant="outline" className="h-11">
+                  <Link href="/register">
+                    <GraduationCap className="mr-2 h-4 w-4" />
+                    Create Student Account
+                  </Link>
+                </Button>
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div>
+              <h2 className="text-2xl font-semibold text-slate-950">Admissions Review in Progress</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-600">
+                Your application is in queue. Once it is reviewed, your account and admission steps will become available.
+              </p>
 
-        {!isApproved && (
-          <div className="bg-blue-50 rounded-xl p-4 mb-6 text-left space-y-2 text-sm text-gray-600">
-            <div className="flex items-start">
-              <span className="mr-2">✅</span>
-              <span>Application form received</span>
+              <div className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-5">
+                <p className="text-sm font-semibold text-slate-950">What happens next</p>
+                <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-6 text-slate-600">
+                  <li>Admissions reviews your application.</li>
+                  <li>You receive approval and a matricule if accepted.</li>
+                  <li>You return to the platform to create or activate your portal account.</li>
+                </ol>
+              </div>
             </div>
-            <div className="flex items-start">
-              <span className="mr-2">⏳</span>
-              <span>Under review by admissions</span>
-            </div>
-            <div className="flex items-start">
-              <span className="mr-2">📧</span>
-              <span>Confirmation email will be sent</span>
-            </div>
-            <div className="flex items-start">
-              <span className="mr-2">📞</span>
-              <span>Admissions will call you</span>
-            </div>
-          </div>
-        )}
-
-        {!isApproved && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <p className="text-xs text-yellow-800 font-semibold mb-2">📋 NEXT STEPS</p>
-            <ol className="text-xs text-yellow-700 space-y-1 list-decimal list-inside">
-              <li>Wait for approval notification</li>
-              <li>Receive your Matricle Number</li>
-              <li>Download your Admission Letter</li>
-              <li>Use it to activate your account</li>
-            </ol>
-          </div>
-        )}
-
-        <div className="flex flex-col gap-3">
-          {isApproved && (
-            <>
-              <Button
-                onClick={downloadAdmissionLetter}
-                disabled={downloadingLetter}
-                className="bg-green-600 hover:bg-green-700 w-full"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                {downloadingLetter ? "Downloading..." : "Download Admission Letter"}
-              </Button>
-              <Button asChild variant="outline">
-                <Link href={`/login`}>
-                  <GraduationCap className="mr-2 h-4 w-4" />
-                  Register Now
-                </Link>
-              </Button>
-            </>
           )}
 
-          {!isApproved && enrollmentId && (
-            <Button asChild className="bg-blue-600 hover:bg-blue-700 w-full">
-              <a
-                href={`/api/enrollments/${enrollmentId}/download`}
-                download={`enrollment-form-${enrollmentId}.pdf`}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Download Enrollment Form (PDF)
-              </a>
+          <div className="mt-8 grid gap-3">
+            <Button asChild variant={isApproved ? "secondary" : "default"} className="h-11">
+              <Link href="/">Back to Home</Link>
             </Button>
-          )}
+            <Button asChild variant="ghost" className="h-11">
+              <Link href="/contact">Contact Admissions</Link>
+            </Button>
+          </div>
 
-          <Button asChild variant={isApproved ? "default" : "secondary"}>
-            <Link href="/">
-              <GraduationCap className="mr-2 h-4 w-4" />
-              Back to Home
-            </Link>
-          </Button>
+          <p className="mt-8 text-xs text-slate-400">Reference ID: {enrollmentId}</p>
         </div>
-
-        <p className="text-xs text-gray-400 mt-6 text-center">
-          Application ID: {enrollmentId || "---"}
-        </p>
       </div>
     </div>
   );
 }
 
-export default function EnrollSuccessPage({
-  searchParams,
-}: {
-  searchParams: { id?: string };
-}) {
-  const enrollmentId = searchParams.id;
-
+export default function EnrollSuccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-600 flex items-center justify-center">
-          <div className="bg-white rounded-2xl shadow-2xl p-10 max-w-md w-full text-center">
-            <p className="text-gray-500">Loading...</p>
+        <div className="flex min-h-screen items-center justify-center bg-slate-950">
+          <div className="w-full max-w-md border border-white/10 bg-white p-10 text-center shadow-2xl">
+            <p className="text-slate-500">Loading application details...</p>
           </div>
         </div>
       }
     >
-      <SuccessPageContent enrollmentId={enrollmentId || ""} />
+      <SuccessPageContent />
     </Suspense>
   );
 }

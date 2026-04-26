@@ -127,6 +127,7 @@ model Enrollment {
                           message     String?
                             status      String   @default("pending") // pending | approved | rejected
                               matricle    String?  @unique // Generated when approved
+                                publicAccessToken String? @unique
                                 approvedAt  DateTime?
                                   approvedBy  Int?     // CEO user ID
                                     rejectedReason String?

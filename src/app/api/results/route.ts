@@ -22,7 +22,23 @@ export async function GET() {
     })));
   }
 
-  // CEO / Teacher - return all
+  if (session.role === "teacher") {
+    const results = await prisma.result.findMany({
+      where: {
+        course: {
+          teacherId: session.teacherId,
+        },
+      },
+      include: { course: true, student: { include: { user: { select: { firstName: true, lastName: true } } } } },
+      orderBy: { year: "desc" },
+    });
+    return NextResponse.json(results);
+  }
+
+  if (session.role !== "ceo") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const results = await prisma.result.findMany({
     include: { course: true, student: { include: { user: { select: { firstName: true, lastName: true } } } } },
     orderBy: { year: "desc" },

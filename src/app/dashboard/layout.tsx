@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { DashboardSidebar } from "@/components/dashboard/Sidebar";
@@ -12,6 +13,18 @@ const roleDashboardRoot: Record<string, string> = {
   teacher: "/dashboard/teacher",
   student: "/dashboard/student",
 };
+
+function titleFromPath(pathname: string) {
+  const last = pathname.split("/").filter(Boolean).pop() || "dashboard";
+  if (last === "ceo" || last === "teacher" || last === "student" || last === "dashboard") {
+    return "Overview";
+  }
+
+  return last
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -33,9 +46,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [user, loading, pathname, router]);
 
+  const sectionTitle = useMemo(() => titleFromPath(pathname), [pathname]);
+  const roleLabel = useMemo(() => {
+    const role = normalizeRole(user?.role);
+    if (role === "ceo") return "Executive Workspace";
+    if (role === "teacher") return "Faculty Workspace";
+    return "Student Workspace";
+  }, [user?.role]);
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="flex min-h-screen items-center justify-center bg-slate-100">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -46,18 +67,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const allowedRoot = roleDashboardRoot[normalizeRole(user.role)];
   if (allowedRoot && !pathname.startsWith(allowedRoot)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="flex min-h-screen items-center justify-center bg-slate-100">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-slate-100">
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
-          <div className="fixed left-0 top-0 bottom-0 w-64 bg-gray-900">
+          <div className="absolute inset-0 bg-slate-950/55" onClick={() => setSidebarOpen(false)} />
+          <div className="absolute inset-y-0 left-0">
             <DashboardSidebar onClose={() => setSidebarOpen(false)} />
           </div>
         </div>
@@ -67,17 +88,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <DashboardSidebar />
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          >
-            <Menu className="h-6 w-6" />
-          </button>
-          <h1 className="text-lg font-semibold text-gray-900">EduManage</h1>
-          <div className="w-10" />
-        </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/92 backdrop-blur">
+          <div className="flex items-center justify-between gap-4 px-4 py-3 lg:px-6">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="rounded-md p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950 lg:hidden"
+                aria-label="Open dashboard menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{roleLabel}</p>
+                <h1 className="text-lg font-semibold text-slate-950 lg:text-xl">{sectionTitle}</h1>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <p className="text-sm font-medium text-slate-950">
+                {user.firstName} {user.lastName}
+              </p>
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{normalizeRole(user.role)}</p>
+            </div>
+          </div>
+        </header>
 
         <main className="flex-1 overflow-auto p-4 lg:p-6">{children}</main>
       </div>

@@ -80,7 +80,7 @@ function EnrollForm() {
     });
     if (res.ok) {
       const data = await res.json();
-      router.push(`/enroll/success?id=${data.id}`);
+      router.push(`/enroll/success?id=${data.id}&token=${data.publicAccessToken}`);
     } else {
       const errorData = await res.json();
       toast({ 

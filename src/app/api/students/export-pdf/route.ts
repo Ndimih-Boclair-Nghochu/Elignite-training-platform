@@ -3,9 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import PDFDocument from "pdfkit";
 import path from "path";
+import { getSession } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session.userId || session.role !== "ceo") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { program, search } = await req.json();
 
     // Fetch students with optional filters

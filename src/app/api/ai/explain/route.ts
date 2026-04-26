@@ -1,6 +1,12 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/lib/session";
 export async function POST(req: NextRequest) {
+  const session = await getSession();
+  if (!session.userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { concept, subject, level } = await req.json();
   return NextResponse.json({
     explanation: `${concept} is a fundamental concept in ${subject}. At the ${level} level, it refers to the core principle that underpins how ${concept.toLowerCase()} operates within the broader context of ${subject}. Understanding this concept requires grasping both its theoretical foundations and practical applications.`,

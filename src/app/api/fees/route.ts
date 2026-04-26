@@ -17,6 +17,10 @@ export async function GET() {
     return NextResponse.json(fees);
   }
 
+  if (session.role !== "ceo") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const fees = await prisma.fee.findMany({
     include: { student: { include: { user: { select: { firstName: true, lastName: true } } } } },
     orderBy: { createdAt: "desc" },

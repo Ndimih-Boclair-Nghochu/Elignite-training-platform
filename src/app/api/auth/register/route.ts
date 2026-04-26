@@ -6,12 +6,14 @@ import { getSession } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
   try {
-    const { matricule, password, confirmPassword, role = "student" } = await req.json();
+    const { matricule, email, password, confirmPassword } = await req.json();
+    const normalizedMatricule = String(matricule || "").trim();
+    const normalizedEmail = String(email || "").trim().toLowerCase();
 
     // Validate required fields
-    if (!matricule || !password || !confirmPassword) {
+    if (!normalizedMatricule || !normalizedEmail || !password || !confirmPassword) {
       return NextResponse.json(
-        { error: "Matricule, password, and password confirmation are required" },
+        { error: "Matricule, email, password, and password confirmation are required" },
         { status: 400 }
       );
     }
@@ -32,73 +34,83 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // For student role, matricule must be verified
     let enrollmentData = null;
     let existingStudent = null;
-    if (role === "student" || !role) {
-      // Try to find enrollment first (for pending students)
-      let enrollment = await prisma.enrollment.findUnique({
-        where: { matricle: matricule },
+    let enrollment = await prisma.enrollment.findUnique({
+      where: { matricle: normalizedMatricule },
+    });
+
+    // If no enrollment, try to find existing student record
+    if (!enrollment) {
+      existingStudent = await prisma.student.findFirst({
+        where: {
+          OR: [
+            { matricle: normalizedMatricule },
+            { studentId: normalizedMatricule },
+          ],
+        },
+        include: {
+          user: true,
+        },
       });
 
-      // If no enrollment, try to find existing student record
-      if (!enrollment) {
-        existingStudent = await prisma.student.findFirst({
-          where: {
-            OR: [
-              { matricle: matricule },
-              { studentId: matricule }, // Support studentId format like STU678565
-            ],
-          },
+      if (!existingStudent) {
+        return NextResponse.json(
+          { error: "Invalid matricule number. Please verify and try again." },
+          { status: 404 }
+        );
+      }
+
+      if (existingStudent.user?.email?.toLowerCase() !== normalizedEmail) {
+        return NextResponse.json(
+          { error: "Email does not match the student record for this matricule." },
+          { status: 403 }
+        );
+      }
+
+      if (existingStudent.userId) {
+        const linkedUser = await prisma.user.findUnique({
+          where: { id: existingStudent.userId },
         });
 
-        if (!existingStudent) {
+        if (linkedUser) {
           return NextResponse.json(
-            { error: "Invalid matricule number. Please verify and try again." },
-            { status: 404 }
+            { error: "Account already exists for this student" },
+            { status: 409 }
           );
         }
-
-        // If this student already has a user account, verify the linked user still exists
-        if (existingStudent.userId) {
-          const linkedUser = await prisma.user.findUnique({
-            where: { id: existingStudent.userId },
-          });
-
-          if (linkedUser) {
-            return NextResponse.json(
-              { error: "Account already exists for this student" },
-              { status: 409 }
-            );
-          }
-
-          // Broken link exists, allow repair through registration and relink below
-        }
-
-        enrollmentData = {
-          matricle: existingStudent.matricle || matricule,
-          firstName: "",
-          lastName: "",
-          email: "",
-          program: existingStudent.program,
-          status: "approved",
-        } as any;
-      } else {
-        // Verify enrollment is approved
-        if (enrollment.status !== "approved") {
-          return NextResponse.json(
-            {
-              error: `Your enrollment is ${enrollment.status}. Please contact admissions.`,
-            },
-            { status: 403 }
-          );
-        }
-        enrollmentData = enrollment;
       }
+
+      enrollmentData = {
+        matricle: existingStudent.matricle || normalizedMatricule,
+        firstName: existingStudent.user?.firstName || "",
+        lastName: existingStudent.user?.lastName || "",
+        email: normalizedEmail,
+        program: existingStudent.program,
+        status: "approved",
+      } as const;
+    } else {
+      if (enrollment.status !== "approved") {
+        return NextResponse.json(
+          {
+            error: `Your enrollment is ${enrollment.status}. Please contact admissions.`,
+          },
+          { status: 403 }
+        );
+      }
+
+      if (enrollment.email.toLowerCase() !== normalizedEmail) {
+        return NextResponse.json(
+          { error: "Email does not match the approved enrollment for this matricule." },
+          { status: 403 }
+        );
+      }
+
+      enrollmentData = enrollment;
     }
 
     // Check if user already exists with this matricule
-    const existing = await prisma.user.findUnique({ where: { matricule } });
+    const existing = await prisma.user.findUnique({ where: { matricule: normalizedMatricule } });
     if (existing) {
       return NextResponse.json(
         { error: "Matricule already registered" },
@@ -110,55 +122,53 @@ export async function POST(req: NextRequest) {
 
     const user = await prisma.user.create({
       data: {
-        matricule,
-        email: enrollmentData?.email || `${matricule}@school.local`,
+        matricule: normalizedMatricule,
+        email: normalizedEmail,
         password: hashed,
         firstName: enrollmentData?.firstName || "",
         lastName: enrollmentData?.lastName || "",
-        role,
+        role: "student",
+        isActivated: true,
       },
     });
 
-    // Auto-create or link student profile if role is student
     let studentId: number | undefined;
-    if (role === "student" || !role) {
-      if (!existingStudent) {
-        existingStudent = await prisma.student.findFirst({
-          where: {
-            OR: [
-              { matricle: matricule },
-              { studentId: matricule },
-            ],
-          },
-        });
-      }
+    if (!existingStudent) {
+      existingStudent = await prisma.student.findFirst({
+        where: {
+          OR: [
+            { matricle: normalizedMatricule },
+            { studentId: normalizedMatricule },
+          ],
+        },
+      });
+    }
 
-      if (existingStudent) {
-        await prisma.student.update({
-          where: { id: existingStudent.id },
-          data: { userId: user.id },
-        });
-        studentId = existingStudent.id;
-      } else {
-        const student = await prisma.student.create({
-          data: {
-            studentId: `STU${Date.now().toString().slice(-6)}`,
-            matricle: matricule,
-            userId: user.id,
-            program: enrollmentData?.program || "General",
-            level: 1,
-          },
-        });
-        studentId = student.id;
-      }
+    if (existingStudent) {
+      await prisma.student.update({
+        where: { id: existingStudent.id },
+        data: { userId: user.id },
+      });
+      studentId = existingStudent.id;
+    } else {
+      const student = await prisma.student.create({
+        data: {
+          studentId: `STU${Date.now().toString().slice(-6)}`,
+          matricle: normalizedMatricule,
+          userId: user.id,
+          program: enrollmentData?.program || "General",
+          level: 1,
+        },
+      });
+      studentId = student.id;
     }
 
     const session = await getSession();
     session.userId = user.id;
-    session.email = user.email || matricule;
+    session.email = user.email || normalizedMatricule;
     session.firstName = user.firstName || "";
     session.lastName = user.lastName || "";
-    session.role = user.role as "ceo" | "teacher" | "student";
+    session.role = "student";
     if (studentId) session.studentId = studentId;
     await session.save();
 
@@ -181,15 +191,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// Helper function to get program from enrollment
-async function getProgramFromEnrollment(matricle?: string): Promise<string> {
-  if (!matricle) return "";
-
-  const enrollment = await prisma.enrollment.findUnique({
-    where: { matricle },
-  });
-
-  return enrollment?.program || "";
 }
