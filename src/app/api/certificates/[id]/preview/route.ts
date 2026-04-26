@@ -18,14 +18,23 @@ export async function GET(
 
     const certificate = await prisma.certificate.findUnique({
       where: { id: parseInt(params.id) },
-      include: { 
-        student: { 
-          include: { 
+      include: {
+        student: {
+          include: {
             user: { select: { firstName: true, lastName: true } }
           }
-        } 
+        }
       },
     });
+
+    const programRecord = certificate ? await prisma.program.findFirst({
+      where: { slug: certificate.student.program },
+      include: {
+        teacher: {
+          include: { user: { select: { firstName: true, lastName: true } } }
+        }
+      }
+    }) : null;
 
     if (!certificate) {
       return NextResponse.json(
@@ -64,6 +73,10 @@ export async function GET(
     const studentName = `${certificate.student.user.firstName} ${certificate.student.user.lastName}`;
     const programName = certificate.student.program || "Program";
     const ceoName = `${schoolSettings.ceoFirstName} ${schoolSettings.ceoLastName}`;
+    const teacherName = programRecord?.teacher
+      ? `${programRecord.teacher.user.firstName} ${programRecord.teacher.user.lastName}`
+      : null;
+    const teacherTitle = programRecord?.teacher?.occupation || "Program Instructor";
     const issueDate = certificate.issuedDate 
       ? new Date(certificate.issuedDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
       : "Not yet issued";
@@ -304,6 +317,12 @@ export async function GET(
         </div>
 
         <div class="signature-section">
+          ${teacherName ? `
+          <div class="sig-block">
+            <div class="signature-line"></div>
+            <div class="sig-name">${teacherName}</div>
+            <div class="sig-title">${teacherTitle}</div>
+          </div>` : ""}
           <div class="sig-block">
             <div class="signature-line"></div>
             <div class="sig-name">${ceoName}</div>

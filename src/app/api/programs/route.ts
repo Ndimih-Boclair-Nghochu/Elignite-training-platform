@@ -13,6 +13,7 @@ const programSchema = z.object({
   tuition: z.coerce.number().min(0),
   requirements: z.string().optional().or(z.literal("")),
   outcomes: z.string().optional().or(z.literal("")),
+  imageUrl: z.string().optional().or(z.literal("")),
   status: z.string().optional(),
 });
 
@@ -60,6 +61,7 @@ export async function POST(req: NextRequest) {
         ...payload.data,
         requirements: payload.data.requirements || null,
         outcomes: payload.data.outcomes || null,
+        imageUrl: payload.data.imageUrl || null,
         status: payload.data.status || "published",
       },
     });

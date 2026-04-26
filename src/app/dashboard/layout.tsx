@@ -78,13 +78,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-slate-950/55" onClick={() => setSidebarOpen(false)} />
-          <div className="absolute inset-y-0 left-0">
+          <div className="absolute inset-y-0 left-0 overflow-y-auto">
             <DashboardSidebar onClose={() => setSidebarOpen(false)} />
           </div>
         </div>
       )}
 
-      <div className="hidden lg:block">
+      <div className="hidden lg:sticky lg:top-0 lg:block lg:h-screen">
         <DashboardSidebar />
       </div>
 

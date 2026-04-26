@@ -59,13 +59,17 @@ export default async function HomePage() {
       }),
       prisma.student.count(),
       prisma.program.count({ where: { status: "published" } }),
-      prisma.teacher.count({ where: { status: "active" } }),
-      prisma.student.count({ where: { status: "graduated" } }),
+      // Active programs where at least one student is enrolled
+      prisma.student.findMany({ select: { program: true }, distinct: ["program"] }),
+      // Students who have received at least one issued certificate
+      prisma.student.count({
+        where: { certificates: { some: { status: "issued" } } },
+      }),
     ]);
 
     studentCount = sCount;
     programCount = pCount;
-    facultyCount = fCount;
+    facultyCount = (fCount as { program: string }[]).length;
     graduateCount = gCount;
 
     if (dbPrograms.length > 0) {
@@ -125,7 +129,7 @@ export default async function HomePage() {
   const liveStats = [
     { label: "Students Enrolled", value: studentCount.toString() },
     { label: "Published Programs", value: programCount.toString() },
-    { label: "Active Faculty", value: facultyCount.toString() },
+    { label: "Active Programs", value: facultyCount.toString() },
     { label: "Graduates", value: graduateCount.toString() },
   ];
 
@@ -385,12 +389,12 @@ export default async function HomePage() {
                 className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
               />
               <div className="relative mt-6 w-full overflow-hidden rounded-2xl">
-                <Image
-                  src="/images/why-elignite.png"
-                  alt="ELIGNITE training platform illustration"
-                  width={600}
-                  height={450}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://storyset.com/illustration/tech-company/rafiki"
+                  alt="Tech company illustration by Storyset"
                   className="w-full object-contain"
+                  loading="lazy"
                 />
               </div>
             </div>
@@ -480,6 +484,15 @@ export default async function HomePage() {
               description="The public site now makes the next step clearer, but here are the essentials in one place."
               className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
             />
+            <div className="mt-6 w-full overflow-hidden rounded-2xl">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://storyset.com/illustration/thinking-face/rafiki"
+                alt="Thinking face illustration by Storyset"
+                className="w-full max-h-64 object-contain"
+                loading="lazy"
+              />
+            </div>
           </Reveal>
           <div className="space-y-4">
             {faqs.map((faq, index) => (
