@@ -19,8 +19,22 @@ const config: Config = {
       keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
         "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
+        "wa-bounce": {
+          "0%, 60%, 100%": { transform: "translateY(0)" },
+          "20%": { transform: "translateY(-10px)" },
+          "40%": { transform: "translateY(-5px)" },
+        },
+        "wa-ring": {
+          "0%": { transform: "scale(1)", opacity: "0.7" },
+          "100%": { transform: "scale(2)", opacity: "0" },
+        },
       },
-      animation: { "accordion-down": "accordion-down 0.2s ease-out", "accordion-up": "accordion-up 0.2s ease-out" },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        "wa-bounce": "wa-bounce 2.4s ease-in-out infinite",
+        "wa-ring": "wa-ring 2.4s ease-out infinite",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

@@ -14,8 +14,8 @@ async function main() {
     where: { email: "ceo@elignite.cm" },
     update: {
       password: ceoPassword,
-      firstName: "Boclair",
-      lastName: "Nghochu",
+      firstName: "MSAME",
+      lastName: "RENE",
       role: "ceo",
       phone: "+237670768962",
       isActivated: true,
@@ -23,8 +23,8 @@ async function main() {
     create: {
       email: "ceo@elignite.cm",
       password: ceoPassword,
-      firstName: "Boclair",
-      lastName: "Nghochu",
+      firstName: "MSAME",
+      lastName: "RENE",
       role: "ceo",
       phone: "+237670768962",
       isActivated: true,
@@ -297,8 +297,8 @@ async function main() {
     where: { id: 1 },
     update: {
       schoolName: "ELIGNITE Training Platform",
-      ceoFirstName: "Boclair",
-      ceoLastName: "Nghochu",
+      ceoFirstName: "MSAME",
+      ceoLastName: "RENE",
       ceoTitle: "Chief Executive Officer",
       schoolMotto: "Practical digital skills for real work",
       schoolAddress: "Elegance Junction, UBa first gate, Bamenda",
@@ -309,8 +309,8 @@ async function main() {
     create: {
       id: 1,
       schoolName: "ELIGNITE Training Platform",
-      ceoFirstName: "Boclair",
-      ceoLastName: "Nghochu",
+      ceoFirstName: "MSAME",
+      ceoLastName: "RENE",
       ceoTitle: "Chief Executive Officer",
       schoolMotto: "Practical digital skills for real work",
       schoolAddress: "Elegance Junction, UBa first gate, Bamenda",
