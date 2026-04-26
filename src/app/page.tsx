@@ -12,7 +12,6 @@ import {
   faqs,
   learningSteps,
   partnerLogos,
-  platformStats,
   techPrograms,
 } from "@/lib/site-content";
 import {
@@ -21,6 +20,7 @@ import {
   CheckCircle2,
   Clock3,
   Cpu,
+  GraduationCap,
   Layers3,
   ShieldCheck,
   Sparkles,
@@ -39,8 +39,13 @@ export default async function HomePage() {
     rating: number;
   }> = [];
 
+  let studentCount = 0;
+  let programCount = 0;
+  let facultyCount = 0;
+  let graduateCount = 0;
+
   try {
-    const [dbPrograms, dbTestimonials] = await Promise.all([
+    const [dbPrograms, dbTestimonials, sCount, pCount, fCount, gCount] = await Promise.all([
       prisma.program.findMany({
         where: { status: "published" },
         orderBy: { createdAt: "desc" },
@@ -52,7 +57,16 @@ export default async function HomePage() {
         take: 3,
         select: { id: true, name: true, program: true, text: true, rating: true },
       }),
+      prisma.student.count(),
+      prisma.program.count({ where: { status: "published" } }),
+      prisma.teacher.count({ where: { status: "active" } }),
+      prisma.student.count({ where: { status: "graduated" } }),
     ]);
+
+    studentCount = sCount;
+    programCount = pCount;
+    facultyCount = fCount;
+    graduateCount = gCount;
 
     if (dbPrograms.length > 0) {
       programs = dbPrograms.map((program, index) => {
@@ -108,10 +122,18 @@ export default async function HomePage() {
           },
         ];
 
+  const liveStats = [
+    { label: "Students Enrolled", value: studentCount.toString() },
+    { label: "Published Programs", value: programCount.toString() },
+    { label: "Active Faculty", value: facultyCount.toString() },
+    { label: "Graduates", value: graduateCount.toString() },
+  ];
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
+      {/* ── HERO ── */}
       <section className="relative overflow-hidden border-b border-blue-100">
         <div className="absolute inset-0">
           <Image
@@ -121,8 +143,9 @@ export default async function HomePage() {
             priority
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(118deg,rgba(224,242,254,0.82),rgba(240,249,255,0.74),rgba(14,165,233,0.34))]" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(37,99,235,0.04)_0,rgba(37,99,235,0.04)_1px,transparent_1px,transparent_88px),linear-gradient(rgba(37,99,235,0.04)_0,rgba(37,99,235,0.04)_1px,transparent_1px,transparent_88px)] bg-[size:88px_88px]" />
+          {/* Lighter overlay — image stays clearly visible */}
+          <div className="absolute inset-0 bg-[linear-gradient(118deg,rgba(186,230,253,0.60),rgba(224,242,254,0.45),rgba(14,165,233,0.18))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(37,99,235,0.03)_0,rgba(37,99,235,0.03)_1px,transparent_1px,transparent_88px),linear-gradient(rgba(37,99,235,0.03)_0,rgba(37,99,235,0.03)_1px,transparent_1px,transparent_88px)] bg-[size:88px_88px]" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-24 sm:px-6 lg:px-8 lg:pb-24 lg:pt-28">
@@ -149,8 +172,9 @@ export default async function HomePage() {
                 </Button>
               </div>
 
-              <div className="mt-10 grid gap-4 sm:grid-cols-3">
-                {platformStats.slice(0, 3).map((stat, index) => (
+              {/* Real DB stats */}
+              <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+                {liveStats.map((stat, index) => (
                   <Reveal key={stat.label} delay={index * 80} className="surface-card hover-lift p-5">
                     <p className="text-3xl font-semibold text-slate-950">{stat.value}</p>
                     <p className="mt-2 text-sm text-slate-500">{stat.label}</p>
@@ -159,22 +183,8 @@ export default async function HomePage() {
               </div>
             </Reveal>
 
-            <Reveal delay={160} className="grid gap-5">
-              <div className="surface-card-strong p-6">
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-700">
-                  Campaign Preview
-                </p>
-                <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-                  Training communication presented with the same clarity as the platform.
-                </h2>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  This rotating preview highlights ELIGNITE training campaigns inside a polished mobile frame, giving visitors a stronger sense of the brand and offer at a glance.
-                </p>
-                <div className="mt-6">
-                  <PhoneShowcase />
-                </div>
-              </div>
-
+            {/* Hero right — Learning Experience only */}
+            <Reveal delay={160}>
               <div className="surface-card p-6">
                 <div className="flex items-center justify-between gap-4">
                   <div>
@@ -200,7 +210,7 @@ export default async function HomePage() {
                       key={item}
                       className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-white px-4 py-4"
                     >
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-blue-600" />
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
                       <p className="text-sm leading-6 text-slate-600">{item}</p>
                     </div>
                   ))}
@@ -211,6 +221,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── FEATURES STRIP ── */}
       <section className="border-b border-blue-100 bg-white">
         <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 text-sm text-slate-600 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
           {[
@@ -220,13 +231,44 @@ export default async function HomePage() {
             { icon: Briefcase, label: "Job-facing support for meaningful next steps" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-3">
-              <item.icon className="h-5 w-5 text-blue-600" />
+              <item.icon className="h-5 w-5 shrink-0 text-blue-600" />
               <span>{item.label}</span>
             </div>
           ))}
         </div>
       </section>
 
+      {/* ── CAMPAIGN PREVIEW (moved here, below features strip) ── */}
+      <section className="border-b border-blue-100 bg-blue-50/40 px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-center">
+            <Reveal>
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-700">
+                Campaign Preview
+              </p>
+              <h2 className="mt-4 text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl">
+                Training communication presented with the same clarity as the platform.
+              </h2>
+              <p className="mt-4 text-base leading-7 text-slate-600">
+                See how ELIGNITE presents its training programmes — clear offers, structured information, and a consistent brand voice that builds trust from first contact.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Button size="lg" asChild className="bg-blue-600 text-white hover:bg-blue-700">
+                  <Link href="/enroll">Apply Now <ArrowRight className="h-4 w-4" /></Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild className="border-slate-200 bg-white text-slate-900 hover:bg-slate-50">
+                  <Link href="/programs">View Programs</Link>
+                </Button>
+              </div>
+            </Reveal>
+            <Reveal delay={120} className="flex justify-center">
+              <PhoneShowcase />
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ── POPULAR PROGRAMS ── */}
       <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
@@ -284,7 +326,7 @@ export default async function HomePage() {
                         </span>
                       ))}
                     </div>
-                    <div className="mt-6 flex gap-3">
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                       <Button asChild className="flex-1 bg-blue-600 text-white hover:bg-blue-700">
                         <Link href={`/enroll?program=${program.slug}`}>Apply Now</Link>
                       </Button>
@@ -304,6 +346,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── HOW LEARNING WORKS ── */}
       <section className="border-y border-blue-100 bg-blue-50/65 px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
@@ -314,7 +357,7 @@ export default async function HomePage() {
               className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
             />
           </Reveal>
-          <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
             {learningSteps.map((step, index) => (
               <Reveal key={step.title} delay={index * 90}>
                 <div className="surface-card hover-lift h-full p-6">
@@ -330,6 +373,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── WHY ELIGNITE ── */}
       <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.95fr_1.05fr]">
           <Reveal>
@@ -379,6 +423,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── TESTIMONIALS ── */}
       <section className="border-y border-blue-100 bg-slate-50 px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
@@ -390,7 +435,7 @@ export default async function HomePage() {
               className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
             />
           </Reveal>
-          <div className="mt-12 grid gap-6 lg:grid-cols-3">
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {testimonials.map((testimony, index) => (
               <Reveal key={testimony.id} delay={index * 90}>
                 <div className="surface-card hover-lift h-full p-6">
@@ -416,6 +461,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── FAQ ── */}
       <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
           <Reveal>
@@ -439,6 +485,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── PARTNERS ── */}
       <section className="border-y border-blue-100 bg-blue-50/40 px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-4 text-sm text-slate-500">
           {partnerLogos.map((partner) => (
@@ -449,6 +496,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── CTA ── */}
       <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
         <Reveal>
           <div className="surface-card-strong overflow-hidden p-8 sm:p-10">

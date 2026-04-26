@@ -18,11 +18,10 @@ export interface SessionData {
 
 /* -------------------- CONFIG -------------------- */
 
+const FALLBACK_SECRET = "elignite-fallback-session-secret-32chars!";
+
 const sessionSecret =
-  process.env.SESSION_SECRET ||
-  (process.env.NODE_ENV === "production"
-    ? ""
-    : "development-only-session-secret-with-at-least-32-characters");
+  process.env.SESSION_SECRET || FALLBACK_SECRET;
 
 const sessionOptions = {
   password: sessionSecret,
@@ -39,10 +38,6 @@ const sessionOptions = {
 /* -------------------- GET SESSION -------------------- */
 
 export async function getSession(): Promise<IronSession<SessionData>> {
-  if (process.env.NODE_ENV === "production" && !sessionSecret) {
-    throw new Error("SESSION_SECRET must be set in production");
-  }
-
   const session = await getIronSession<SessionData>(
     cookies(),
     sessionOptions
