@@ -4,344 +4,410 @@ generator client {
 }
 
 datasource db {
-    provider = "postgresql"
-      url      = env("DATABASE_URL")
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
     directUrl = env("DIRECT_DATABASE_URL")
 }
 
 model User {
     id          Int      @id @default(autoincrement())
-      matricule   String?  @unique
-        email       String?  @unique
-          password    String
-            firstName   String?
-              lastName    String?
-                role        String   @default("student") // "ceo" | "teacher" | "student"
-                  phone       String?
-                    photoUrl    String?
-                      isActivated Boolean  @default(false) // false until student/teacher activates their account
-                        createdAt   DateTime @default(now())
-                          updatedAt   DateTime @updatedAt
+    matricule   String?  @unique
+    email       String?  @unique
+    password    String
+    firstName   String?
+    lastName    String?
+    role        String   @default("student") // "ceo" | "teacher" | "student"
+    phone       String?
+    photoUrl    String?
+    isActivated Boolean  @default(false)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
 
-                            student     Student?
-                              teacher     Teacher?
-                                announcements Announcement[]
-                                  approvedEnrollments Enrollment[]
-                                    testimonies Testimony[] @relation("UserTestimonies")
-                                      approvedTestimonies Testimony[] @relation("ApprovedTestimonies")
+    student             Student?
+    teacher             Teacher?
+    announcements       Announcement[]
+    approvedEnrollments Enrollment[]
+    testimonies         Testimony[]  @relation("UserTestimonies")
+    approvedTestimonies Testimony[]  @relation("ApprovedTestimonies")
 }
 
 model Student {
     id             Int      @id @default(autoincrement())
-      studentId      String   @unique
-        matricle       String?  @unique // Same as enrollment matricle
-          userId         Int      @unique
-            user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-              program        String
-                level          Int      @default(1)
-                  gender         String?
-                    dateOfBirth    String?
-                      address        String?
-                        parentName     String?
-                          parentPhone    String?
-                            status         String   @default("active") // active | inactive | graduated
-                              enrollmentDate DateTime @default(now())
+    studentId      String   @unique
+    matricle       String?  @unique
+    userId         Int      @unique
+    user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    program        String   // primary program slug (kept for compatibility)
+    level          Int      @default(1)
+    gender         String?
+    dateOfBirth    String?
+    address        String?
+    parentName     String?
+    parentPhone    String?
+    status         String   @default("active") // active | inactive | graduated
+    enrollmentDate DateTime @default(now())
 
-                                results        Result[]
-                                  fees           Fee[]
-                                    payments       Payment[]
-                                      attendances    Attendance[]
-                                        certificates   Certificate[]
-                                          projectScores ProjectScore[]
+    results              Result[]
+    fees                 Fee[]
+    payments             Payment[]
+    attendances          Attendance[]
+    certificates         Certificate[]
+    projectScores        ProjectScore[]
+    studentPrograms      StudentProgram[]
+    exerciseSubmissions  ExerciseSubmission[]
 }
 
 model Teacher {
     id             Int      @id @default(autoincrement())
-      teacherId      String   @unique
-        matricle       String?  @unique
-          userId         Int      @unique
-            user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-              occupation     String?
-                profession     String?
-                  quotes         String?
-                    department     String
-                      specialization String?
-                        qualifications String?
-                          office         String?
-                            status         String   @default("active")
-                              joinDate       DateTime @default(now())
+    teacherId      String   @unique
+    matricle       String?  @unique
+    userId         Int      @unique
+    user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    occupation     String?
+    profession     String?
+    quotes         String?
+    department     String
+    specialization String?
+    qualifications String?
+    office         String?
+    status         String   @default("active")
+    joinDate       DateTime @default(now())
 
-                                courses        Course[]
-                                  programs       Program[]
-                                    projects       Project[]
+    courses         Course[]
+    projects        Project[]
+    teacherPrograms TeacherProgram[]
+    exercises       Exercise[]
+}
+
+// Many-to-many: Teacher ↔ Program
+model TeacherProgram {
+    id         Int      @id @default(autoincrement())
+    teacherId  Int
+    teacher    Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+    programId  Int
+    program    Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
+    assignedAt DateTime @default(now())
+
+    @@unique([teacherId, programId])
+}
+
+// Many-to-many: Student ↔ Program (up to 2 programs per student)
+model StudentProgram {
+    id         Int      @id @default(autoincrement())
+    studentId  Int
+    student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    programId  Int
+    program    Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
+    enrolledAt DateTime @default(now())
+    isPrimary  Boolean  @default(false)
+
+    @@unique([studentId, programId])
 }
 
 model Program {
-    id          Int      @id @default(autoincrement())
-      slug        String   @unique
-        title       String
-          category    String
-            duration    String
-              description String
-                tuition     Float
-                  requirements String?
-                    outcomes    String?
-                      imageUrl    String?  // program cover image (URL or base64)
-                        teacherId   Int?
-                          teacher     Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
-                            status      String   @default("published") // draft | published
-                              createdAt   DateTime @default(now())
-                                updatedAt   DateTime @updatedAt
+    id           Int      @id @default(autoincrement())
+    programCode  String   @unique // auto-generated: PRG-001, PRG-002 ...
+    slug         String   @unique
+    title        String
+    category     String
+    duration     String
+    description  String
+    tuition      Float
+    requirements String?
+    outcomes     String?
+    imageUrl     String?
+    status       String   @default("published") // draft | published
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+
+    teachers TeacherProgram[]
+    students StudentProgram[]
+    courses  Course[]
 }
 
 model Course {
     id          Int      @id @default(autoincrement())
-      code        String   @unique
-        title       String
-          description String?
-            credits     Int      @default(3)
-              program     String
-                level       Int
-                  semester    String
-                    year        Int
-                      teacherId   Int?
-                        teacher     Teacher? @relation(fields: [teacherId], references: [id])
-                          room        String?
-                            schedule    String?
+    code        String   @unique
+    title       String
+    description String?
+    credits     Int      @default(3)
+    program     String   // kept for compatibility
+    programId   Int?     // proper FK to Program
+    programRef  Program? @relation(fields: [programId], references: [id], onDelete: SetNull)
+    level       Int
+    semester    String
+    year        Int
+    teacherId   Int?
+    teacher     Teacher? @relation(fields: [teacherId], references: [id])
+    room        String?
+    schedule    String?
 
-                              results     Result[]
-                                attendances Attendance[]
-                                  timetables  Timetable[]
-}            
+    results     Result[]
+    attendances Attendance[]
+    timetables  Timetable[]
+    exercises   Exercise[]
+}
+
+model Exercise {
+    id          Int      @id @default(autoincrement())
+    title       String
+    description String
+    courseId    Int
+    course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    teacherId   Int
+    teacher     Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+    dueDate     DateTime?
+    maxScore    Float    @default(100)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    submissions ExerciseSubmission[]
+}
+
+model ExerciseSubmission {
+    id          Int      @id @default(autoincrement())
+    exerciseId  Int
+    exercise    Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+    studentId   Int
+    student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    content     String?
+    score       Float?
+    feedback    String?
+    submittedAt DateTime?
+    gradedAt    DateTime?
+    status      String   @default("pending") // pending | submitted | graded
+
+    @@unique([exerciseId, studentId])
+}
 
 model Enrollment {
-    id          Int      @id @default(autoincrement())
-      firstName   String
-        lastName    String
-          email       String   @unique
-            phone       String
-              dob         String?
-                gender      String?
-                  program     String
-                    address     String?
-                      parentName  String?
-                        parentPhone String?
-                          message     String?
-                            status      String   @default("pending") // pending | approved | rejected
-                              matricle    String?  @unique // Generated when approved
-                                publicAccessToken String? @unique
-                                approvedAt  DateTime?
-                                  approvedBy  Int?     // CEO user ID
-                                    rejectedReason String?
-                                      createdAt   DateTime @default(now())
-                                        updatedAt   DateTime @updatedAt
+    id                Int      @id @default(autoincrement())
+    firstName         String
+    lastName          String
+    email             String   @unique
+    phone             String
+    dob               String?
+    gender            String?
+    program           String
+    address           String?
+    parentName        String?
+    parentPhone       String?
+    message           String?
+    status            String   @default("pending") // pending | approved | rejected
+    matricle          String?  @unique
+    publicAccessToken String?  @unique
+    approvedAt        DateTime?
+    approvedBy        Int?
+    rejectedReason    String?
+    createdAt         DateTime @default(now())
+    updatedAt         DateTime @updatedAt
 
-                                          user        User?    @relation(fields: [approvedBy], references: [id])
+    user User? @relation(fields: [approvedBy], references: [id])
 }
 
 model Result {
-    id         Int     @id @default(autoincrement())
-      studentId  Int
-        student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-          courseId   Int
-            course     Course  @relation(fields: [courseId], references: [id])
-              ca         Float   @default(0)
-                exam       Float   @default(0)
-                  total      Float   @default(0)
-                    grade      String  @default("F")
-                      semester   String
-                        year       Int
+    id        Int     @id @default(autoincrement())
+    studentId Int
+    student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    courseId  Int
+    course    Course  @relation(fields: [courseId], references: [id])
+    ca        Float   @default(0)
+    exam      Float   @default(0)
+    total     Float   @default(0)
+    grade     String  @default("F")
+    semester  String
+    year      Int
 
-                          @@unique([studentId, courseId, semester, year])
+    @@unique([studentId, courseId, semester, year])
 }
 
 model Fee {
     id          Int      @id @default(autoincrement())
-      studentId   Int
-        student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-          description String
-            amount      Float
-              dueDate     DateTime
-                paidDate    DateTime?
-                  status      String   @default("pending") // pending | paid | overdue
-                    receiptNo   String?
-                      createdAt   DateTime @default(now())
+    studentId   Int
+    student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    description String
+    amount      Float
+    dueDate     DateTime
+    paidDate    DateTime?
+    status      String   @default("pending") // pending | paid | overdue
+    receiptNo   String?
+    createdAt   DateTime @default(now())
 }
 
 model Payment {
-    id          Int      @id @default(autoincrement())
-      studentId   Int
-        student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-          amount      Float
-            paidAt     DateTime @default(now())
-              createdAt DateTime @default(now())
+    id        Int      @id @default(autoincrement())
+    studentId Int
+    student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    amount    Float
+    paidAt    DateTime @default(now())
+    createdAt DateTime @default(now())
 }
 
 model Attendance {
     id        Int      @id @default(autoincrement())
-      studentId Int
-        student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-          courseId  Int
-            course    Course   @relation(fields: [courseId], references: [id])
-              date      DateTime
-                status    String   @default("present") // present | absent | late
+    studentId Int
+    student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    courseId  Int
+    course    Course   @relation(fields: [courseId], references: [id])
+    date      DateTime
+    status    String   @default("present") // present | absent | late
 
-                  @@unique([studentId, courseId, date])
+    @@unique([studentId, courseId, date])
 }
 
 model Announcement {
     id         Int      @id @default(autoincrement())
-      title      String
-        content    String
-          targetRole String   @default("all") // all | student | teacher
-            priority   String   @default("medium") // low | medium | high
-              author     String
-                userId     Int
-                  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-                    createdAt  DateTime @default(now())
+    title      String
+    content    String
+    targetRole String   @default("all") // all | student | teacher
+    priority   String   @default("medium") // low | medium | high
+    author     String
+    userId     Int
+    user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    createdAt  DateTime @default(now())
 }
 
 model Certificate {
-    id          Int      @id @default(autoincrement())
-      certNo      String   @unique
-        studentId   Int
-          student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-            title       String
-              issuedDate  DateTime?
-                status      String   @default("pending") // pending | issued
-                  createdAt   DateTime @default(now())
+    id         Int       @id @default(autoincrement())
+    certNo     String    @unique
+    studentId  Int
+    student    Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    title      String
+    issuedDate DateTime?
+    status     String    @default("pending") // pending | issued
+    createdAt  DateTime  @default(now())
 }
 
 model Gallery {
     id        Int      @id @default(autoincrement())
-      title     String
-        category  String
-          url       String
-            createdAt DateTime @default(now())
+    title     String
+    category  String
+    url       String
+    createdAt DateTime @default(now())
 }
 
 model Service {
     id          Int      @id @default(autoincrement())
-      name        String
-        description String
-          category    String   // Career, Academic, Health, Sports, Accommodation, Welfare
-            icon        String?  // icon name (e.g., "Briefcase", "Heart")
-              imageUrl    String?  // optional service image
-                isActive    Boolean  @default(true)
-                  createdAt   DateTime @default(now())
-                    updatedAt   DateTime @updatedAt
+    name        String
+    description String
+    category    String
+    icon        String?
+    imageUrl    String?
+    isActive    Boolean  @default(true)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
 }
 
 model AboutUs {
-    id              Int      @id @default(autoincrement())
-      vision          String
-        visionImageUrl String
-          mission         String
-            missionImageUrl String
-              createdAt      DateTime @default(now())
-                updatedAt      DateTime @updatedAt
+    id             Int      @id @default(autoincrement())
+    vision         String
+    visionImageUrl String
+    mission        String
+    missionImageUrl String
+    createdAt      DateTime @default(now())
+    updatedAt      DateTime @updatedAt
 }
 
 model Testimony {
     id            Int      @id @default(autoincrement())
-      userId        Int
-        user          User     @relation("UserTestimonies", fields: [userId], references: [id], onDelete: Cascade)
-          submitterType String   @default("student") // student | teacher
-            name          String
-              program       String
-                year          String
-                  text          String
-                    rating        Int      @default(5)
-                      status        String   @default("pending") // pending | approved | rejected
-                        approvedBy    Int?     // CEO user ID who approved it
-                          approver      User?    @relation("ApprovedTestimonies", fields: [approvedBy], references: [id], onDelete: SetNull)
-                            rejectionNote String?
-                              createdAt     DateTime @default(now())
-                                updatedAt     DateTime @updatedAt
+    userId        Int
+    user          User     @relation("UserTestimonies", fields: [userId], references: [id], onDelete: Cascade)
+    submitterType String   @default("student")
+    name          String
+    program       String
+    year          String
+    text          String
+    rating        Int      @default(5)
+    status        String   @default("pending") // pending | approved | rejected
+    approvedBy    Int?
+    approver      User?    @relation("ApprovedTestimonies", fields: [approvedBy], references: [id], onDelete: SetNull)
+    rejectionNote String?
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
 }
 
 model Message {
-    id         Int      @id @default(autoincrement())
-      fromName   String
-        fromEmail  String
-          fromRole   String   @default("student")
-            toRole     String   @default("ceo")
-              subject    String
-                body       String
-                  read       Boolean  @default(false)
-                    createdAt  DateTime @default(now())
+    id        Int      @id @default(autoincrement())
+    fromName  String
+    fromEmail String
+    fromRole  String   @default("student")
+    toRole    String   @default("ceo")
+    subject   String
+    body      String
+    read      Boolean  @default(false)
+    createdAt DateTime @default(now())
 }
 
 model Settings {
-    id                 Int     @id @default(autoincrement())
-      applicationsOpen   Boolean @default(true)
-        applicationYear    String  @default("2024/2025")
-          maintenanceMode    Boolean @default(false)
-            updatedAt          DateTime @updatedAt
-              updatedBy          Int?
+    id               Int      @id @default(autoincrement())
+    applicationsOpen Boolean  @default(true)
+    applicationYear  String   @default("2024/2025")
+    maintenanceMode  Boolean  @default(false)
+    updatedAt        DateTime @updatedAt
+    updatedBy        Int?
 }
 
 model SchoolSettings {
-    id              Int      @id @default(autoincrement())
-      schoolName      String   @default("Computer Training Institute")
-        schoolLogoUrl   String?  // URL or base64 encoded image
-          ceoFirstName    String   @default("Dr.")
-            ceoLastName     String   @default("John Smith")
-              ceoTitle        String   @default("Chief Executive Officer")
-                schoolMotto     String?
-                  schoolAddress  String?
-                    schoolPhone     String?
-                      schoolEmail     String?
-                        aiName          String   @default("EduAssistant") // AI helper name
-                          createdAt       DateTime @default(now())
-                            updatedAt       DateTime @updatedAt
+    id            Int      @id @default(autoincrement())
+    schoolName    String   @default("Computer Training Institute")
+    schoolLogoUrl String?
+    ceoFirstName  String   @default("Dr.")
+    ceoLastName   String   @default("John Smith")
+    ceoTitle      String   @default("Chief Executive Officer")
+    schoolMotto   String?
+    schoolAddress String?
+    schoolPhone   String?
+    schoolEmail   String?
+    aiName        String   @default("EduAssistant")
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
 }
 
 model Project {
-    id            Int      @id @default(autoincrement())
-      code          String   @unique
-        title         String
-          description   String?
-            program       String   // Program name/slug
-              dueDate       DateTime?
-                maxScore      Float    @default(100)
-                  teacherId     Int?     // Teacher who created it
-                    teacher       Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
-                      createdAt     DateTime @default(now())
-                        updatedAt     DateTime @updatedAt
+    id          Int       @id @default(autoincrement())
+    code        String    @unique
+    title       String
+    description String?
+    program     String
+    dueDate     DateTime?
+    maxScore    Float     @default(100)
+    teacherId   Int?
+    teacher     Teacher?  @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
 
-                          scores        ProjectScore[]
+    scores ProjectScore[]
 }
 
 model ProjectScore {
-    id            Int      @id @default(autoincrement())
-      projectId     Int
-        project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-          studentId     Int
-            student       Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-              score         Float    @default(0)
-                feedback      String?
-                  submittedAt   DateTime?
-                    gradedAt      DateTime?
-                      gradedBy      Int?     // Teacher ID who graded it
-                        createdAt     DateTime @default(now())
-                          updatedAt     DateTime @updatedAt
+    id          Int       @id @default(autoincrement())
+    projectId   Int
+    project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    studentId   Int
+    student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    score       Float     @default(0)
+    feedback    String?
+    submittedAt DateTime?
+    gradedAt    DateTime?
+    gradedBy    Int?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
 
-                            @@unique([projectId, studentId])
+    @@unique([projectId, studentId])
 }
 
 model Timetable {
-    id          Int      @id @default(autoincrement())
-      courseId    Int
-        course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-          dayOfWeek   String   // "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"
-            startTime   String   // "HH:MM" format (24-hour)
-              endTime     String   // "HH:MM" format (24-hour)
-                room        String?
-                  semester    String
-                    year        Int
-                      createdAt   DateTime @default(now())
-                        updatedAt   DateTime @updatedAt
+    id        Int      @id @default(autoincrement())
+    courseId  Int
+    course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    dayOfWeek String
+    startTime String
+    endTime   String
+    room      String?
+    semester  String
+    year      Int
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-                          @@unique([courseId, dayOfWeek, startTime, semester, year])
+    @@unique([courseId, dayOfWeek, startTime, semester, year])
 }

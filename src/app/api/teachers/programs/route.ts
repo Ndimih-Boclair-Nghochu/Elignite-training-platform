@@ -8,35 +8,41 @@ export async function GET(req: NextRequest) {
   if (!session.userId || session.role !== "teacher") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
   try {
-    const teacher = await prisma.teacher.findUnique({
-      where: { userId: session.userId },
-      select: { id: true },
+    const teacher = await prisma.teacher.findUnique({ where: { userId: session.userId }, select: { id: true } });
+    if (!teacher) return NextResponse.json({ error: "Teacher not found" }, { status: 404 });
+
+    const teacherPrograms = await prisma.teacherProgram.findMany({
+      where: { teacherId: teacher.id },
+      include: { program: { select: { id: true, programCode: true, title: true, slug: true } } },
     });
 
-    if (!teacher) {
-      return NextResponse.json({ error: "Teacher not found" }, { status: 404 });
-    }
-
-    // Get all programs this teacher teaches
-    const courses = await prisma.course.findMany({
+    // Also pick up programs from courses the teacher teaches (backward compat)
+    const coursePrograms = await prisma.course.findMany({
       where: { teacherId: teacher.id },
-      select: { program: true },
+      select: { programId: true, program: true },
       distinct: ["program"],
     });
 
-    const programs = courses
-      .map((c) => c.program)
-      .filter((p) => p && p.trim() !== "")
-      .sort();
+    const fromJunction = teacherPrograms.map((tp) => tp.program);
 
-    return NextResponse.json([...new Set(programs)]);
-  } catch (error) {
-    console.error("Error fetching teacher programs:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    // For courses not yet in the junction, add them if we can resolve their program
+    const junctionIds = new Set(fromJunction.map((p) => p.id));
+    const extraSlugs = coursePrograms.map((c) => c.program).filter(Boolean);
+    if (extraSlugs.length > 0) {
+      const extraPrograms = await prisma.program.findMany({
+        where: { slug: { in: extraSlugs as string[] }, id: { notIn: Array.from(junctionIds) } },
+        select: { id: true, programCode: true, title: true, slug: true },
+      });
+      fromJunction.push(...extraPrograms);
+    }
+
+    // Deduplicate by id
+    const seen = new Set<number>();
+    const result = fromJunction.filter((p) => { if (seen.has(p.id)) return false; seen.add(p.id); return true; });
+
+    return NextResponse.json(result.sort((a, b) => a.title.localeCompare(b.title)));
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

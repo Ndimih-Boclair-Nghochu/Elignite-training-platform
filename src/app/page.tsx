@@ -391,7 +391,7 @@ export default async function HomePage() {
               <div className="relative mt-6 w-full overflow-hidden rounded-2xl">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="https://storyset.com/illustration/tech-company/rafiki"
+                  src="https://storyset.com/image/tech-company/rafiki"
                   alt="Tech company illustration by Storyset"
                   className="w-full object-contain"
                   loading="lazy"
@@ -487,8 +487,8 @@ export default async function HomePage() {
             <div className="mt-6 w-full overflow-hidden rounded-2xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="https://storyset.com/illustration/thinking-face/rafiki"
-                alt="Thinking face illustration by Storyset"
+                src="https://storyset.com/image/thinking-face/rafiki"
+                alt="Thinking illustration by Storyset"
                 className="w-full max-h-64 object-contain"
                 loading="lazy"
               />

@@ -2,11 +2,18 @@
 
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { usePathname } from "next/navigation";
 
 export function WhatsAppFloat() {
+  const { user } = useAuth();
+  const pathname = usePathname();
+
+  // Hide on dashboard pages and when logged in
+  if (user || pathname.startsWith("/dashboard")) return null;
+
   return (
     <div className="fixed bottom-5 right-5 z-[60]">
-      {/* Pulse ring */}
       <span className="absolute inset-0 rounded-full bg-[#25D366] animate-wa-ring" />
       <Link
         href="https://wa.me/237670768962"

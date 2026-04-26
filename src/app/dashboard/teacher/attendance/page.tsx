@@ -1,131 +1,102 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
 import { StudentAttendanceModal } from "../../ceo/attendance/student-attendance-modal";
 
+interface ProgramOption { id: number; programCode: string; title: string; slug: string; }
 interface Student {
-  id: number;
-  studentId: string;
-  user: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
+  id: number; studentId: string;
+  user: { firstName: string; lastName: string; email: string; };
   attendances: any[];
 }
 
-interface ProgramData {
-  program: string;
-  students: Student[];
-}
-
 export default function TeacherAttendancePage() {
-  const [programs, setPrograms] = useState<string[]>([]);
-  const [selectedProgram, setSelectedProgram] = useState<string>("");
-  const [programData, setProgramData] = useState<ProgramData | null>(null);
+  const [programs, setPrograms] = useState<ProgramOption[]>([]);
+  const [selectedProgramId, setSelectedProgramId] = useState<string>("");
+  const [students, setStudents] = useState<Student[]>([]);
+  const [programTitle, setProgramTitle] = useState("");
+  const [programSlug, setProgramSlug] = useState("");
   const [loading, setLoading] = useState(true);
-
   const { toast } = useToast();
-  const { user } = useAuth();
 
-  // Fetch teacher's programs
-  useEffect(() => {
-    fetchTeacherPrograms();
-  }, []);
-
-  // Fetch program data when selected program changes
-  useEffect(() => {
-    if (selectedProgram) {
-      fetchProgramData();
-    }
-  }, [selectedProgram]);
+  useEffect(() => { fetchTeacherPrograms(); }, []);
+  useEffect(() => { if (selectedProgramId) fetchStudents(); }, [selectedProgramId]);
 
   async function fetchTeacherPrograms() {
     try {
       const res = await fetch("/api/teachers/programs");
       if (res.ok) {
-        const data = await res.json();
+        const data: ProgramOption[] = await res.json();
         setPrograms(data);
         if (data.length > 0) {
-          setSelectedProgram(data[0]);
+          setSelectedProgramId(String(data[0].id));
+          setProgramTitle(data[0].title);
+          setProgramSlug(data[0].slug);
         }
       }
-    } catch (error) {
+    } catch {
       toast({ title: "Error loading programs", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   }
 
-  async function fetchProgramData() {
+  async function fetchStudents() {
     try {
       setLoading(true);
-      const res = await fetch(`/api/programs/students?program=${encodeURIComponent(selectedProgram)}`);
+      const res = await fetch(`/api/programs/students?programId=${selectedProgramId}`);
       if (res.ok) {
         const data = await res.json();
-        setProgramData(data);
+        setStudents(data.students || []);
+        setProgramTitle(data.program || "");
       } else {
-        toast({ title: "Error loading program data", variant: "destructive" });
+        toast({ title: "Error loading students", variant: "destructive" });
       }
-    } catch (error) {
-      toast({ title: "Error loading program data", variant: "destructive" });
+    } catch {
+      toast({ title: "Error loading students", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   }
 
-  const attendanceSummary = useMemo(() => {
-    if (!programData) return { present: 0, absent: 0, late: 0 };
+  function handleProgramChange(value: string) {
+    setSelectedProgramId(value);
+    const prog = programs.find((p) => String(p.id) === value);
+    if (prog) { setProgramTitle(prog.title); setProgramSlug(prog.slug); }
+  }
 
-    let present = 0,
-      absent = 0,
-      late = 0;
-
-    programData.students.forEach((student) => {
-      student.attendances.forEach((record) => {
-        if (record.status === "present") present++;
-        else if (record.status === "absent") absent++;
-        else if (record.status === "late") late++;
-      });
-    });
-
+  const summary = useMemo(() => {
+    let present = 0, absent = 0, late = 0;
+    students.forEach((s) => s.attendances.forEach((a) => {
+      if (a.status === "present") present++;
+      else if (a.status === "absent") absent++;
+      else if (a.status === "late") late++;
+    }));
     return { present, absent, late };
-  }, [programData]);
+  }, [students]);
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Attendance Management</h1>
-      </div>
+      <h1 className="text-3xl font-bold">Attendance Management</h1>
 
-      {/* Program Selection */}
       <Card>
-        <CardHeader>
-          <CardTitle>Select Program</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardHeader><CardTitle>Select Program</CardTitle></CardHeader>
+        <CardContent>
           <div className="space-y-2">
             <Label>Program</Label>
-            <Select value={selectedProgram} onValueChange={setSelectedProgram}>
+            <Select value={selectedProgramId} onValueChange={handleProgramChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a program..." />
               </SelectTrigger>
               <SelectContent>
-                {programs.map((program) => (
-                  <SelectItem key={program} value={program}>
-                    {program}
+                {programs.map((p) => (
+                  <SelectItem key={p.id} value={String(p.id)}>
+                    <span className="font-mono text-xs text-gray-500 mr-2">{p.programCode}</span>
+                    {p.title}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -134,63 +105,32 @@ export default function TeacherAttendancePage() {
         </CardContent>
       </Card>
 
-      {/* Summary Stats */}
-      {programData && (
+      {students.length > 0 && (
         <div className="grid md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-gray-600 text-sm">Total Students</p>
-                <p className="text-3xl font-bold text-primary">
-                  {programData.students.length}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-gray-600 text-sm">Present</p>
-                <p className="text-3xl font-bold text-green-600">
-                  {attendanceSummary.present}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-gray-600 text-sm">Late</p>
-                <p className="text-3xl font-bold text-yellow-600">
-                  {attendanceSummary.late}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-gray-600 text-sm">Absent</p>
-                <p className="text-3xl font-bold text-red-600">
-                  {attendanceSummary.absent}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          {[
+            { label: "Total Students", value: students.length, color: "text-primary" },
+            { label: "Present", value: summary.present, color: "text-green-600" },
+            { label: "Late", value: summary.late, color: "text-yellow-600" },
+            { label: "Absent", value: summary.absent, color: "text-red-600" },
+          ].map((s) => (
+            <Card key={s.label}>
+              <CardContent className="pt-6 text-center">
+                <p className="text-gray-600 text-sm">{s.label}</p>
+                <p className={`text-3xl font-bold ${s.color}`}>{s.value}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
-      {/* Students List */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : programData && programData.students.length > 0 ? (
+        <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+      ) : students.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Students in {selectedProgram}
+              Students in {programTitle}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -198,31 +138,24 @@ export default function TeacherAttendancePage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-semibold">Student Name</th>
-                    <th className="text-left py-3 px-4 font-semibold">Student ID</th>
-                    <th className="text-left py-3 px-4 font-semibold">Email</th>
-                    <th className="text-left py-3 px-4 font-semibold">Actions</th>
+                    <th className="text-left py-3 px-4">Student Name</th>
+                    <th className="text-left py-3 px-4">Student ID</th>
+                    <th className="text-left py-3 px-4">Email</th>
+                    <th className="text-left py-3 px-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {programData.students.map((student) => (
-                    <tr
-                      key={student.id}
-                      className="border-b hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="py-3 px-4">
-                        {student.user.firstName} {student.user.lastName}
-                      </td>
-                      <td className="py-3 px-4 font-mono text-xs">
-                        {student.studentId}
-                      </td>
+                  {students.map((student) => (
+                    <tr key={student.id} className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4">{student.user.firstName} {student.user.lastName}</td>
+                      <td className="py-3 px-4 font-mono text-xs">{student.studentId}</td>
                       <td className="py-3 px-4 text-gray-600">{student.user.email}</td>
                       <td className="py-3 px-4">
                         <StudentAttendanceModal
                           studentId={student.id}
                           studentName={`${student.user.firstName} ${student.user.lastName}`}
                           studentIdNum={student.studentId}
-                          program={selectedProgram}
+                          program={programSlug}
                         />
                       </td>
                     </tr>
@@ -236,9 +169,7 @@ export default function TeacherAttendancePage() {
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-gray-500">
-              {selectedProgram
-                ? "No students found in this program."
-                : "No programs assigned to you yet."}
+              {selectedProgramId ? "No students found in this program." : "No programs assigned to you yet."}
             </p>
           </CardContent>
         </Card>
