@@ -4,30 +4,30 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 222.2 47.4% 11.2%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
-    --primary: 199 89% 48%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --background: 220 40% 8%;
+    --foreground: 210 40% 98%;
+    --card: 222 39% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 39% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 190 95% 54%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 222 30% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 220 24% 16%;
+    --muted-foreground: 215 20% 72%;
+    --accent: 219 34% 18%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 199 89% 48%;
-    --radius: 0.625rem;
+    --border: 220 24% 22%;
+    --input: 220 24% 22%;
+    --ring: 190 95% 54%;
+    --radius: 0.9rem;
   }
 
   * {
-    @apply border-gray-200;
+    @apply border-slate-800;
   }
 
   html {
@@ -35,12 +35,15 @@
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply bg-[#050b16] text-slate-100 antialiased;
     font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     min-height: 100vh;
     background-image:
-      radial-gradient(circle at top left, rgba(14, 165, 233, 0.1), transparent 24%),
-      radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.06), transparent 18%);
+      linear-gradient(180deg, rgba(8, 15, 28, 0.96), rgba(5, 11, 22, 1)),
+      linear-gradient(90deg, rgba(34, 211, 238, 0.05) 0, rgba(34, 211, 238, 0.05) 1px, transparent 1px, transparent 80px),
+      linear-gradient(rgba(34, 211, 238, 0.04) 0, rgba(34, 211, 238, 0.04) 1px, transparent 1px, transparent 80px);
+    background-size: auto, 80px 80px, 80px 80px;
+    background-attachment: fixed;
   }
 
   h1,
@@ -63,5 +66,43 @@
   ::selection {
     background-color: rgba(14, 165, 233, 0.22);
     color: rgb(15, 23, 42);
+  }
+}
+
+@layer utilities {
+  .surface-card {
+    @apply rounded-[24px] border border-white/10 bg-white/5 shadow-[0_18px_70px_-38px_rgba(34,211,238,0.28)] backdrop-blur;
+  }
+
+  .surface-card-strong {
+    @apply rounded-[28px] border border-white/10 bg-slate-950/85 shadow-[0_24px_90px_-42px_rgba(34,211,238,0.3)] backdrop-blur;
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px) scale(0.985);
+    transition:
+      opacity 0.7s ease,
+      transform 0.7s ease;
+    will-change: opacity, transform;
+  }
+
+  .reveal-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .hover-lift {
+    transition:
+      transform 0.35s ease,
+      box-shadow 0.35s ease,
+      border-color 0.35s ease,
+      background-color 0.35s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 28px 90px -40px rgba(34, 211, 238, 0.24);
+    border-color: rgba(103, 232, 249, 0.34);
   }
 }

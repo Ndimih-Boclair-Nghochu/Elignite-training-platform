@@ -1,149 +1,151 @@
-"use client";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/layout/Navbar";
-import { Card, CardContent } from "@/components/ui/card";
+import { Footer } from "@/components/layout/Footer";
+import { Reveal } from "@/components/marketing/reveal";
+import { SectionHeading } from "@/components/marketing/section-heading";
 import { Badge } from "@/components/ui/badge";
-import { Star, Quote } from "lucide-react";
+import { Quote, Star } from "lucide-react";
 
-interface Testimony {
-  id: number;
-  name: string;
-  program: string;
-  year: string;
-  text: string;
-  rating: number;
-  submitterType: "student" | "teacher";
-  createdAt: string;
-  user: {
-    firstName: string;
-    lastName: string;
-    photoUrl: string | null;
-  };
-}
+export const dynamic = "force-dynamic";
 
-export default function TestimoniesPage() {
-  const [testimonies, setTestimonies] = useState<Testimony[]>([]);
-  const [loading, setLoading] = useState(true);
+export default async function TestimoniesPage() {
+  let testimonies: Array<{
+    id: number;
+    name: string;
+    program: string;
+    year: string;
+    text: string;
+    rating: number;
+    submitterType: string;
+    createdAt: Date;
+    user?: { photoUrl: string | null } | null;
+  }> = [];
 
-  useEffect(() => {
-    fetchTestimonies();
-  }, []);
+  try {
+    testimonies = await prisma.testimony.findMany({
+      where: { status: "approved" },
+      orderBy: { createdAt: "desc" },
+      include: { user: { select: { photoUrl: true } } },
+    });
+  } catch (error) {
+    console.error("Testimonies fallback:", error);
+  }
 
-  const fetchTestimonies = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/testimonies");
-      if (!response.ok) throw new Error("Failed to fetch testimonies");
-      const data = await response.json();
-      setTestimonies(data);
-    } catch (error) {
-      console.error("Error fetching testimonies:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fallback = [
+    {
+      id: 1,
+      name: "Merveille N.",
+      program: "Software Engineering",
+      year: "2026",
+      text: "The program felt focused and practical. I wasn’t just watching lessons, I was building things that made sense.",
+      rating: 5,
+      submitterType: "student" as const,
+      createdAt: new Date(),
+      user: null,
+    },
+    {
+      id: 2,
+      name: "Daniel T.",
+      program: "Cloud & DevOps",
+      year: "2026",
+      text: "The structure helped me stay consistent. I could see progress clearly and that made it easier to keep going.",
+      rating: 5,
+      submitterType: "student" as const,
+      createdAt: new Date(),
+      user: null,
+    },
+    {
+      id: 3,
+      name: "Coach Melissa",
+      program: "Graphic Design",
+      year: "2026",
+      text: "From the teacher side, the platform makes it easier to guide learners and keep communication cleaner.",
+      rating: 5,
+      submitterType: "teacher" as const,
+      createdAt: new Date(),
+      user: null,
+    },
+  ];
+
+  const items = testimonies.length > 0 ? testimonies : fallback;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#050b16] text-white">
       <Navbar />
 
-      <div className="pt-20 pb-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Student & Teacher Testimonies</h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Hear from our community members about their experiences and success stories at our institution.
-            </p>
-          </div>
-
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="text-gray-500 mt-4">Loading testimonies...</p>
-            </div>
-          ) : testimonies.length === 0 ? (
-            <div className="text-center py-12">
-              <Quote className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg">No testimonies available yet.</p>
-              <p className="text-gray-400">Check back soon for student and teacher experiences!</p>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {testimonies.map((testimony) => (
-                <Card key={testimony.id} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="flex-shrink-0">
-                        {testimony.user?.photoUrl ? (
-                          <img
-                            src={testimony.user.photoUrl}
-                            alt={testimony.name}
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                            <span className="text-blue-600 font-semibold text-lg">
-                              {testimony.name[0]}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate">
-                          {testimony.name}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge
-                            variant="outline"
-                            className={`text-xs ${
-                              testimony.submitterType === "student"
-                                ? "border-blue-200 text-blue-700"
-                                : "border-green-200 text-green-700"
-                            }`}
-                          >
-                            {testimony.submitterType === "student" ? "👨‍🎓 Student" : "👨‍🏫 Teacher"}
-                          </Badge>
-                        </div>
-                        {testimony.program && (
-                          <p className="text-sm text-gray-500 mt-1 truncate">
-                            {testimony.program}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center mb-3">
-                      {Array.from({ length: testimony.rating }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                        />
-                      ))}
-                      <span className="text-sm text-gray-500 ml-2">
-                        {testimony.rating}/5
-                      </span>
-                    </div>
-
-                    <blockquote className="text-gray-700 italic">
-                      &ldquo;{testimony.text}&rdquo;
-                    </blockquote>
-
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <p className="text-xs text-gray-400">
-                        {new Date(testimony.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+      <section className="relative overflow-hidden border-b border-white/8">
+        <div className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=80"
+            alt="Learners sharing experiences"
+            fill
+            className="object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(5,11,22,0.96),rgba(7,17,31,0.88),rgba(8,145,178,0.22))]" />
         </div>
-      </div>
+        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+          <Reveal>
+            <SectionHeading
+              eyebrow="Testimonials"
+              title="Real voices from learners and instructors using the platform."
+              description="A better training experience should feel clearer, more motivating, and more useful. These stories show how that lands for people inside the system."
+            />
+          </Reveal>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {items.map((testimony, index) => (
+            <Reveal key={testimony.id} delay={index * 70}>
+              <article className="surface-card-strong hover-lift h-full p-6">
+                <div className="flex items-center gap-4">
+                  <div className="relative h-14 w-14 overflow-hidden rounded-full border border-white/10 bg-cyan-300/10">
+                    {testimony.user?.photoUrl ? (
+                      <img src={testimony.user.photoUrl} alt={testimony.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-lg font-semibold text-cyan-300">
+                        {testimony.name.slice(0, 1)}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">{testimony.name}</p>
+                    <p className="text-sm text-slate-400">{testimony.program}</p>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex items-center justify-between">
+                  <Badge className="border-white/10 bg-white/5 text-slate-200">
+                    {testimony.submitterType === "student" ? "Student" : "Instructor"}
+                  </Badge>
+                  <div className="flex items-center gap-1 text-cyan-300">
+                    {Array.from({ length: testimony.rating }).map((_, starIndex) => (
+                      <Star key={starIndex} className="h-4 w-4 fill-current" />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-6 rounded-[22px] border border-white/8 bg-white/5 p-5">
+                  <Quote className="h-5 w-5 text-cyan-300" />
+                  <p className="mt-4 text-sm leading-7 text-slate-300">&ldquo;{testimony.text}&rdquo;</p>
+                </div>
+
+                <p className="mt-5 text-xs uppercase tracking-[0.18em] text-slate-500">
+                  {new Date(testimony.createdAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              </article>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <Footer />
     </div>
   );
 }

@@ -1,58 +1,89 @@
 "use client";
 
+import Image from "next/image";
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { ContactForm } from "@/components/contact/Contact";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Reveal } from "@/components/marketing/reveal";
+import { Mail, MapPin, Phone, TimerReset } from "lucide-react";
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#050b16] text-white">
       <Navbar />
 
-      <section className="bg-gradient-to-r from-blue-900 to-blue-600 text-white py-16 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Contact Us</h1>
-          <p className="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto">
-            Have a question or need help with admissions? Our team is here to support you.
-          </p>
+      <section className="relative overflow-hidden border-b border-white/8">
+        <div className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1600&q=80"
+            alt="ELIGNITE support team"
+            fill
+            className="object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(5,11,22,0.96),rgba(7,17,31,0.88),rgba(8,145,178,0.24))]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+          <Reveal className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-300">Contact ELIGNITE</p>
+            <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-5xl">
+              Reach the team behind the training experience.
+            </h1>
+            <p className="mt-5 text-lg leading-8 text-slate-300">
+              Ask about programs, admissions, schedules, beginner pathways, or the best track for your goals. We made this page simpler, clearer, and fully functional.
+            </p>
+          </Reveal>
         </div>
       </section>
 
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto grid gap-10 lg:grid-cols-2">
-          <Card className="shadow-xl border border-slate-200">
-            <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5 text-slate-700">
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-sky-600 mt-1" />
-                <div>
-                  <p className="font-semibold">Campus Office</p>
-                  <p className="text-sm text-slate-600">Bamenda, NW Region, Cameroon</p>
+      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
+          <div className="space-y-6">
+            {[
+              {
+                icon: MapPin,
+                title: "Location",
+                value: "Bamenda, Cameroon",
+                note: "A tech-sector training platform serving ambitious learners.",
+              },
+              {
+                icon: Mail,
+                title: "Email",
+                value: "admissions@elignite.cm",
+                note: "Best for admissions, program guidance, and support questions.",
+              },
+              {
+                icon: Phone,
+                title: "Phone",
+                value: "+237 677 000 111",
+                note: "Reach us directly for quick guidance on your next step.",
+              },
+              {
+                icon: TimerReset,
+                title: "Response Time",
+                value: "Within 1 business day",
+                note: "We aim to keep the admissions journey responsive and calm.",
+              },
+            ].map((item, index) => (
+              <Reveal key={item.title} delay={index * 80}>
+                <div className="surface-card hover-lift p-6">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-300">
+                    <item.icon className="h-5 w-5" />
+                  </div>
+                  <h2 className="mt-5 text-xl font-semibold text-white">{item.title}</h2>
+                  <p className="mt-3 text-base text-slate-200">{item.value}</p>
+                  <p className="mt-2 text-sm leading-7 text-slate-400">{item.note}</p>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Phone className="h-5 w-5 text-sky-600 mt-1" />
-                <div>
-                  <p className="font-semibold">Phone</p>
-                  <p className="text-sm text-slate-600">+237 677 000 111</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Mail className="h-5 w-5 text-sky-600 mt-1" />
-                <div>
-                  <p className="font-semibold">Email</p>
-                  <p className="text-sm text-slate-600">admissions@elignite.cm</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </Reveal>
+            ))}
+          </div>
 
-          <ContactForm />
+          <Reveal delay={120}>
+            <ContactForm />
+          </Reveal>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 }

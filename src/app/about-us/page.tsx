@@ -1,142 +1,206 @@
 import Image from "next/image";
-import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Globe2, Award, Users, Sparkles } from "lucide-react";
+import { Footer } from "@/components/layout/Footer";
+import { Reveal } from "@/components/marketing/reveal";
+import { SectionHeading } from "@/components/marketing/section-heading";
 import { prisma } from "@/lib/prisma";
+import { partnerLogos } from "@/lib/site-content";
+import { Globe2, Layers3, Users2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 const defaultAbout = {
-  vision: "To become the leading training platform in the region by delivering accessible, trusted, and technology-driven learning experiences to every student.",
-  visionImageUrl: "https://placehold.co/640x480?text=Vision",
-  mission: "To equip learners with the skills, knowledge, and support they need to succeed in school and beyond through quality programs, caring faculty, and seamless administrative systems.",
-  missionImageUrl: "https://placehold.co/640x480?text=Mission",
+  vision: "To become a trusted technology training platform where learners build practical digital skills with confidence, clarity, and real career direction.",
+  mission: "To help people move into modern tech work through guided learning, applied projects, visible progress, and support that feels serious and professional.",
+  visionImageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+  missionImageUrl: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80",
 };
 
 export default async function AboutUsPage() {
-  const aboutUs = await prisma.aboutUs.findFirst();
-  const gallery = await prisma.gallery.findMany({ orderBy: { createdAt: "desc" } });
-  const staff = await prisma.teacher.findMany({
-    where: {},
-    include: { user: { select: { firstName: true, lastName: true, phone: true } } },
-    orderBy: { joinDate: "desc" },
-  });
+  let about = defaultAbout;
+  let gallery: Array<{ id: number; title: string; category: string; url: string }> = [];
 
-  const pageAbout = {
-    vision: aboutUs?.vision ?? defaultAbout.vision,
-    visionImageUrl: aboutUs?.visionImageUrl ?? defaultAbout.visionImageUrl,
-    mission: aboutUs?.mission ?? defaultAbout.mission,
-    missionImageUrl: aboutUs?.missionImageUrl ?? defaultAbout.missionImageUrl,
-  };
+  try {
+    const [aboutUs, dbGallery] = await Promise.all([
+      prisma.aboutUs.findFirst(),
+      prisma.gallery.findMany({ orderBy: { createdAt: "desc" }, take: 4 }),
+    ]);
+
+    if (aboutUs) {
+      about = {
+        vision: aboutUs.vision,
+        mission: aboutUs.mission,
+        visionImageUrl: aboutUs.visionImageUrl,
+        missionImageUrl: aboutUs.missionImageUrl,
+      };
+    }
+
+    gallery = dbGallery;
+  } catch (error) {
+    console.error("About fallback:", error);
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#050b16] text-white">
       <Navbar />
 
-      <section className="relative overflow-hidden bg-slate-950 text-white py-24 px-4">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.35),_transparent_30%)]" />
-        <div className="relative max-w-6xl mx-auto text-center">
-          <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm uppercase tracking-[0.3em] text-slate-200">
-            <Globe2 className="h-4 w-4 text-sky-300" />Our Vision
-          </p>
-          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight mb-6">Modern education for every learner.</h1>
-          <p className="mx-auto max-w-3xl text-lg text-slate-200">
-            ELIGNITE blends innovation, strong academics, and community support to create a modern training experience that empowers students, teachers, and administrators.
-          </p>
+      <section className="relative overflow-hidden border-b border-white/8">
+        <div className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1600&q=80"
+            alt="Technology training environment"
+            fill
+            className="object-cover opacity-25"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(5,11,22,0.96),rgba(7,17,31,0.9),rgba(6,182,212,0.22))]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+          <Reveal>
+            <SectionHeading
+              eyebrow="About ELIGNITE"
+              title="A focused training platform for people who want relevant skills and cleaner direction."
+              description="ELIGNITE is built around technology-sector learning. The goal is not to feel like a generic institution, but a credible place where learners can actually grow into digital work."
+            />
+          </Reveal>
         </div>
       </section>
 
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto grid gap-10 lg:grid-cols-2">
-          <div className="rounded-[2rem] overflow-hidden bg-white shadow-[0_25px_80px_-40px_rgba(15,23,42,0.25)]">
-            <Image src={pageAbout.visionImageUrl} alt="Our vision" width={640} height={480} className="h-80 w-full object-cover" />
-            <div className="p-8">
-              <h2 className="text-3xl font-semibold mb-4">Our Vision</h2>
-              <p className="text-slate-600 leading-relaxed">{pageAbout.vision}</p>
-            </div>
-          </div>
-
-          <div className="rounded-[2rem] overflow-hidden bg-white shadow-[0_25px_80px_-40px_rgba(15,23,42,0.25)]">
-            <Image src={pageAbout.missionImageUrl} alt="Our mission" width={640} height={480} className="h-80 w-full object-cover" />
-            <div className="p-8">
-              <h2 className="text-3xl font-semibold mb-4">Our Mission</h2>
-              <p className="text-slate-600 leading-relaxed">{pageAbout.mission}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 px-4 bg-slate-950 text-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-10 text-center">
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Meet our leadership team</p>
-            <h2 className="text-3xl md:text-4xl font-semibold mt-4">Staff and Support</h2>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {staff.length > 0 ? (
-              staff.map((member) => (
-                <Card key={member.id} className="bg-slate-900 border border-slate-800 shadow-[0_20px_50px_-30px_rgba(15,23,42,0.6)]">
-                  <CardContent className="space-y-6 text-slate-100">
-                    <div className="relative mx-auto h-28 w-28 overflow-hidden rounded-full border border-slate-700 bg-slate-800">
-                      <Image src={`https://placehold.co/120x120?text=${encodeURIComponent(member.user.firstName?.[0] || "S")}${encodeURIComponent(member.user.lastName?.[0] || "T")}`} alt={member.user.firstName + " " + member.user.lastName} fill className="object-cover" />
-                    </div>
-                    <div className="space-y-1 text-center">
-                      <p className="text-xl font-semibold">{member.user.firstName} {member.user.lastName}</p>
-                      <p className="text-sm text-slate-400">{member.occupation || "Staff"}</p>
-                    </div>
-                    <a
-                      href={`https://wa.me/${member.user.phone ?? ""}?text=${encodeURIComponent(`Hello ${member.user.firstName}, I would like to discuss enrollment and admissions at ELIGNITE.`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex w-full items-center justify-center rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400"
-                    >
-                      WhatsApp Staff
-                    </a>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <p className="text-center text-slate-400">No staff have been added yet. Check back later.</p>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-10 text-center">
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Campus gallery</p>
-            <h2 className="text-3xl md:text-4xl font-semibold mt-4">Our Campus Spaces</h2>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {gallery.map((item) => (
-              <div key={item.id} className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_25px_60px_-35px_rgba(15,23,42,0.2)]">
-                <div className="relative h-44 w-full">
-                  <Image src={item.url} alt={item.title} fill className="object-cover" />
-                </div>
-                <div className="p-4">
-                  <p className="font-semibold text-slate-900">{item.title}</p>
-                  <p className="text-sm text-slate-500 mt-1">{item.category}</p>
-                </div>
+      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-2">
+          <Reveal>
+            <article className="surface-card-strong overflow-hidden">
+              <div className="relative h-72">
+                <img src={about.visionImageUrl} alt="ELIGNITE vision" className="h-full w-full object-cover" />
               </div>
+              <div className="p-8">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-300">
+                  <Globe2 className="h-5 w-5" />
+                </div>
+                <h2 className="mt-5 text-2xl font-semibold text-white">Our Vision</h2>
+                <p className="mt-4 text-sm leading-7 text-slate-400">{about.vision}</p>
+              </div>
+            </article>
+          </Reveal>
+
+          <Reveal delay={100}>
+            <article className="surface-card-strong overflow-hidden">
+              <div className="relative h-72">
+                <img src={about.missionImageUrl} alt="ELIGNITE mission" className="h-full w-full object-cover" />
+              </div>
+              <div className="p-8">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-300">
+                  <Layers3 className="h-5 w-5" />
+                </div>
+                <h2 className="mt-5 text-2xl font-semibold text-white">Our Mission</h2>
+                <p className="mt-4 text-sm leading-7 text-slate-400">{about.mission}</p>
+              </div>
+            </article>
+          </Reveal>
+        </div>
+      </section>
+
+      <section className="bg-[#07111f] px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <Reveal>
+            <SectionHeading
+              eyebrow="Our Approach"
+              title="Why the platform feels different."
+              description="The experience is shaped around modern tech training expectations: practical delivery, better structure, visible progress, and interfaces that stay usable instead of cluttered."
+            />
+          </Reveal>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {[
+              {
+                title: "Built for applied learning",
+                text: "Programs center practical work, repeated execution, and real project outputs instead of drifting into abstract theory.",
+              },
+              {
+                title: "Designed for modern learners",
+                text: "Schedules, pathways, and UX choices fit learners balancing work, ambition, and the need for clear structure.",
+              },
+              {
+                title: "Focused on digital careers",
+                text: "Everything from branding to program content is aligned around tech-sector opportunity and capability building.",
+              },
+            ].map((item, index) => (
+              <Reveal key={item.title} delay={index * 80}>
+                <div className="surface-card hover-lift h-full p-6">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-300">
+                    <Users2 className="h-5 w-5" />
+                  </div>
+                  <h3 className="mt-5 text-xl font-semibold text-white">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-400">{item.text}</p>
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-white py-16 px-4 border-t">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Want to learn more?</h2>
-          <p className="text-slate-600 mb-6">Contact our team to discuss programs, admissions, and campus events.</p>
-          <Button size="lg" asChild>
-            <Link href="/contact">Contact Us</Link>
-          </Button>
+      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        <Reveal>
+          <SectionHeading
+            eyebrow="Visual Story"
+            title="The environment behind the training."
+            description="Real spaces, live sessions, and hands-on moments help make the platform feel grounded in actual work."
+          />
+        </Reveal>
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {(gallery.length > 0
+            ? gallery
+            : [
+                {
+                  id: 1,
+                  title: "Live coding session",
+                  category: "Training",
+                  url: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+                },
+                {
+                  id: 2,
+                  title: "Design workshop",
+                  category: "Creative Tech",
+                  url: "https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1200&q=80",
+                },
+                {
+                  id: 3,
+                  title: "Mentor support",
+                  category: "Coaching",
+                  url: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80",
+                },
+                {
+                  id: 4,
+                  title: "Team collaboration",
+                  category: "Projects",
+                  url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80",
+                },
+              ]
+          ).map((item, index) => (
+            <Reveal key={item.id} delay={index * 70}>
+              <div className="surface-card-strong hover-lift overflow-hidden">
+                <div className="relative h-64">
+                  <img src={item.url} alt={item.title} className="h-full w-full object-cover" />
+                </div>
+                <div className="p-5">
+                  <p className="font-semibold text-white">{item.title}</p>
+                  <p className="mt-1 text-sm text-slate-400">{item.category}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
         </div>
       </section>
+
+      <section className="border-y border-white/8 bg-white/[0.03] px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-4 text-sm text-slate-400">
+          {partnerLogos.map((partner) => (
+            <div key={partner} className="rounded-full border border-white/10 bg-white/5 px-5 py-2">
+              {partner}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <Footer />
     </div>
   );
 }
