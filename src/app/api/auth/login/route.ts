@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user) {
       return NextResponse.json(
         { error: "Invalid identifier or password" },
         { status: 401 }
@@ -62,6 +62,9 @@ export async function POST(req: NextRequest) {
 
     const normalizedRole = normalizeRole(user.role);
 
+    // Check activation BEFORE password so unactivated users get the right error
+    // (pre-created accounts have an unknown random temp password, so bcrypt would
+    // always fail and hide the real reason they can't log in)
     if (
       (normalizedRole === "student" || normalizedRole === "teacher") &&
       !user.isActivated
@@ -73,6 +76,13 @@ export async function POST(req: NextRequest) {
           requiresActivation: true,
         },
         { status: 403 }
+      );
+    }
+
+    if (!(await bcrypt.compare(password, user.password))) {
+      return NextResponse.json(
+        { error: "Invalid identifier or password" },
+        { status: 401 }
       );
     }
 
