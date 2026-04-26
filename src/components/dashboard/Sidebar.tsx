@@ -107,7 +107,7 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void }) {
   return (
     <aside
       className={cn(
-        "flex min-h-screen flex-shrink-0 flex-col border-r border-slate-200 bg-white text-slate-900 transition-all duration-300",
+        "flex h-screen flex-shrink-0 flex-col border-r border-slate-200 bg-white text-slate-900 transition-all duration-300",
         collapsed ? "w-20" : "w-72"
       )}
     >
