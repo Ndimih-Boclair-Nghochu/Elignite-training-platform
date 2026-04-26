@@ -19,6 +19,20 @@ interface Settings {
   applicationYear: string;
 }
 
+async function readJson<T>(response: Response): Promise<T> {
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      (data && typeof data === "object" && "error" in data && typeof data.error === "string")
+        ? data.error
+        : "Request failed"
+    );
+  }
+
+  return data as T;
+}
+
 function EnrollForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -48,15 +62,27 @@ function EnrollForm() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/settings", { cache: "no-store" }).then((r) => r.json()).then(setSettings),
-      fetch("/api/programs").then((r) => r.json()).then(setPrograms),
+      fetch("/api/settings", { cache: "no-store" }).then((r) => readJson<Settings>(r)),
+      fetch("/api/programs", { cache: "no-store" }).then((r) => readJson<Array<{ id: number; slug: string; title: string }>>(r)),
     ])
-      .catch((err) => console.error(err))
+      .then(([settingsData, programsData]) => {
+        setSettings(settingsData);
+        setPrograms(Array.isArray(programsData) ? programsData : []);
+      })
+      .catch((err) => {
+        console.error(err);
+        toast({
+          title: "We could not load the application form",
+          description: "Please refresh the page or try again in a moment.",
+          variant: "destructive",
+        });
+        setPrograms([]);
+      })
       .finally(() => {
         setLoadingSettings(false);
         setLoadingPrograms(false);
       });
-  }, []);
+  }, [toast]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -203,8 +229,12 @@ export default function EnrollPage() {
 
   useEffect(() => {
     fetch("/api/settings", { cache: "no-store" })
-      .then((r) => r.json())
+      .then((r) => readJson<Settings>(r))
       .then(setSettings)
+      .catch((error) => {
+        console.error(error);
+        setSettings(null);
+      })
       .finally(() => setLoadingSettings(false));
   }, []);
 

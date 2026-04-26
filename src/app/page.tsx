@@ -106,6 +106,7 @@ export default async function HomePage() {
             priority
             className="object-cover opacity-[0.08]"
           />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.88),rgba(255,255,255,0.82),rgba(186,230,253,0.68))]" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-24 sm:px-6 lg:px-8 lg:pb-24 lg:pt-28">

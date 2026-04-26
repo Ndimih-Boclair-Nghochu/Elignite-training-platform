@@ -9,27 +9,27 @@ import { Mail, MapPin, Phone, TimerReset } from "lucide-react";
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-[#050b16] text-white">
+    <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
-      <section className="relative overflow-hidden border-b border-white/8">
+      <section className="relative overflow-hidden border-b border-blue-100 bg-[linear-gradient(180deg,#edf7ff_0%,#ffffff_55%,#f5fbff_100%)]">
         <div className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1600&q=80"
             alt="ELIGNITE support team"
             fill
-            className="object-cover opacity-20"
+            className="object-cover opacity-[0.1]"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(5,11,22,0.96),rgba(7,17,31,0.88),rgba(8,145,178,0.24))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.92),rgba(255,255,255,0.84),rgba(186,230,253,0.72))]" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
           <Reveal className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-300">Contact ELIGNITE</p>
-            <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-5xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-700">Contact ELIGNITE</p>
+            <h1 className="mt-4 text-4xl font-semibold leading-tight text-slate-950 sm:text-5xl">
               Reach the team behind the training experience.
             </h1>
-            <p className="mt-5 text-lg leading-8 text-slate-300">
-              Ask about programs, admissions, schedules, beginner pathways, or the best track for your goals. We made this page simpler, clearer, and fully functional.
+            <p className="mt-5 text-lg leading-8 text-slate-600">
+              Ask about programs, admissions, schedules, beginner pathways, or the best track for your goals. Everything here is tuned for a cleaner and more reliable admissions experience.
             </p>
           </Reveal>
         </div>
@@ -43,7 +43,7 @@ export default function ContactPage() {
                 icon: MapPin,
                 title: "Location",
                 value: "Bamenda, Cameroon",
-                note: "A tech-sector training platform serving ambitious learners.",
+                note: "A focused tech-training platform serving ambitious learners.",
               },
               {
                 icon: Mail,
@@ -66,12 +66,12 @@ export default function ContactPage() {
             ].map((item, index) => (
               <Reveal key={item.title} delay={index * 80}>
                 <div className="surface-card hover-lift p-6">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-300">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-blue-700">
                     <item.icon className="h-5 w-5" />
                   </div>
-                  <h2 className="mt-5 text-xl font-semibold text-white">{item.title}</h2>
-                  <p className="mt-3 text-base text-slate-200">{item.value}</p>
-                  <p className="mt-2 text-sm leading-7 text-slate-400">{item.note}</p>
+                  <h2 className="mt-5 text-xl font-semibold text-slate-950">{item.title}</h2>
+                  <p className="mt-3 text-base text-slate-900">{item.value}</p>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">{item.note}</p>
                 </div>
               </Reveal>
             ))}

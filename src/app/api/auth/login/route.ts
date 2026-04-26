@@ -20,11 +20,9 @@ export async function POST(req: NextRequest) {
     let user = null;
     const isEmail = loginValue.includes("@");
 
-    /* -------------------- FIND USER -------------------- */
-
     if (isEmail) {
       user = await prisma.user.findUnique({
-        where: { email: loginValue },
+        where: { email: loginValue.toLowerCase() },
       });
     } else {
       user = await prisma.user.findUnique({
@@ -55,8 +53,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    /* -------------------- VALIDATE -------------------- */
-
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return NextResponse.json(
         { error: "Invalid identifier or password" },
@@ -80,8 +76,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    /* -------------------- GET ROLE IDS -------------------- */
-
     let teacherId: number | undefined;
     let studentId: number | undefined;
 
@@ -99,14 +93,7 @@ export async function POST(req: NextRequest) {
       studentId = student?.id;
     }
 
-    /* -------------------- SESSION FIX -------------------- */
-
     const session = await getSession();
-
-    // 🔥 CLEAR OLD SESSION (VERY IMPORTANT)
-    session.destroy();
-
-    // 🔥 SET NEW SESSION CLEANLY
     session.userId = user.id;
     session.email =
       (user.email || user.matricule || user.id.toString()) as string;
@@ -117,12 +104,6 @@ export async function POST(req: NextRequest) {
     session.studentId = studentId;
 
     await session.save();
-
-    console.log(
-      `[LOGIN] User logged in: ${user.email}, Role: ${normalizedRole}`
-    );
-
-    /* -------------------- RESPONSE -------------------- */
 
     return NextResponse.json({
       user: {

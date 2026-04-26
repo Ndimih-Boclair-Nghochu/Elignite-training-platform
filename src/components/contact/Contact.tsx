@@ -47,21 +47,21 @@ export function ContactForm() {
   }
 
   return (
-    <Card className="surface-card-strong border-white/10 text-slate-100">
+    <Card className="surface-card-strong border-blue-100 text-slate-900">
       <CardHeader className="space-y-3">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/15 text-cyan-300">
+        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-blue-700">
           <MessageSquare className="h-5 w-5" />
         </div>
-        <CardTitle className="text-2xl text-white">Send a message</CardTitle>
-        <p className="text-sm leading-6 text-slate-400">
-          Tell us what you are trying to learn, what schedule you need, or what support you want from the team.
+        <CardTitle className="text-2xl text-slate-950">Send a message</CardTitle>
+        <p className="text-sm leading-6 text-slate-600">
+          Tell us what you want to learn, the schedule you need, or the support you want from the ELIGNITE team.
         </p>
       </CardHeader>
       <CardContent>
         {submitted ? (
-          <div className="rounded-[24px] border border-emerald-400/25 bg-emerald-400/10 p-6 text-emerald-100">
+          <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-6 text-emerald-900">
             <p className="text-lg font-semibold">Message sent successfully.</p>
-            <p className="mt-2 text-sm text-emerald-100/80">
+            <p className="mt-2 text-sm text-emerald-800">
               Our admissions team will get back to you shortly with the next step.
             </p>
           </div>
@@ -69,7 +69,7 @@ export function ContactForm() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
-                <label htmlFor="contact-name" className="block text-sm font-medium text-slate-200">
+                <label htmlFor="contact-name" className="block text-sm font-medium text-slate-700">
                   Full Name
                 </label>
                 <Input
@@ -78,11 +78,11 @@ export function ContactForm() {
                   onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                   placeholder="Your full name"
                   required
-                  className="mt-2 border-white/10 bg-white/5 text-white placeholder:text-slate-500"
+                  className="mt-2 border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"
                 />
               </div>
               <div>
-                <label htmlFor="contact-email" className="block text-sm font-medium text-slate-200">
+                <label htmlFor="contact-email" className="block text-sm font-medium text-slate-700">
                   Email
                 </label>
                 <Input
@@ -92,13 +92,13 @@ export function ContactForm() {
                   onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
                   placeholder="you@example.com"
                   required
-                  className="mt-2 border-white/10 bg-white/5 text-white placeholder:text-slate-500"
+                  className="mt-2 border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="contact-subject" className="block text-sm font-medium text-slate-200">
+              <label htmlFor="contact-subject" className="block text-sm font-medium text-slate-700">
                 Subject
               </label>
               <Input
@@ -107,12 +107,12 @@ export function ContactForm() {
                 onChange={(event) => setForm((current) => ({ ...current, subject: event.target.value }))}
                 placeholder="What would you like help with?"
                 required
-                className="mt-2 border-white/10 bg-white/5 text-white placeholder:text-slate-500"
+                className="mt-2 border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"
               />
             </div>
 
             <div>
-              <label htmlFor="contact-body" className="block text-sm font-medium text-slate-200">
+              <label htmlFor="contact-body" className="block text-sm font-medium text-slate-700">
                 Message
               </label>
               <Textarea
@@ -122,31 +122,31 @@ export function ContactForm() {
                 placeholder="Tell us your goals, your preferred track, or the kind of support you need."
                 rows={6}
                 required
-                className="mt-2 border-white/10 bg-white/5 text-white placeholder:text-slate-500"
+                className="mt-2 border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"
               />
             </div>
 
             {error ? (
-              <div className="rounded-2xl border border-rose-400/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                 {error}
               </div>
             ) : null}
 
-            <Button type="submit" size="lg" disabled={loading} className="w-full bg-cyan-400 text-slate-950 hover:bg-cyan-300">
+            <Button type="submit" size="lg" disabled={loading} className="w-full bg-[#0d5bd7] text-white hover:bg-[#0a49ac]">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               {loading ? "Sending..." : "Send Message"}
             </Button>
           </form>
         )}
       </CardContent>
-      <div className="border-t border-white/10 px-6 py-5">
-        <div className="flex flex-col gap-4 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+      <div className="border-t border-blue-100 px-6 py-5">
+        <div className="flex flex-col gap-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <Mail className="h-4 w-4 text-cyan-300" />
+            <Mail className="h-4 w-4 text-blue-600" />
             <span>admissions@elignite.cm</span>
           </div>
           <div className="flex items-center gap-3">
-            <Phone className="h-4 w-4 text-cyan-300" />
+            <Phone className="h-4 w-4 text-blue-600" />
             <span>+237 677 000 111</span>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/toaster";
+import { WhatsAppFloat } from "@/components/layout/whatsapp-float";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const poppins = Poppins({
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} ${poppins.variable}`}>
         <AuthProvider>
           {children}
+          <WhatsAppFloat />
           <Toaster />
         </AuthProvider>
       </body>

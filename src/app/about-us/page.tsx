@@ -10,10 +10,14 @@ import { Globe2, Layers3, Users2 } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 const defaultAbout = {
-  vision: "To become a trusted technology training platform where learners build practical digital skills with confidence, clarity, and real career direction.",
-  mission: "To help people move into modern tech work through guided learning, applied projects, visible progress, and support that feels serious and professional.",
-  visionImageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
-  missionImageUrl: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80",
+  vision:
+    "To become a trusted technology training platform where learners build practical digital skills with confidence, clarity, and real career direction.",
+  mission:
+    "To help people move into modern tech work through guided learning, applied projects, visible progress, and support that feels serious and professional.",
+  visionImageUrl:
+    "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+  missionImageUrl:
+    "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80",
 };
 
 export default async function AboutUsPage() {
@@ -41,25 +45,26 @@ export default async function AboutUsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050b16] text-white">
+    <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
-      <section className="relative overflow-hidden border-b border-white/8">
+      <section className="relative overflow-hidden border-b border-blue-100 bg-[linear-gradient(180deg,#edf7ff_0%,#ffffff_55%,#f5fbff_100%)]">
         <div className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1600&q=80"
             alt="Technology training environment"
             fill
-            className="object-cover opacity-25"
+            className="object-cover opacity-[0.11]"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(5,11,22,0.96),rgba(7,17,31,0.9),rgba(6,182,212,0.22))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.92),rgba(255,255,255,0.84),rgba(186,230,253,0.72))]" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
           <Reveal>
             <SectionHeading
               eyebrow="About ELIGNITE"
-              title="A focused training platform for people who want relevant skills and cleaner direction."
-              description="ELIGNITE is built around technology-sector learning. The goal is not to feel like a generic institution, but a credible place where learners can actually grow into digital work."
+              title="A focused training platform for people who want useful tech skills and clearer career direction."
+              description="ELIGNITE is built around technology-sector training. The experience is practical, professional, and designed for learners who want to grow into real digital work."
+              className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
             />
           </Reveal>
         </div>
@@ -73,11 +78,11 @@ export default async function AboutUsPage() {
                 <img src={about.visionImageUrl} alt="ELIGNITE vision" className="h-full w-full object-cover" />
               </div>
               <div className="p-8">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-300">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-blue-700">
                   <Globe2 className="h-5 w-5" />
                 </div>
-                <h2 className="mt-5 text-2xl font-semibold text-white">Our Vision</h2>
-                <p className="mt-4 text-sm leading-7 text-slate-400">{about.vision}</p>
+                <h2 className="mt-5 text-2xl font-semibold text-slate-950">Our Vision</h2>
+                <p className="mt-4 text-sm leading-7 text-slate-600">{about.vision}</p>
               </div>
             </article>
           </Reveal>
@@ -88,24 +93,25 @@ export default async function AboutUsPage() {
                 <img src={about.missionImageUrl} alt="ELIGNITE mission" className="h-full w-full object-cover" />
               </div>
               <div className="p-8">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-300">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-blue-700">
                   <Layers3 className="h-5 w-5" />
                 </div>
-                <h2 className="mt-5 text-2xl font-semibold text-white">Our Mission</h2>
-                <p className="mt-4 text-sm leading-7 text-slate-400">{about.mission}</p>
+                <h2 className="mt-5 text-2xl font-semibold text-slate-950">Our Mission</h2>
+                <p className="mt-4 text-sm leading-7 text-slate-600">{about.mission}</p>
               </div>
             </article>
           </Reveal>
         </div>
       </section>
 
-      <section className="bg-[#07111f] px-4 py-20 sm:px-6 lg:px-8">
+      <section className="bg-sky-50/70 px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
             <SectionHeading
               eyebrow="Our Approach"
               title="Why the platform feels different."
-              description="The experience is shaped around modern tech training expectations: practical delivery, better structure, visible progress, and interfaces that stay usable instead of cluttered."
+              description="The experience is shaped around modern tech-training expectations: practical delivery, better structure, visible progress, and interfaces that stay easy to use."
+              className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
             />
           </Reveal>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
@@ -125,11 +131,11 @@ export default async function AboutUsPage() {
             ].map((item, index) => (
               <Reveal key={item.title} delay={index * 80}>
                 <div className="surface-card hover-lift h-full p-6">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-300">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-blue-700">
                     <Users2 className="h-5 w-5" />
                   </div>
-                  <h3 className="mt-5 text-xl font-semibold text-white">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-400">{item.text}</p>
+                  <h3 className="mt-5 text-xl font-semibold text-slate-950">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{item.text}</p>
                 </div>
               </Reveal>
             ))}
@@ -143,6 +149,7 @@ export default async function AboutUsPage() {
             eyebrow="Visual Story"
             title="The environment behind the training."
             description="Real spaces, live sessions, and hands-on moments help make the platform feel grounded in actual work."
+            className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
           />
         </Reveal>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -181,8 +188,8 @@ export default async function AboutUsPage() {
                   <img src={item.url} alt={item.title} className="h-full w-full object-cover" />
                 </div>
                 <div className="p-5">
-                  <p className="font-semibold text-white">{item.title}</p>
-                  <p className="mt-1 text-sm text-slate-400">{item.category}</p>
+                  <p className="font-semibold text-slate-950">{item.title}</p>
+                  <p className="mt-1 text-sm text-slate-600">{item.category}</p>
                 </div>
               </div>
             </Reveal>
@@ -190,10 +197,10 @@ export default async function AboutUsPage() {
         </div>
       </section>
 
-      <section className="border-y border-white/8 bg-white/[0.03] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-4 text-sm text-slate-400">
+      <section className="border-y border-blue-100 bg-sky-50/50 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-4 text-sm text-slate-600">
           {partnerLogos.map((partner) => (
-            <div key={partner} className="rounded-full border border-white/10 bg-white/5 px-5 py-2">
+            <div key={partner} className="rounded-full border border-blue-100 bg-white px-5 py-2">
               {partner}
             </div>
           ))}
