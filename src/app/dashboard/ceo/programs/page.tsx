@@ -131,7 +131,7 @@ export default function CeoProgramsPage() {
         </div>
         <Dialog open={openDialog} onOpenChange={setOpenDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-sky-500 text-white hover:bg-sky-600">
+            <Button className="bg-blue-500 text-white hover:bg-blue-600">
               <Plus className="h-4 w-4 mr-2" />
               Add Program
             </Button>
@@ -243,8 +243,8 @@ export default function CeoProgramsPage() {
               <CardContent className="pt-4">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-3 flex-1">
-                    <div className="rounded-2xl bg-sky-50 p-2">
-                      <BookOpen className="h-5 w-5 text-sky-600" />
+                    <div className="rounded-2xl bg-blue-50 p-2">
+                      <BookOpen className="h-5 w-5 text-blue-600" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-slate-950">{p.title}</p>

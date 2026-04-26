@@ -94,14 +94,15 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
     <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
-      <section className="relative overflow-hidden border-b border-slate-200 bg-sky-50/60">
+      <section className="relative overflow-hidden border-b border-blue-100">
         <div className="absolute inset-0">
-          <Image src={program.image} alt={program.title} fill className="object-cover opacity-[0.08]" />
+          <Image src={program.image} alt={program.title} fill className="object-cover" />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.93),rgba(255,255,255,0.84),rgba(37,99,235,0.15))]" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
             <Reveal>
-              <Badge className="border-sky-200 bg-sky-50 text-sky-700">{program.category}</Badge>
+              <Badge className="border-blue-200 bg-blue-50 text-blue-700">{program.category}</Badge>
               <h1 className="mt-6 text-4xl font-semibold leading-tight text-slate-950 sm:text-5xl">{program.title}</h1>
               <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">{program.description}</p>
               <div className="mt-8 flex flex-wrap gap-3">
@@ -115,7 +116,7 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
 
             <Reveal delay={120}>
               <div className="surface-card-strong hover-lift p-6">
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-600">Program Snapshot</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-600">Program Snapshot</p>
                 <div className="mt-6 grid gap-4">
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                     <p className="text-sm text-slate-500">Instructor</p>
@@ -127,7 +128,7 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
                   </div>
                 </div>
                 <div className="mt-6 flex flex-col gap-3">
-                  <Button asChild size="lg" className="bg-sky-500 text-white hover:bg-sky-600">
+                  <Button asChild size="lg" className="bg-blue-500 text-white hover:bg-blue-600">
                     <Link href={`/enroll?program=${program.slug}`}>Apply Now</Link>
                   </Button>
                   <Button asChild size="lg" variant="outline" className="border-slate-200 bg-white text-slate-900 hover:bg-slate-50">
@@ -148,7 +149,7 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
               <div className="mt-6 grid gap-3">
                 {program.outcomes.map((outcome: string) => (
                   <div key={outcome} className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 text-sky-500" />
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 text-blue-500" />
                     <p className="text-sm leading-7 text-slate-600">{outcome}</p>
                   </div>
                 ))}
@@ -162,7 +163,7 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
               <div className="mt-6 space-y-3">
                 {program.requirements.map((item: string) => (
                   <div key={item} className="flex items-start gap-3">
-                    <Layers3 className="mt-1 h-4 w-4 text-sky-500" />
+                    <Layers3 className="mt-1 h-4 w-4 text-blue-500" />
                     <p className="text-sm leading-7 text-slate-600">{item}</p>
                   </div>
                 ))}
@@ -175,7 +176,7 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
           <Reveal delay={120}>
             <div className="surface-card hover-lift p-8">
               <div className="flex items-center gap-3">
-                <Users2 className="h-5 w-5 text-sky-500" />
+                <Users2 className="h-5 w-5 text-blue-500" />
                 <h2 className="text-2xl font-semibold text-slate-950">Learner outcomes</h2>
               </div>
               <p className="mt-4 text-sm leading-7 text-slate-600">
@@ -199,11 +200,11 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
                   <div key={testimony.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                     <p className="text-sm leading-7 text-slate-700">&ldquo;{testimony.text}&rdquo;</p>
                     <p className="mt-4 text-sm font-medium text-slate-950">{testimony.name}</p>
-                    <p className="text-xs uppercase tracking-[0.18em] text-sky-600">{testimony.program}</p>
+                    <p className="text-xs uppercase tracking-[0.18em] text-blue-600">{testimony.program}</p>
                   </div>
                 ))}
               </div>
-              <Button asChild className="mt-6 w-full bg-sky-500 text-white hover:bg-sky-600">
+              <Button asChild className="mt-6 w-full bg-blue-500 text-white hover:bg-blue-600">
                 <Link href="/testimonies">
                   Read More Testimonials
                   <ArrowRight className="h-4 w-4" />

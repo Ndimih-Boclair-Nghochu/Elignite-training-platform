@@ -8,7 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Reveal } from "@/components/marketing/reveal";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { PhoneShowcase } from "@/components/marketing/phone-showcase";
-import { faqs, learningSteps, partnerLogos, platformStats, techPrograms } from "@/lib/site-content";
+import {
+  faqs,
+  learningSteps,
+  partnerLogos,
+  platformStats,
+  techPrograms,
+} from "@/lib/site-content";
 import {
   ArrowRight,
   Briefcase,
@@ -25,7 +31,13 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   let programs = techPrograms.slice(0, 6);
-  let approvedTestimonials: Array<{ id: number; name: string; program: string; text: string; rating: number }> = [];
+  let approvedTestimonials: Array<{
+    id: number;
+    name: string;
+    program: string;
+    text: string;
+    rating: number;
+  }> = [];
 
   try {
     const [dbPrograms, dbTestimonials] = await Promise.all([
@@ -44,7 +56,10 @@ export default async function HomePage() {
 
     if (dbPrograms.length > 0) {
       programs = dbPrograms.map((program, index) => {
-        const fallback = techPrograms.find((item) => item.slug === program.slug) || techPrograms[index % techPrograms.length];
+        const fallback =
+          techPrograms.find((item) => item.slug === program.slug) ||
+          techPrograms[index % techPrograms.length];
+
         return {
           slug: program.slug,
           title: program.title,
@@ -97,38 +112,39 @@ export default async function HomePage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
-      <section className="relative overflow-hidden border-b border-slate-200 bg-[linear-gradient(180deg,#f8fdff_0%,#ffffff_55%,#eef9ff_100%)]">
+      <section className="relative overflow-hidden border-b border-blue-100">
         <div className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80"
+            src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1800&q=80"
             alt="Learners working with modern tech equipment"
             fill
             priority
-            className="object-cover opacity-[0.08]"
+            className="object-cover"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.88),rgba(255,255,255,0.82),rgba(186,230,253,0.68))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(118deg,rgba(255,255,255,0.95),rgba(255,255,255,0.9),rgba(37,99,235,0.16))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(37,99,235,0.04)_0,rgba(37,99,235,0.04)_1px,transparent_1px,transparent_88px),linear-gradient(rgba(37,99,235,0.04)_0,rgba(37,99,235,0.04)_1px,transparent_1px,transparent_88px)] bg-[size:88px_88px]" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-24 sm:px-6 lg:px-8 lg:pb-24 lg:pt-28">
           <div className="grid gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
             <Reveal className="max-w-3xl">
-              <Badge className="border-sky-200 bg-sky-50 px-4 py-2 text-sky-700">
-                Bright, practical tech training for careers, freelancing, and digital work
+              <Badge className="border-blue-200 bg-white/90 px-4 py-2 text-blue-700">
+                Premium tech training for practical careers, freelancing, and digital growth
               </Badge>
               <h1 className="mt-6 text-4xl font-semibold leading-tight text-slate-950 sm:text-5xl lg:text-6xl">
-                ELIGNITE helps learners build modern tech skills through clear, practical training.
+                Practical technology training that helps serious learners produce real work.
               </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-                From web development and software engineering to cloud, design, AI tools, and digital productivity, every track is built around hands-on outcomes and real-world confidence.
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-700">
+                ELIGNITE delivers structured training in software, cloud, design, digital tools, and modern productivity so learners can move from interest to visible capability with confidence.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Button size="lg" asChild className="bg-sky-500 text-white hover:bg-sky-600">
+                <Button size="lg" asChild className="bg-blue-600 text-white hover:bg-blue-700">
                   <Link href="/enroll">
                     Apply Now
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild className="border-slate-200 bg-white text-slate-900 hover:bg-sky-50">
+                <Button size="lg" variant="outline" asChild className="border-blue-200 bg-white/95 text-slate-900 hover:bg-blue-50">
                   <Link href="/programs">Explore Programs</Link>
                 </Button>
               </div>
@@ -145,10 +161,14 @@ export default async function HomePage() {
 
             <Reveal delay={160} className="grid gap-5">
               <div className="surface-card-strong p-6">
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-600">Visual Showcase</p>
-                <h2 className="mt-3 text-2xl font-semibold text-slate-950">ELIGNITE in your hand</h2>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-700">
+                  Campaign Preview
+                </p>
+                <h2 className="mt-3 text-2xl font-semibold text-slate-950">
+                  Training communication presented with the same clarity as the platform.
+                </h2>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
-                  A rotating phone-style preview gives visitors a cleaner feel for your flyers and training offers without breaking the page rhythm.
+                  This rotating preview highlights ELIGNITE training campaigns inside a polished mobile frame, giving visitors a stronger sense of the brand and offer at a glance.
                 </p>
                 <div className="mt-6">
                   <PhoneShowcase />
@@ -158,10 +178,14 @@ export default async function HomePage() {
               <div className="surface-card p-6">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-600">Learning Experience</p>
-                    <h2 className="mt-3 text-2xl font-semibold text-slate-950">Built for practical progress</h2>
+                    <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-700">
+                      Learning Experience
+                    </p>
+                    <h2 className="mt-3 text-2xl font-semibold text-slate-950">
+                      Built for practical progress
+                    </h2>
                   </div>
-                  <div className="rounded-2xl border border-sky-100 bg-sky-50 p-3 text-sky-600">
+                  <div className="rounded-2xl border border-blue-100 bg-blue-50 p-3 text-blue-700">
                     <Cpu className="h-6 w-6" />
                   </div>
                 </div>
@@ -169,11 +193,14 @@ export default async function HomePage() {
                   {[
                     "Structured paths for beginners and career-switchers",
                     "Hands-on assignments, projects, and guided feedback",
-                    "Track progress through one learner dashboard",
-                    "Career-facing support for confidence after training",
+                    "One learner workspace for applications, progress, and next steps",
+                    "Career-facing support that strengthens confidence after training",
                   ].map((item) => (
-                    <div key={item} className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-sky-500" />
+                    <div
+                      key={item}
+                      className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-white px-4 py-4"
+                    >
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-blue-600" />
                       <p className="text-sm leading-6 text-slate-600">{item}</p>
                     </div>
                   ))}
@@ -184,89 +211,100 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-slate-200 bg-white">
+      <section className="border-b border-blue-100 bg-white">
         <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 text-sm text-slate-600 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
           {[
-            { icon: Layers3, label: "Career tracks designed for the tech sector" },
+            { icon: Layers3, label: "Career tracks designed for the technology sector" },
             { icon: Users2, label: "Cohort-based learning with structured milestones" },
             { icon: ShieldCheck, label: "Applied projects instead of passive theory" },
-            { icon: Briefcase, label: "Job-facing support for real next steps" },
+            { icon: Briefcase, label: "Job-facing support for meaningful next steps" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-3">
-              <item.icon className="h-5 w-5 text-sky-500" />
+              <item.icon className="h-5 w-5 text-blue-600" />
               <span>{item.label}</span>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <Reveal>
-          <SectionHeading
-            eyebrow="Popular Programs"
-            title="Choose a training path that feels current, practical, and worth your time."
-            description="Every ELIGNITE program is shaped for real digital work, with clear pacing, hands-on deliverables, and a direct path from learning to execution."
-            className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
-          />
-        </Reveal>
-        <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {programs.map((program, index) => (
-            <Reveal key={program.slug} delay={index * 70}>
-              <article className="surface-card-strong hover-lift h-full overflow-hidden">
-                <div className="relative h-56">
-                  <Image src={program.image} alt={program.title} fill className="object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
-                    <Badge className="border-white/15 bg-white/90 text-sky-700">{program.category}</Badge>
-                    <span className="rounded-full border border-white/20 bg-white/85 px-3 py-1 text-xs text-slate-700">
-                      {program.mode}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-slate-950">{program.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">{program.description}</p>
-                  <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                      <p className="text-slate-500">Duration</p>
-                      <p className="mt-1 font-medium text-slate-900">{program.duration}</p>
-                    </div>
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                      <p className="text-slate-500">Level</p>
-                      <p className="mt-1 font-medium text-slate-900">{program.level}</p>
-                    </div>
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                      <p className="text-slate-500">Mode</p>
-                      <p className="mt-1 font-medium text-slate-900">{program.mode}</p>
-                    </div>
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                      <p className="text-slate-500">Price</p>
-                      <p className="mt-1 font-medium text-slate-900">{program.price}</p>
-                    </div>
-                  </div>
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {program.highlights.map((item) => (
-                      <span key={item} className="rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs text-sky-700">
-                        {item}
+      <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <Reveal>
+            <SectionHeading
+              eyebrow="Popular Programs"
+              title="Choose a training path with clear value, current relevance, and visible outcomes."
+              description="Every ELIGNITE program is shaped for real digital work, with clean pacing, hands-on deliverables, and a direct path from learning to execution."
+              className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
+            />
+          </Reveal>
+          <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {programs.map((program, index) => (
+              <Reveal key={program.slug} delay={index * 70}>
+                <article className="surface-card-strong hover-lift h-full overflow-hidden">
+                  <div className="relative h-56">
+                    <Image src={program.image} alt={program.title} fill className="object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
+                      <Badge className="border-white/15 bg-white/92 text-blue-700">
+                        {program.category}
+                      </Badge>
+                      <span className="rounded-full border border-white/20 bg-white/88 px-3 py-1 text-xs text-slate-700">
+                        {program.mode}
                       </span>
-                    ))}
+                    </div>
                   </div>
-                  <div className="mt-6 flex gap-3">
-                    <Button asChild className="flex-1 bg-sky-500 text-white hover:bg-sky-600">
-                      <Link href={`/enroll?program=${program.slug}`}>Apply Now</Link>
-                    </Button>
-                    <Button asChild variant="outline" className="flex-1 border-slate-200 bg-white text-slate-900 hover:bg-slate-50">
-                      <Link href={`/programs/${program.slug}`}>View Details</Link>
-                    </Button>
+                  <div className="p-6">
+                    <h3 className="text-xl font-semibold text-slate-950">{program.title}</h3>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">{program.description}</p>
+                    <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                      <div className="rounded-2xl border border-blue-100 bg-blue-50/50 px-4 py-3">
+                        <p className="text-slate-500">Duration</p>
+                        <p className="mt-1 font-medium text-slate-900">{program.duration}</p>
+                      </div>
+                      <div className="rounded-2xl border border-blue-100 bg-blue-50/50 px-4 py-3">
+                        <p className="text-slate-500">Level</p>
+                        <p className="mt-1 font-medium text-slate-900">{program.level}</p>
+                      </div>
+                      <div className="rounded-2xl border border-blue-100 bg-blue-50/50 px-4 py-3">
+                        <p className="text-slate-500">Mode</p>
+                        <p className="mt-1 font-medium text-slate-900">{program.mode}</p>
+                      </div>
+                      <div className="rounded-2xl border border-blue-100 bg-blue-50/50 px-4 py-3">
+                        <p className="text-slate-500">Price</p>
+                        <p className="mt-1 font-medium text-slate-900">{program.price}</p>
+                      </div>
+                    </div>
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {program.highlights.map((item) => (
+                        <span
+                          key={item}
+                          className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs text-blue-700"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="mt-6 flex gap-3">
+                      <Button asChild className="flex-1 bg-blue-600 text-white hover:bg-blue-700">
+                        <Link href={`/enroll?program=${program.slug}`}>Apply Now</Link>
+                      </Button>
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="flex-1 border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
+                      >
+                        <Link href={`/programs/${program.slug}`}>View Details</Link>
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </article>
-            </Reveal>
-          ))}
+                </article>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="bg-sky-50/70 px-4 py-20 sm:px-6 lg:px-8">
+      <section className="border-y border-blue-100 bg-blue-50/65 px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
             <SectionHeading
@@ -280,7 +318,7 @@ export default async function HomePage() {
             {learningSteps.map((step, index) => (
               <Reveal key={step.title} delay={index * 90}>
                 <div className="surface-card hover-lift h-full p-6">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-lg font-semibold text-sky-700">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-lg font-semibold text-white">
                     0{index + 1}
                   </div>
                   <h3 className="mt-6 text-xl font-semibold text-slate-950">{step.title}</h3>
@@ -292,8 +330,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+      <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.95fr_1.05fr]">
           <Reveal>
             <div className="surface-card-strong h-full p-8">
               <SectionHeading
@@ -306,14 +344,30 @@ export default async function HomePage() {
           </Reveal>
           <div className="grid gap-6 sm:grid-cols-2">
             {[
-              { icon: Users2, title: "Student-ready UX", text: "Learners can track applications, follow progress, and move through training without confusion." },
-              { icon: Sparkles, title: "Expert-led support", text: "Teachers and coordinators can keep learning active with updates, feedback, and guidance." },
-              { icon: Clock3, title: "Flexible delivery", text: "Programs can support evening, weekend, remote, and hybrid schedules for real-world learners." },
-              { icon: ShieldCheck, title: "Professional trust", text: "Clear admissions, secure access, and polished communication build confidence from the first visit." },
+              {
+                icon: Users2,
+                title: "Student-ready UX",
+                text: "Learners can track applications, follow progress, and move through training without confusion.",
+              },
+              {
+                icon: Sparkles,
+                title: "Expert-led support",
+                text: "Teachers and coordinators can keep learning active with updates, feedback, and guidance.",
+              },
+              {
+                icon: Clock3,
+                title: "Flexible delivery",
+                text: "Programs can support evening, weekend, remote, and hybrid schedules for real-world learners.",
+              },
+              {
+                icon: ShieldCheck,
+                title: "Professional trust",
+                text: "Clear admissions, secure access, and polished communication build confidence from the first visit.",
+              },
             ].map((item, index) => (
               <Reveal key={item.title} delay={index * 90}>
                 <div className="surface-card hover-lift h-full p-6">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
                     <item.icon className="h-5 w-5" />
                   </div>
                   <h3 className="mt-5 text-xl font-semibold text-slate-950">{item.title}</h3>
@@ -325,7 +379,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-slate-50 px-4 py-20 sm:px-6 lg:px-8">
+      <section className="border-y border-blue-100 bg-slate-50 px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
             <SectionHeading
@@ -340,14 +394,18 @@ export default async function HomePage() {
             {testimonials.map((testimony, index) => (
               <Reveal key={testimony.id} delay={index * 90}>
                 <div className="surface-card hover-lift h-full p-6">
-                  <p className="text-sm uppercase tracking-[0.22em] text-sky-600">{testimony.program}</p>
-                  <p className="mt-4 text-lg leading-8 text-slate-700">&ldquo;{testimony.text}&rdquo;</p>
+                  <p className="text-sm uppercase tracking-[0.22em] text-blue-700">
+                    {testimony.program}
+                  </p>
+                  <p className="mt-4 text-lg leading-8 text-slate-700">
+                    &ldquo;{testimony.text}&rdquo;
+                  </p>
                   <div className="mt-8 flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-slate-950">{testimony.name}</p>
                       <p className="text-sm text-slate-500">{testimony.rating}/5 rating</p>
                     </div>
-                    <div className="rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs text-sky-700">
+                    <div className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs text-blue-700">
                       Verified
                     </div>
                   </div>
@@ -358,8 +416,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
+      <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
           <Reveal>
             <SectionHeading
               eyebrow="FAQ"
@@ -381,22 +439,24 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-slate-200 bg-white px-4 py-8 sm:px-6 lg:px-8">
+      <section className="border-y border-blue-100 bg-blue-50/40 px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-4 text-sm text-slate-500">
           {partnerLogos.map((partner) => (
-            <div key={partner} className="rounded-full border border-slate-200 bg-slate-50 px-5 py-2">
+            <div key={partner} className="rounded-full border border-blue-100 bg-white px-5 py-2">
               {partner}
             </div>
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+      <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
         <Reveal>
           <div className="surface-card-strong overflow-hidden p-8 sm:p-10">
             <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-600">Ready to start</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-700">
+                  Ready to start
+                </p>
                 <h2 className="mt-4 text-3xl font-semibold text-slate-950 sm:text-4xl">
                   Join a serious tech training platform built to help you produce real work.
                 </h2>
@@ -405,10 +465,15 @@ export default async function HomePage() {
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-                <Button size="lg" asChild className="bg-sky-500 text-white hover:bg-sky-600">
+                <Button size="lg" asChild className="bg-blue-600 text-white hover:bg-blue-700">
                   <Link href="/enroll">Apply Now</Link>
                 </Button>
-                <Button size="lg" asChild variant="outline" className="border-slate-200 bg-white text-slate-900 hover:bg-slate-50">
+                <Button
+                  size="lg"
+                  asChild
+                  variant="outline"
+                  className="border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
+                >
                   <Link href="/contact">Talk to Admissions</Link>
                 </Button>
               </div>

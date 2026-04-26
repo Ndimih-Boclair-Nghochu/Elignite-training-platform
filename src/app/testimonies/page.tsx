@@ -74,15 +74,15 @@ export default async function TestimoniesPage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
-      <section className="relative overflow-hidden border-b border-blue-100 bg-[linear-gradient(180deg,#edf7ff_0%,#ffffff_55%,#f5fbff_100%)]">
+      <section className="relative overflow-hidden border-b border-blue-100">
         <div className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=80"
             alt="Learners sharing experiences"
             fill
-            className="object-cover opacity-[0.1]"
+            className="object-cover"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.92),rgba(255,255,255,0.84),rgba(186,230,253,0.72))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.94),rgba(255,255,255,0.86),rgba(37,99,235,0.15))]" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
           <Reveal>
@@ -102,7 +102,7 @@ export default async function TestimoniesPage() {
             <Reveal key={testimony.id} delay={index * 70}>
               <article className="surface-card-strong hover-lift h-full p-6">
                 <div className="flex items-center gap-4">
-                  <div className="relative h-14 w-14 overflow-hidden rounded-full border border-blue-100 bg-sky-100">
+                  <div className="relative h-14 w-14 overflow-hidden rounded-full border border-blue-100 bg-blue-100">
                     {testimony.user?.photoUrl ? (
                       <img src={testimony.user.photoUrl} alt={testimony.name} className="h-full w-full object-cover" />
                     ) : (
@@ -118,17 +118,17 @@ export default async function TestimoniesPage() {
                 </div>
 
                 <div className="mt-5 flex items-center justify-between">
-                  <Badge className="border-blue-100 bg-sky-50 text-blue-700">
+                  <Badge className="border-blue-100 bg-blue-50 text-blue-700">
                     {testimony.submitterType === "student" ? "Student" : "Instructor"}
                   </Badge>
-                  <div className="flex items-center gap-1 text-sky-500">
+                  <div className="flex items-center gap-1 text-blue-500">
                     {Array.from({ length: testimony.rating }).map((_, starIndex) => (
                       <Star key={starIndex} className="h-4 w-4 fill-current" />
                     ))}
                   </div>
                 </div>
 
-                <div className="mt-6 rounded-[22px] border border-blue-100 bg-sky-50/60 p-5">
+                <div className="mt-6 rounded-[22px] border border-blue-100 bg-blue-50/60 p-5">
                   <Quote className="h-5 w-5 text-blue-700" />
                   <p className="mt-4 text-sm leading-7 text-slate-700">&ldquo;{testimony.text}&rdquo;</p>
                 </div>

@@ -12,15 +12,15 @@ export default function ContactPage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
-      <section className="relative overflow-hidden border-b border-blue-100 bg-[linear-gradient(180deg,#edf7ff_0%,#ffffff_55%,#f5fbff_100%)]">
+      <section className="relative overflow-hidden border-b border-blue-100">
         <div className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1600&q=80"
             alt="ELIGNITE support team"
             fill
-            className="object-cover opacity-[0.1]"
+            className="object-cover"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.92),rgba(255,255,255,0.84),rgba(186,230,253,0.72))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.94),rgba(255,255,255,0.86),rgba(37,99,235,0.15))]" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
           <Reveal className="max-w-3xl">
@@ -66,7 +66,7 @@ export default function ContactPage() {
             ].map((item, index) => (
               <Reveal key={item.title} delay={index * 80}>
                 <div className="surface-card hover-lift p-6">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-blue-700">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
                     <item.icon className="h-5 w-5" />
                   </div>
                   <h2 className="mt-5 text-xl font-semibold text-slate-950">{item.title}</h2>

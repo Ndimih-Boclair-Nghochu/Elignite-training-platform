@@ -22,18 +22,18 @@ export function Footer() {
     <footer className="border-t border-blue-200 bg-[#0d5bd7] text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.8fr_1fr] lg:px-8">
         <div className="space-y-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-sky-100">ELIGNITE</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-100">ELIGNITE</p>
           <h3 className="text-2xl font-semibold text-white">Tech training built for real work.</h3>
-          <p className="max-w-md text-sm leading-7 text-sky-100/85">
+          <p className="max-w-md text-sm leading-7 text-blue-100/85">
             ELIGNITE Training Platform helps learners build practical digital skills through structured programs, expert support, and hands-on projects.
           </p>
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-100">Quick Links</h4>
+          <h4 className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-100">Quick Links</h4>
           <div className="mt-4 space-y-3">
             {quickLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="block text-sm text-sky-50/90 transition-colors hover:text-white">
+              <Link key={link.href} href={link.href} className="block text-sm text-blue-50/90 transition-colors hover:text-white">
                 {link.label}
               </Link>
             ))}
@@ -41,10 +41,10 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-100">Popular Tracks</h4>
+          <h4 className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-100">Popular Tracks</h4>
           <div className="mt-4 space-y-3">
             {courseLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="block text-sm text-sky-50/90 transition-colors hover:text-white">
+              <Link key={link.href} href={link.href} className="block text-sm text-blue-50/90 transition-colors hover:text-white">
                 {link.label}
               </Link>
             ))}
@@ -52,8 +52,8 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-100">Contact</h4>
-          <div className="mt-4 space-y-4 text-sm text-sky-50/90">
+          <h4 className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-100">Contact</h4>
+          <div className="mt-4 space-y-4 text-sm text-blue-50/90">
             <div className="flex items-start gap-3">
               <MapPin className="mt-0.5 h-4 w-4 text-white" />
               <span>Bamenda, Cameroon</span>
@@ -70,7 +70,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-white/15 px-4 py-5 text-center text-xs text-sky-100/80 sm:px-6 lg:px-8">
+      <div className="border-t border-white/15 px-4 py-5 text-center text-xs text-blue-100/80 sm:px-6 lg:px-8">
         Copyright 2026 ELIGNITE Training Platform. Practical digital learning for careers in tech.
       </div>
     </footer>

@@ -39,9 +39,10 @@ export default async function ServicesPage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
-      <section className="relative overflow-hidden border-b border-slate-200 bg-sky-50/60">
+      <section className="relative overflow-hidden border-b border-blue-100">
         <div className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1516321310764-8d3b8c5f0d5c?auto=format&fit=crop&w=1600&q=80" alt="ELIGNITE services and learner support" fill className="object-cover opacity-[0.08]" />
+          <Image src="https://images.unsplash.com/photo-1516321310764-8d3b8c5f0d5c?auto=format&fit=crop&w=1600&q=80" alt="ELIGNITE services and learner support" fill className="object-cover" />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.94),rgba(255,255,255,0.86),rgba(37,99,235,0.16))]" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
           <Reveal>
@@ -66,7 +67,7 @@ export default async function ServicesPage() {
                     <img src={service.image} alt={service.title} className="h-full w-full object-cover" />
                   </div>
                   <div className="p-8">
-                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
                       <Icon className="h-5 w-5" />
                     </div>
                     <h2 className="mt-5 text-2xl font-semibold text-slate-950">{service.title}</h2>
@@ -88,13 +89,13 @@ export default async function ServicesPage() {
             <SectionHeading
               eyebrow="Need Guidance"
               title="Not sure which track or support path fits you best?"
-              description="Talk to the team and we’ll help you match your goals to the right learning plan."
+              description="Talk to the team and we will help you match your goals to the right learning plan."
               align="center"
               className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
             />
           </Reveal>
           <Reveal delay={120} className="mt-8">
-            <Button asChild size="lg" className="bg-sky-500 text-white hover:bg-sky-600">
+            <Button asChild size="lg" className="bg-blue-500 text-white hover:bg-blue-600">
               <Link href="/contact">
                 Contact the Team
                 <ArrowRight className="h-4 w-4" />

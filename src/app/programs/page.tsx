@@ -47,14 +47,15 @@ export default async function ProgramsPage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
-      <section className="relative overflow-hidden border-b border-slate-200 bg-sky-50/60">
+      <section className="relative overflow-hidden border-b border-blue-100">
         <div className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80"
             alt="Tech learners collaborating"
             fill
-            className="object-cover opacity-[0.08]"
+            className="object-cover"
           />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.94),rgba(255,255,255,0.86),rgba(37,99,235,0.16))]" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
           <Reveal>
@@ -77,7 +78,7 @@ export default async function ProgramsPage() {
                   <Image src={program.image} alt={program.title} fill className="object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/10 to-transparent" />
                   <div className="absolute left-5 right-5 top-5 flex items-center justify-between">
-                    <Badge className="border-white/20 bg-white/90 text-sky-700">{program.category}</Badge>
+                    <Badge className="border-white/20 bg-white/90 text-blue-700">{program.category}</Badge>
                     <span className="rounded-full border border-white/20 bg-white/85 px-3 py-1 text-xs text-slate-700">
                       {program.mode}
                     </span>
@@ -110,14 +111,14 @@ export default async function ProgramsPage() {
                   <div className="mt-5 space-y-2">
                     {program.highlights.map((item) => (
                       <div key={item} className="flex items-center gap-3 text-sm text-slate-600">
-                        <CheckCircle2 className="h-4 w-4 text-sky-500" />
+                        <CheckCircle2 className="h-4 w-4 text-blue-500" />
                         <span>{item}</span>
                       </div>
                     ))}
                   </div>
 
                   <div className="mt-6 flex gap-3">
-                    <Button asChild className="flex-1 bg-sky-500 text-white hover:bg-sky-600">
+                    <Button asChild className="flex-1 bg-blue-500 text-white hover:bg-blue-600">
                       <Link href={`/enroll?program=${program.slug}`}>Apply Now</Link>
                     </Button>
                     <Button asChild variant="outline" className="flex-1 border-slate-200 bg-white text-slate-900 hover:bg-slate-50">

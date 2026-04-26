@@ -20,10 +20,10 @@ export function PhoneShowcase() {
   }, []);
 
   return (
-    <div className="relative mx-auto flex w-full max-w-[400px] items-center justify-center">
-      <div className="phone-orbit relative rounded-[46px] border border-blue-200 bg-slate-900 p-3 shadow-[0_40px_120px_-50px_rgba(13,91,215,0.35)]">
+    <div className="relative mx-auto flex w-full max-w-[420px] items-center justify-center">
+      <div className="phone-orbit relative rounded-[48px] border border-blue-200 bg-slate-950 p-3 shadow-[0_40px_120px_-50px_rgba(37,99,235,0.38)]">
         <div className="absolute left-1/2 top-3 z-20 h-5 w-28 -translate-x-1/2 rounded-full bg-slate-950" />
-        <div className="relative aspect-[9/19.5] w-[300px] overflow-hidden rounded-[36px] bg-[#e8f5ff] p-2">
+        <div className="relative h-[620px] w-[330px] overflow-hidden rounded-[38px] bg-black">
           {images.map((image, index) => (
             <div
               key={image.src}
@@ -31,9 +31,7 @@ export function PhoneShowcase() {
                 active === index ? "opacity-100" : "opacity-0"
               }`}
             >
-              <div className="relative h-full w-full overflow-hidden rounded-[28px] bg-white">
-                <Image src={image.src} alt={image.alt} fill className="object-contain" />
-              </div>
+              <Image src={image.src} alt={image.alt} fill className="object-fill" />
             </div>
           ))}
         </div>

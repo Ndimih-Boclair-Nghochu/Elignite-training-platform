@@ -110,7 +110,7 @@ function EnrollForm() {
     return (
       <Card className="surface-card-strong">
         <CardContent className="pt-6 text-center">
-          <Loader2 className="mx-auto mb-2 h-6 w-6 animate-spin text-sky-500" />
+          <Loader2 className="mx-auto mb-2 h-6 w-6 animate-spin text-blue-500" />
           <p className="text-slate-600">Loading application status...</p>
         </CardContent>
       </Card>
@@ -124,7 +124,7 @@ function EnrollForm() {
           <AlertCircle className="mx-auto h-10 w-10 text-amber-500" />
           <h2 className="text-xl font-semibold text-slate-950">Applications are currently closed</h2>
           <p className="text-slate-600">Please contact ELIGNITE for the next admissions opening.</p>
-          <Link href="/" className="font-medium text-sky-700 hover:underline">Return to home page</Link>
+          <Link href="/" className="font-medium text-blue-700 hover:underline">Return to home page</Link>
         </CardContent>
       </Card>
     );
@@ -216,7 +216,7 @@ function EnrollForm() {
         </CardContent>
       </Card>
 
-      <Button type="submit" className="w-full bg-sky-500 text-white hover:bg-sky-600" size="lg" disabled={loading || loadingPrograms}>
+      <Button type="submit" className="w-full bg-blue-500 text-white hover:bg-blue-600" size="lg" disabled={loading || loadingPrograms}>
         {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting...</> : <><CheckCircle className="mr-2 h-4 w-4" />Submit Application</>}
       </Button>
     </form>
@@ -247,7 +247,7 @@ export default function EnrollPage() {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-      <div className="border-b border-slate-200 bg-sky-50/60 px-4 py-14 text-center">
+      <div className="border-b border-slate-200 bg-blue-50/60 px-4 py-14 text-center">
         <h1 className="mb-2 text-3xl font-bold text-slate-950">Apply for Admission</h1>
         <p className="text-slate-600">{subtitle}</p>
       </div>
@@ -256,7 +256,7 @@ export default function EnrollPage() {
           <EnrollForm />
         </Suspense>
         <p className="mt-6 text-center text-sm text-slate-500">
-          Already have an account? <Link href="/login" className="text-sky-700 hover:underline">Login to your portal</Link>
+          Already have an account? <Link href="/login" className="text-blue-700 hover:underline">Login to your portal</Link>
         </p>
       </div>
       <Footer />

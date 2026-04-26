@@ -71,7 +71,7 @@ function gradeColor(grade: string) {
 function getRemarkColor(remark: string) {
   if (remark === "Excellent") return "text-green-600 bg-green-50";
   if (remark === "Very Good") return "text-blue-600 bg-blue-50";
-  if (remark === "Good") return "text-cyan-600 bg-cyan-50";
+  if (remark === "Good") return "text-blue-600 bg-blue-50";
   if (remark === "Satisfactory") return "text-yellow-600 bg-yellow-50";
   return "text-red-600 bg-red-50";
 }

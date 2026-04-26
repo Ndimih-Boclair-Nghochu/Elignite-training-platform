@@ -20,7 +20,7 @@ export function SectionHeading({
   return (
     <div className={cn(centered ? "mx-auto max-w-3xl text-center" : "max-w-3xl", className)}>
       {eyebrow ? (
-        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-300/90">
+        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-300/90">
           {eyebrow}
         </p>
       ) : null}

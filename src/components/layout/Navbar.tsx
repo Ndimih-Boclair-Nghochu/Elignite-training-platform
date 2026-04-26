@@ -38,7 +38,7 @@ export function Navbar() {
           </div>
           <div className="leading-tight">
             <p className="text-sm font-semibold sm:text-base">ELIGNITE</p>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-sky-100">Tech Training Platform</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-blue-100">Tech Training Platform</p>
           </div>
         </Link>
 
@@ -48,7 +48,7 @@ export function Navbar() {
               key={item.href}
               href={item.href}
               className={`text-sm font-medium transition-colors hover:text-white ${
-                pathname === item.href ? "text-white" : "text-sky-100/90"
+                pathname === item.href ? "text-white" : "text-blue-100/90"
               }`}
             >
               {item.label}
@@ -58,7 +58,7 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           {dashLink ? (
-            <Button asChild className="bg-white text-blue-700 hover:bg-sky-50">
+            <Button asChild className="bg-white text-blue-700 hover:bg-blue-50">
               <Link href={dashLink}>Open Dashboard</Link>
             </Button>
           ) : (
@@ -66,7 +66,7 @@ export function Navbar() {
               <Button variant="outline" asChild className="border-white/35 bg-transparent text-white hover:bg-white/10 hover:text-white">
                 <Link href="/login">Login</Link>
               </Button>
-              <Button asChild className="bg-white text-blue-700 hover:bg-sky-50">
+              <Button asChild className="bg-white text-blue-700 hover:bg-blue-50">
                 <Link href="/enroll">Apply Now</Link>
               </Button>
             </>
@@ -93,7 +93,7 @@ export function Navbar() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={`block rounded-xl px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10 hover:text-white ${
-                  pathname === item.href ? "bg-white/12 text-white" : "text-sky-100/90"
+                  pathname === item.href ? "bg-white/12 text-white" : "text-blue-100/90"
                 }`}
               >
                 {item.label}
@@ -101,7 +101,7 @@ export function Navbar() {
             ))}
             <div className="grid gap-2 pt-3">
               {dashLink ? (
-                <Button asChild className="w-full bg-white text-blue-700 hover:bg-sky-50">
+                <Button asChild className="w-full bg-white text-blue-700 hover:bg-blue-50">
                   <Link href={dashLink} onClick={() => setOpen(false)}>Open Dashboard</Link>
                 </Button>
               ) : (
@@ -109,7 +109,7 @@ export function Navbar() {
                   <Button variant="outline" asChild className="w-full border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white">
                     <Link href="/login" onClick={() => setOpen(false)}>Login</Link>
                   </Button>
-                  <Button asChild className="w-full bg-white text-blue-700 hover:bg-sky-50">
+                  <Button asChild className="w-full bg-white text-blue-700 hover:bg-blue-50">
                     <Link href="/enroll" onClick={() => setOpen(false)}>Apply Now</Link>
                   </Button>
                 </>

@@ -49,7 +49,7 @@ export function ContactForm() {
   return (
     <Card className="surface-card-strong border-blue-100 text-slate-900">
       <CardHeader className="space-y-3">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-blue-700">
+        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
           <MessageSquare className="h-5 w-5" />
         </div>
         <CardTitle className="text-2xl text-slate-950">Send a message</CardTitle>

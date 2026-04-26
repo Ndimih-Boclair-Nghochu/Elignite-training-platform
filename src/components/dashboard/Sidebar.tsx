@@ -114,7 +114,7 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void }) {
       <div className="border-b border-slate-200 p-4">
         <div className="flex items-start justify-between gap-3">
           <Link href="/" className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-            <div className="flex h-11 w-11 items-center justify-center rounded-md bg-sky-50 text-sky-600">
+            <div className="flex h-11 w-11 items-center justify-center rounded-md bg-blue-50 text-blue-600">
               <GraduationCap className="h-5 w-5" />
             </div>
             {!collapsed && (
@@ -154,8 +154,8 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void }) {
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
                 active
-                  ? "bg-sky-500 text-white"
-                  : "text-slate-600 hover:bg-sky-50 hover:text-slate-950"
+                  ? "bg-blue-500 text-white"
+                  : "text-slate-600 hover:bg-blue-50 hover:text-slate-950"
               )}
             >
               <item.icon className="h-4 w-4 flex-shrink-0" />

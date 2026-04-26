@@ -48,15 +48,15 @@ export default async function AboutUsPage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
-      <section className="relative overflow-hidden border-b border-blue-100 bg-[linear-gradient(180deg,#edf7ff_0%,#ffffff_55%,#f5fbff_100%)]">
+      <section className="relative overflow-hidden border-b border-blue-100">
         <div className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1600&q=80"
             alt="Technology training environment"
             fill
-            className="object-cover opacity-[0.11]"
+            className="object-cover"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.92),rgba(255,255,255,0.84),rgba(186,230,253,0.72))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.94),rgba(255,255,255,0.86),rgba(37,99,235,0.15))]" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
           <Reveal>
@@ -78,7 +78,7 @@ export default async function AboutUsPage() {
                 <img src={about.visionImageUrl} alt="ELIGNITE vision" className="h-full w-full object-cover" />
               </div>
               <div className="p-8">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-blue-700">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
                   <Globe2 className="h-5 w-5" />
                 </div>
                 <h2 className="mt-5 text-2xl font-semibold text-slate-950">Our Vision</h2>
@@ -93,7 +93,7 @@ export default async function AboutUsPage() {
                 <img src={about.missionImageUrl} alt="ELIGNITE mission" className="h-full w-full object-cover" />
               </div>
               <div className="p-8">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-blue-700">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
                   <Layers3 className="h-5 w-5" />
                 </div>
                 <h2 className="mt-5 text-2xl font-semibold text-slate-950">Our Mission</h2>
@@ -104,7 +104,7 @@ export default async function AboutUsPage() {
         </div>
       </section>
 
-      <section className="bg-sky-50/70 px-4 py-20 sm:px-6 lg:px-8">
+      <section className="bg-blue-50/70 px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
             <SectionHeading
@@ -131,7 +131,7 @@ export default async function AboutUsPage() {
             ].map((item, index) => (
               <Reveal key={item.title} delay={index * 80}>
                 <div className="surface-card hover-lift h-full p-6">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-blue-700">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
                     <Users2 className="h-5 w-5" />
                   </div>
                   <h3 className="mt-5 text-xl font-semibold text-slate-950">{item.title}</h3>
@@ -197,7 +197,7 @@ export default async function AboutUsPage() {
         </div>
       </section>
 
-      <section className="border-y border-blue-100 bg-sky-50/50 px-4 py-8 sm:px-6 lg:px-8">
+      <section className="border-y border-blue-100 bg-blue-50/50 px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-4 text-sm text-slate-600">
           {partnerLogos.map((partner) => (
             <div key={partner} className="rounded-full border border-blue-100 bg-white px-5 py-2">
