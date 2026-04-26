@@ -377,13 +377,22 @@ export default async function HomePage() {
       <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.95fr_1.05fr]">
           <Reveal>
-            <div className="surface-card-strong h-full p-8">
+            <div className="surface-card-strong h-full overflow-hidden p-8">
               <SectionHeading
                 eyebrow="Why ELIGNITE"
                 title="A modern training environment with structure, clarity, and momentum."
                 description="The platform is designed to make programs feel credible, easy to navigate, and motivating to continue."
                 className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
               />
+              <div className="relative mt-6 w-full overflow-hidden rounded-2xl">
+                <Image
+                  src="/images/why-elignite.png"
+                  alt="ELIGNITE training platform illustration"
+                  width={600}
+                  height={450}
+                  className="w-full object-contain"
+                />
+              </div>
             </div>
           </Reveal>
           <div className="grid gap-6 sm:grid-cols-2">
