@@ -4,283 +4,397 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Seeding database...");
+  console.log("Seeding ELIGNITE platform...");
 
-  // ─── CEO User ───────────────────────────────────────────────
-  const ceoPassword = await bcrypt.hash("admin123", 10);
+  const ceoPassword = await bcrypt.hash("Elignite@2026", 10);
+  const teacherPassword = await bcrypt.hash("Teacher@2026", 10);
+  const studentPassword = await bcrypt.hash("Student@2026", 10);
+
   const ceo = await prisma.user.upsert({
-    where: { email: "admin@edumanage.cm" },
-    update: {},
-    create: {
-      email: "admin@edumanage.cm",
+    where: { email: "ceo@elignite.cm" },
+    update: {
       password: ceoPassword,
-      firstName: "Emmanuel",
-      lastName: "Ngum",
+      firstName: "Boclair",
+      lastName: "Nghochu",
       role: "ceo",
-      phone: "+237677000001",
+      phone: "+237670768962",
+      isActivated: true,
+    },
+    create: {
+      email: "ceo@elignite.cm",
+      password: ceoPassword,
+      firstName: "Boclair",
+      lastName: "Nghochu",
+      role: "ceo",
+      phone: "+237670768962",
+      isActivated: true,
     },
   });
-  console.log("✅ CEO created:", ceo.email);
 
-  // ─── Teacher Users ──────────────────────────────────────────
-  const teacherPassword = await bcrypt.hash("teacher123", 10);
-
-  const teacher1User = await prisma.user.upsert({
-    where: { email: "paul.ngum@edumanage.cm" },
-    update: {},
-    create: {
-      email: "paul.ngum@edumanage.cm",
+  const teacherUser = await prisma.user.upsert({
+    where: { email: "mentor@elignite.cm" },
+    update: {
       password: teacherPassword,
-      firstName: "Paul",
-      lastName: "Ngum",
+      firstName: "Melissa",
+      lastName: "Ngwa",
       role: "teacher",
-      phone: "+237677100001",
+      phone: "+237672320608",
+      isActivated: true,
+    },
+    create: {
+      email: "mentor@elignite.cm",
+      password: teacherPassword,
+      firstName: "Melissa",
+      lastName: "Ngwa",
+      role: "teacher",
+      phone: "+237672320608",
+      isActivated: true,
+    },
+  });
+
+  const teacher = await prisma.teacher.upsert({
+    where: { userId: teacherUser.id },
+    update: {
+      teacherId: "TCH1001",
+      matricle: "ELI-TCH-1001",
+      occupation: "Lead Instructor",
+      profession: "Software Engineer",
+      department: "Technology Training",
+      specialization: "Web Development and AI Tools",
+      qualifications: "Full-stack engineer with project delivery experience",
+      office: "ELIGNITE Main Hub",
+      status: "active",
+    },
+    create: {
+      teacherId: "TCH1001",
+      matricle: "ELI-TCH-1001",
+      userId: teacherUser.id,
+      occupation: "Lead Instructor",
+      profession: "Software Engineer",
+      department: "Technology Training",
+      specialization: "Web Development and AI Tools",
+      qualifications: "Full-stack engineer with project delivery experience",
+      office: "ELIGNITE Main Hub",
+      status: "active",
+    },
+  });
+
+  const inactiveTeacherUser = await prisma.user.upsert({
+    where: { email: "trainer.pending@elignite.cm" },
+    update: {
+      password: teacherPassword,
+      firstName: "Pauline",
+      lastName: "Mbah",
+      role: "teacher",
+      phone: "+237677000112",
+      isActivated: false,
+    },
+    create: {
+      email: "trainer.pending@elignite.cm",
+      password: teacherPassword,
+      firstName: "Pauline",
+      lastName: "Mbah",
+      role: "teacher",
+      phone: "+237677000112",
+      isActivated: false,
     },
   });
 
   await prisma.teacher.upsert({
-    where: { userId: teacher1User.id },
-    update: {},
-    create: {
-      teacherId: "TCH001",
-      userId: teacher1User.id,
-      department: "Computer Science",
-      specialization: "AI & Machine Learning",
-      office: "Office 201, Block A",
+    where: { userId: inactiveTeacherUser.id },
+    update: {
+      teacherId: "TCH1002",
+      matricle: "ELI-TCH-1002",
+      occupation: "Trainer",
+      profession: "Digital Skills Coach",
+      department: "Technology Training",
+      status: "inactive",
     },
-  });
-  console.log("✅ Teacher created:", teacher1User.email);
-
-  const teacher2User = await prisma.user.upsert({
-    where: { email: "marie.atanga@edumanage.cm" },
-    update: {},
     create: {
-      email: "marie.atanga@edumanage.cm",
-      password: teacherPassword,
-      firstName: "Marie",
-      lastName: "Atanga",
-      role: "teacher",
-      phone: "+237677100002",
+      teacherId: "TCH1002",
+      matricle: "ELI-TCH-1002",
+      userId: inactiveTeacherUser.id,
+      occupation: "Trainer",
+      profession: "Digital Skills Coach",
+      department: "Technology Training",
+      status: "inactive",
     },
   });
 
-  await prisma.teacher.upsert({
-    where: { userId: teacher2User.id },
-    update: {},
-    create: {
-      teacherId: "TCH002",
-      userId: teacher2User.id,
-      department: "Business",
-      specialization: "Strategic Management",
-      office: "Office 105, Block B",
-    },
-  });
-
-  // ─── Student Users ──────────────────────────────────────────
-  const studentPassword = await bcrypt.hash("student123", 10);
-
-  const student1User = await prisma.user.upsert({
-    where: { email: "amara.fonkeng@student.edumanage.cm" },
-    update: {},
-    create: {
-      email: "amara.fonkeng@student.edumanage.cm",
+  const studentUser = await prisma.user.upsert({
+    where: { email: "student@elignite.cm" },
+    update: {
       password: studentPassword,
       firstName: "Amara",
       lastName: "Fonkeng",
       role: "student",
       phone: "+237677200001",
+      isActivated: true,
+      matricule: "ELI-STU-1001",
+    },
+    create: {
+      email: "student@elignite.cm",
+      password: studentPassword,
+      firstName: "Amara",
+      lastName: "Fonkeng",
+      role: "student",
+      phone: "+237677200001",
+      isActivated: true,
+      matricule: "ELI-STU-1001",
     },
   });
 
   await prisma.student.upsert({
-    where: { userId: student1User.id },
-    update: {},
-    create: {
-      studentId: "STU2024001",
-      userId: student1User.id,
-      program: "bsc-computer-science",
-      level: 2,
+    where: { userId: studentUser.id },
+    update: {
+      studentId: "STU1001",
+      matricle: "ELI-STU-1001",
+      program: "web-development",
+      level: 1,
       gender: "female",
-      address: "Bamenda, NW Region",
+      address: "Bamenda, Cameroon",
+      parentName: "Mrs Fonkeng",
+      parentPhone: "+237677200099",
+      status: "active",
+    },
+    create: {
+      studentId: "STU1001",
+      matricle: "ELI-STU-1001",
+      userId: studentUser.id,
+      program: "web-development",
+      level: 1,
+      gender: "female",
+      address: "Bamenda, Cameroon",
+      parentName: "Mrs Fonkeng",
+      parentPhone: "+237677200099",
+      status: "active",
     },
   });
-  console.log("✅ Student created:", student1User.email);
 
-  const student2User = await prisma.user.upsert({
-    where: { email: "brice.nkemdirim@student.edumanage.cm" },
-    update: {},
-    create: {
-      email: "brice.nkemdirim@student.edumanage.cm",
-      password: studentPassword,
+  await prisma.enrollment.upsert({
+    where: { email: "newstudent@elignite.cm" },
+    update: {
       firstName: "Brice",
       lastName: "Nkemdirim",
-      role: "student",
-      phone: "+237677200002",
+      phone: "+237677200222",
+      program: "software-engineering",
+      status: "approved",
+      matricle: "ELI-APP-1002",
+      approvedAt: new Date(),
+      approvedBy: ceo.id,
     },
-  });
-
-  await prisma.student.upsert({
-    where: { userId: student2User.id },
-    update: {},
     create: {
-      studentId: "STU2024002",
-      userId: student2User.id,
-      program: "bsc-business-administration",
-      level: 1,
-      gender: "male",
-      address: "Bamenda, NW Region",
+      firstName: "Brice",
+      lastName: "Nkemdirim",
+      email: "newstudent@elignite.cm",
+      phone: "+237677200222",
+      program: "software-engineering",
+      status: "approved",
+      matricle: "ELI-APP-1002",
+      publicAccessToken: "seed-public-token-1002",
+      approvedAt: new Date(),
+      approvedBy: ceo.id,
     },
   });
 
-  // ─── Programs ───────────────────────────────────────────────
   const programs = [
-    { slug: "bsc-computer-science", title: "BSc Computer Science", category: "Technology", duration: "4 Years", description: "A comprehensive program covering software engineering, algorithms, AI, and systems design.", tuition: 2500000, requirements: "GCE O/L with 5 credits|Math and English mandatory", outcomes: "Software Developer|Data Scientist|AI Engineer|Systems Analyst" },
-    { slug: "bsc-business-administration", title: "BSc Business Administration", category: "Business", duration: "3 Years", description: "Learn leadership, finance, marketing, and entrepreneurship.", tuition: 2000000, requirements: "GCE O/L with 5 credits|Math required", outcomes: "Business Manager|Entrepreneur|Marketing Manager" },
-    { slug: "bsc-nursing", title: "BSc Nursing", category: "Health Sciences", duration: "4 Years", description: "Train to become a skilled, compassionate nursing professional.", tuition: 3000000, requirements: "GCE O/L with Biology & Chemistry|Health certificate", outcomes: "Registered Nurse|Clinical Specialist|Nurse Educator" },
-    { slug: "bsc-education", title: "BSc Education", category: "Education", duration: "3 Years", description: "Become a qualified teacher with skills in pedagogy and curriculum design.", tuition: 1800000, requirements: "GCE O/L with 5 credits|English proficiency", outcomes: "Primary Teacher|Secondary Teacher|Education Admin" },
-    { slug: "hnd-accounting", title: "HND Accounting & Finance", category: "Finance", duration: "2 Years", description: "Master accounting principles, financial reporting, and taxation.", tuition: 1500000, requirements: "GCE O/L with 5 credits|Math required", outcomes: "Accountant|Financial Analyst|Auditor" },
-    { slug: "bsc-civil-engineering", title: "BSc Civil Engineering", category: "Engineering", duration: "5 Years", description: "Design, build, and maintain infrastructure with strong math and physics foundations.", tuition: 3500000, requirements: "GCE A/L with Math and Physics", outcomes: "Civil Engineer|Structural Engineer|Project Manager" },
+    {
+      slug: "web-development",
+      title: "Web Development",
+      category: "Software",
+      duration: "8 Weeks",
+      description: "Learn HTML, CSS, JavaScript, React, deployment, and portfolio-ready frontend delivery.",
+      tuition: 180000,
+      requirements: "Basic computer use, willingness to practice, internet access for assignments",
+      outcomes: "Responsive websites, React interfaces, deployment workflow",
+      teacherId: teacher.id,
+    },
+    {
+      slug: "software-engineering",
+      title: "Software Engineering",
+      category: "Engineering",
+      duration: "12 Weeks",
+      description: "Build backend and frontend thinking with Git, APIs, testing, and team-ready software habits.",
+      tuition: 260000,
+      requirements: "Comfort with beginner programming concepts or strong learning commitment",
+      outcomes: "Project architecture, backend services, version control discipline",
+      teacherId: teacher.id,
+    },
+    {
+      slug: "cloud-devops",
+      title: "Cloud & DevOps",
+      category: "Infrastructure",
+      duration: "10 Weeks",
+      description: "Work through Linux basics, cloud deployment, CI/CD, and modern delivery workflows.",
+      tuition: 220000,
+      requirements: "Basic technical confidence and laptop access",
+      outcomes: "Deployment confidence, CI/CD familiarity, cloud operations basics",
+      teacherId: teacher.id,
+    },
+    {
+      slug: "graphic-design",
+      title: "Graphic Design",
+      category: "Creative Tech",
+      duration: "8 Weeks",
+      description: "Create digital brand assets, social media graphics, client-ready layouts, and visual campaigns.",
+      tuition: 140000,
+      requirements: "Beginner-friendly, creativity and consistency",
+      outcomes: "Design portfolio, brand systems, campaign graphics",
+      teacherId: teacher.id,
+    },
+    {
+      slug: "ai-tools",
+      title: "AI Tools for Work",
+      category: "AI Productivity",
+      duration: "5 Weeks",
+      description: "Use AI tools for writing, research, business workflows, and responsible productivity gains.",
+      tuition: 95000,
+      requirements: "No technical background required",
+      outcomes: "Prompt workflows, faster research, better digital output",
+      teacherId: teacher.id,
+    },
   ];
 
-  for (const p of programs) {
-    await prisma.program.upsert({ where: { slug: p.slug }, update: {}, create: p });
-  }
-  console.log("✅ Programs seeded");
-
-  // ─── Courses ────────────────────────────────────────────────
-  const teacher1 = await prisma.teacher.findFirst({ where: { teacherId: "TCH001" } });
-  const teacher2 = await prisma.teacher.findFirst({ where: { teacherId: "TCH002" } });
-
-  const courses = [
-    { code: "CS101", title: "Introduction to Programming", credits: 3, program: "bsc-computer-science", level: 1, semester: "Semester 1", year: 2024, teacherId: teacher1?.id, room: "Lab 1", schedule: "Mon/Wed 8-10am" },
-    { code: "CS205", title: "Data Structures & Algorithms", credits: 3, program: "bsc-computer-science", level: 2, semester: "Semester 1", year: 2024, teacherId: teacher1?.id, room: "Lab 1", schedule: "Tue/Thu 2-4pm" },
-    { code: "MATH201", title: "Calculus II", credits: 3, program: "bsc-computer-science", level: 2, semester: "Semester 1", year: 2024, teacherId: undefined, room: "Hall B", schedule: "Mon/Wed 10-12pm" },
-    { code: "ENG102", title: "English Communication", credits: 2, program: "bsc-computer-science", level: 1, semester: "Semester 1", year: 2024, teacherId: undefined, room: "Room 14", schedule: "Fri 2-4pm" },
-    { code: "BUS201", title: "Business Management", credits: 3, program: "bsc-business-administration", level: 2, semester: "Semester 1", year: 2024, teacherId: teacher2?.id, room: "Hall A", schedule: "Tue/Thu 10-12pm" },
-  ];
-
-  for (const c of courses) {
-    await prisma.course.upsert({ where: { code: c.code }, update: {}, create: c });
-  }
-  console.log("✅ Courses seeded");
-
-  // ─── Sample Results ──────────────────────────────────────────
-  const student1 = await prisma.student.findFirst({ where: { studentId: "STU2024001" } });
-  const cs205 = await prisma.course.findFirst({ where: { code: "CS205" } });
-  const math201 = await prisma.course.findFirst({ where: { code: "MATH201" } });
-
-  if (student1 && cs205) {
-    await prisma.result.upsert({
-      where: { studentId_courseId_semester_year: { studentId: student1.id, courseId: cs205.id, semester: "Semester 1", year: 2024 } },
-      update: {},
-      create: { studentId: student1.id, courseId: cs205.id, ca: 35, exam: 56, total: 91, grade: "A+", semester: "Semester 1", year: 2024 },
-    });
-  }
-  if (student1 && math201) {
-    await prisma.result.upsert({
-      where: { studentId_courseId_semester_year: { studentId: student1.id, courseId: math201.id, semester: "Semester 1", year: 2024 } },
-      update: {},
-      create: { studentId: student1.id, courseId: math201.id, ca: 28, exam: 55, total: 83, grade: "A", semester: "Semester 1", year: 2024 },
+  for (const program of programs) {
+    await prisma.program.upsert({
+      where: { slug: program.slug },
+      update: program,
+      create: program,
     });
   }
 
-  // ─── Sample Fees ─────────────────────────────────────────────
-  if (student1) {
-    await prisma.fee.createMany({
-      data: [
-        { studentId: student1.id, description: "Tuition Fee - Semester 1", amount: 625000, dueDate: new Date("2024-09-30"), paidDate: new Date("2024-09-15"), status: "paid", receiptNo: "REC-2024-001" },
-        { studentId: student1.id, description: "Library Fee", amount: 25000, dueDate: new Date("2024-09-30"), paidDate: new Date("2024-09-15"), status: "paid", receiptNo: "REC-2024-002" },
-        { studentId: student1.id, description: "Tuition Fee - Semester 2", amount: 625000, dueDate: new Date("2025-01-31"), status: "pending" },
-        { studentId: student1.id, description: "Examination Fee", amount: 30000, dueDate: new Date("2024-12-01"), status: "overdue" },
-      ],
-    });
-  }
-
-  // ─── Announcements ───────────────────────────────────────────
-  await prisma.announcement.createMany({
-    data: [
-      { title: "End of Semester Exams – Timetable Released", content: "The final exam timetable for Semester 1 (2024/2025) has been released. Exams run from December 9–20, 2024.", targetRole: "all", priority: "high", author: "Academic Office", userId: ceo.id },
-      { title: "Fee Payment Deadline Extended to Nov 30", content: "The deadline for second installment tuition payment has been extended to November 30, 2024.", targetRole: "student", priority: "medium", author: "Finance Office", userId: ceo.id },
-      { title: "Faculty Meeting – November", content: "Monthly faculty meeting on Nov 20 at 10am in Hall A.", targetRole: "teacher", priority: "low", author: "Director", userId: ceo.id },
-    ],
+  await prisma.course.upsert({
+    where: { code: "WEB101" },
+    update: {
+      title: "Frontend Foundations",
+      program: "web-development",
+      teacherId: teacher.id,
+      room: "Lab 1",
+      schedule: "Mon/Wed/Fri 8:00-10:00",
+    },
+    create: {
+      code: "WEB101",
+      title: "Frontend Foundations",
+      description: "HTML, CSS, JavaScript and responsive UI build practice",
+      credits: 3,
+      program: "web-development",
+      level: 1,
+      semester: "Cohort A",
+      year: 2026,
+      teacherId: teacher.id,
+      room: "Lab 1",
+      schedule: "Mon/Wed/Fri 8:00-10:00",
+    },
   });
-  console.log("✅ Announcements seeded");
 
-  // ─── Testimonies ─────────────────────────────────────────────
-  await prisma.testimony.createMany({
-    data: [
-      { userId: ceo.id, name: "Amara Fonkeng", program: "BSc Computer Science", year: "2023", text: "EduManage transformed my career. The faculty are exceptional and the facilities are world-class.", rating: 5, status: "approved" },
-      { userId: ceo.id, name: "Brice Nkemdirim", program: "BSc Business Admin", year: "2022", text: "The best investment I ever made. The business program gave me real-world skills from day one.", rating: 5, status: "approved" },
-      { userId: ceo.id, name: "Sandra Mbah", program: "BSc Nursing", year: "2023", text: "Compassionate training with hands-on clinical practice. I graduated ready to serve.", rating: 4, status: "approved" },
-    ],
+  await prisma.settings.upsert({
+    where: { id: 1 },
+    update: { applicationsOpen: true, applicationYear: "2026 Cohort", maintenanceMode: false, updatedBy: ceo.id },
+    create: { id: 1, applicationsOpen: true, applicationYear: "2026 Cohort", maintenanceMode: false, updatedBy: ceo.id },
+  });
+
+  await prisma.schoolSettings.upsert({
+    where: { id: 1 },
+    update: {
+      schoolName: "ELIGNITE Training Platform",
+      ceoFirstName: "Boclair",
+      ceoLastName: "Nghochu",
+      ceoTitle: "Chief Executive Officer",
+      schoolMotto: "Practical digital skills for real work",
+      schoolAddress: "Elegance Junction, UBa first gate, Bamenda",
+      schoolPhone: "+237670768962 / +237672320608",
+      schoolEmail: "ceo@elignite.cm",
+      aiName: "ELI Assist",
+    },
+    create: {
+      id: 1,
+      schoolName: "ELIGNITE Training Platform",
+      ceoFirstName: "Boclair",
+      ceoLastName: "Nghochu",
+      ceoTitle: "Chief Executive Officer",
+      schoolMotto: "Practical digital skills for real work",
+      schoolAddress: "Elegance Junction, UBa first gate, Bamenda",
+      schoolPhone: "+237670768962 / +237672320608",
+      schoolEmail: "ceo@elignite.cm",
+      aiName: "ELI Assist",
+    },
   });
 
   await prisma.aboutUs.upsert({
     where: { id: 1 },
     update: {
-      vision: "To become the leading school management platform in the region by delivering accessible, trusted, and technology-driven learning experiences to every student.",
-      visionImageUrl: "https://placehold.co/640x480?text=Vision",
-      mission: "To equip learners with the skills, knowledge, and support they need to succeed in school and beyond through quality programs, caring faculty, and seamless administrative systems.",
-      missionImageUrl: "https://placehold.co/640x480?text=Mission",
+      vision: "To become a trusted technology training platform where learners build practical digital skills with confidence and career direction.",
+      visionImageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+      mission: "To help people move into modern tech work through guided learning, applied projects, and support that feels clear and professional.",
+      missionImageUrl: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80",
     },
     create: {
-      vision: "To become the leading school management platform in the region by delivering accessible, trusted, and technology-driven learning experiences to every student.",
-      visionImageUrl: "https://placehold.co/640x480?text=Vision",
-      mission: "To equip learners with the skills, knowledge, and support they need to succeed in school and beyond through quality programs, caring faculty, and seamless administrative systems.",
-      missionImageUrl: "https://placehold.co/640x480?text=Mission",
+      id: 1,
+      vision: "To become a trusted technology training platform where learners build practical digital skills with confidence and career direction.",
+      visionImageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+      mission: "To help people move into modern tech work through guided learning, applied projects, and support that feels clear and professional.",
+      missionImageUrl: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80",
     },
   });
 
-  await prisma.gallery.createMany({
-    data: [
-      { title: "Main Campus Building", category: "Campus", url: "https://placehold.co/640x480?text=Campus" },
-      { title: "Graduation Day", category: "Events", url: "https://placehold.co/640x480?text=Graduation" },
-      { title: "Computer Lab", category: "Facilities", url: "https://placehold.co/640x480?text=Lab" },
-      { title: "Student Hub", category: "Campus", url: "https://placehold.co/640x480?text=Hub" },
-    ],
-  });
+  const services = [
+    { name: "Career Guidance", description: "Track selection, next-step advice, and learner support", category: "Career", icon: "ShieldCheck" },
+    { name: "Portfolio Support", description: "Project direction and presentation support for job-facing work", category: "Academic", icon: "Briefcase" },
+    { name: "Mentorship", description: "Ongoing coach accountability through the learning journey", category: "Welfare", icon: "HeartHandshake" },
+  ];
 
-  await prisma.service.createMany({
-    data: [
-      { name: "Student Counseling", description: "Academic and psychological counseling services", category: "Welfare", icon: "HeartHandshake", isActive: true },
-      { name: "Career Placement", description: "Job placement and internship matching services", category: "Career", icon: "Briefcase", isActive: true },
-      { name: "Library Services", description: "Physical and digital library access and resources", category: "Academic", icon: "BookOpen", isActive: true },
-      { name: "Health Clinic", description: "On-campus medical services and health support", category: "Health", icon: "Heart", isActive: true },
-      { name: "Sports Complex", description: "Football, basketball, fitness facilities and sports programs", category: "Sports", icon: "Rocket", isActive: true },
-      { name: "Hostel Accommodation", description: "On-campus housing for students with modern amenities", category: "Accommodation", icon: "Home", isActive: true },
-    ],
-  });
+  for (const service of services) {
+    const existing = await prisma.service.findFirst({ where: { name: service.name } });
+    if (existing) {
+      await prisma.service.update({ where: { id: existing.id }, data: { ...service, isActive: true } });
+    } else {
+      await prisma.service.create({ data: { ...service, isActive: true } });
+    }
+  }
 
-  // ─── School Settings ────────────────────────────────────────
-  await prisma.schoolSettings.upsert({
-    where: { id: 1 },
-    update: {},
-    create: {
-      schoolName: "Computer Training Institute",
-      ceoFirstName: "Dr.",
-      ceoLastName: "Emmanuel Ngum",
-      ceoTitle: "Chief Executive Officer",
-      schoolMotto: "Excellence in Technology Education",
-      schoolAddress: "Bamenda, North West Region, Cameroon",
-      schoolPhone: "+237677000001",
-      schoolEmail: "admin@edumanage.cm",
-      aiName: "EduAssistant",
-    },
-  });
-  console.log("✅ School settings initialized");
+  const gallery = [
+    { title: "Live coding session", category: "Training", url: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80" },
+    { title: "Design workshop", category: "Creative Tech", url: "https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1200&q=80" },
+    { title: "Mentor support", category: "Coaching", url: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80" },
+  ];
 
-  console.log("\n🎉 Seeding complete!\n");
-  console.log("──────────────────────────────────────────");
-  console.log("🔑 Login Credentials:");
-  console.log("   CEO:     admin@edumanage.cm       / admin123");
-  console.log("   Teacher: paul.ngum@edumanage.cm   / teacher123");
-  console.log("   Student: amara.fonkeng@student.edumanage.cm / student123");
-  console.log("──────────────────────────────────────────");
-  console.log("🤖 AI Assistant: EduAssistant");
-  console.log("   Configure the AI name in CEO Dashboard > Settings");
-  console.log("──────────────────────────────────────────");
+  for (const item of gallery) {
+    const existing = await prisma.gallery.findFirst({ where: { title: item.title } });
+    if (existing) {
+      await prisma.gallery.update({ where: { id: existing.id }, data: item });
+    } else {
+      await prisma.gallery.create({ data: item });
+    }
+  }
+
+  const testimonyExists = await prisma.testimony.findFirst({ where: { name: "Amara Fonkeng" } });
+  if (!testimonyExists) {
+    await prisma.testimony.create({
+      data: {
+        userId: studentUser.id,
+        name: "Amara Fonkeng",
+        program: "Web Development",
+        year: "2026",
+        text: "The platform feels structured, clear, and practical. I could actually see my progress week after week.",
+        rating: 5,
+        status: "approved",
+      },
+    });
+  }
+
+  console.log("Seeding complete.");
+  console.log("CEO login: ceo@elignite.cm / Elignite@2026");
+  console.log("Teacher login: mentor@elignite.cm / Teacher@2026");
+  console.log("Student login: student@elignite.cm / Student@2026");
+  console.log("Approved registration record: newstudent@elignite.cm / matricule ELI-APP-1002");
+  console.log("Pending teacher activation: trainer.pending@elignite.cm / teacher ID TCH1002");
 }
 
 main()
-  .catch((e) => { console.error(e); process.exit(1); })
-  .finally(() => prisma.$disconnect());
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

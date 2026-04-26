@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Reveal } from "@/components/marketing/reveal";
 import { SectionHeading } from "@/components/marketing/section-heading";
+import { PhoneShowcase } from "@/components/marketing/phone-showcase";
 import { faqs, learningSteps, partnerLogos, platformStats, techPrograms } from "@/lib/site-content";
 import {
   ArrowRight,
@@ -14,7 +15,6 @@ import {
   CheckCircle2,
   Clock3,
   Cpu,
-  GraduationCap,
   Layers3,
   ShieldCheck,
   Sparkles,
@@ -94,41 +94,40 @@ export default async function HomePage() {
         ];
 
   return (
-    <div className="min-h-screen bg-[#050b16] text-white">
+    <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden border-b border-slate-200 bg-[linear-gradient(180deg,#f8fdff_0%,#ffffff_55%,#eef9ff_100%)]">
         <div className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80"
             alt="Learners working with modern tech equipment"
             fill
             priority
-            className="object-cover opacity-30"
+            className="object-cover opacity-[0.08]"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(5,11,22,0.96),rgba(8,16,30,0.86),rgba(6,78,110,0.45))]" />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-24 sm:px-6 lg:px-8 lg:pb-28 lg:pt-32">
-          <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+        <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-24 sm:px-6 lg:px-8 lg:pb-24 lg:pt-28">
+          <div className="grid gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
             <Reveal className="max-w-3xl">
-              <Badge className="border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-cyan-200">
-                Premium tech training for careers, freelancing, and digital work
+              <Badge className="border-sky-200 bg-sky-50 px-4 py-2 text-sky-700">
+                Bright, practical tech training for careers, freelancing, and digital work
               </Badge>
-              <h1 className="mt-6 text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
-                ELIGNITE helps learners build modern tech skills through practical, guided training.
+              <h1 className="mt-6 text-4xl font-semibold leading-tight text-slate-950 sm:text-5xl lg:text-6xl">
+                ELIGNITE helps learners build modern tech skills through clear, practical training.
               </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-                From web development and software engineering to cloud, design, AI tools, and digital productivity, every track is built around hands-on outcomes and career-facing work.
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
+                From web development and software engineering to cloud, design, AI tools, and digital productivity, every track is built around hands-on outcomes and real-world confidence.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Button size="lg" asChild className="bg-cyan-400 text-slate-950 hover:bg-cyan-300">
+                <Button size="lg" asChild className="bg-sky-500 text-white hover:bg-sky-600">
                   <Link href="/enroll">
                     Apply Now
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                <Button size="lg" variant="outline" asChild className="border-slate-200 bg-white text-slate-900 hover:bg-sky-50">
                   <Link href="/programs">Explore Programs</Link>
                 </Button>
               </div>
@@ -136,51 +135,64 @@ export default async function HomePage() {
               <div className="mt-10 grid gap-4 sm:grid-cols-3">
                 {platformStats.slice(0, 3).map((stat, index) => (
                   <Reveal key={stat.label} delay={index * 80} className="surface-card hover-lift p-5">
-                    <p className="text-3xl font-semibold text-white">{stat.value}</p>
-                    <p className="mt-2 text-sm text-slate-400">{stat.label}</p>
+                    <p className="text-3xl font-semibold text-slate-950">{stat.value}</p>
+                    <p className="mt-2 text-sm text-slate-500">{stat.label}</p>
                   </Reveal>
                 ))}
               </div>
             </Reveal>
 
-            <Reveal delay={160} className="surface-card-strong hover-lift p-6 lg:p-8">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-300">Learning experience</p>
-                  <h2 className="mt-3 text-2xl font-semibold text-white">Built for practical progress</h2>
-                </div>
-                <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/10 p-3 text-cyan-300">
-                  <Cpu className="h-6 w-6" />
+            <Reveal delay={160} className="grid gap-5">
+              <div className="surface-card-strong p-6">
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-600">Visual Showcase</p>
+                <h2 className="mt-3 text-2xl font-semibold text-slate-950">ELIGNITE in your hand</h2>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  A rotating phone-style preview gives visitors a cleaner feel for your flyers and training offers without breaking the page rhythm.
+                </p>
+                <div className="mt-6">
+                  <PhoneShowcase />
                 </div>
               </div>
-              <div className="mt-8 space-y-4">
-                {[
-                  "Structured paths for beginners and career-switchers",
-                  "Hands-on assignments, projects, and guided feedback",
-                  "Track progress through one learner dashboard",
-                  "Career-facing support for confidence after training",
-                ].map((item) => (
-                  <div key={item} className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/5 px-4 py-4">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 text-cyan-300" />
-                    <p className="text-sm leading-6 text-slate-300">{item}</p>
+
+              <div className="surface-card p-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-600">Learning Experience</p>
+                    <h2 className="mt-3 text-2xl font-semibold text-slate-950">Built for practical progress</h2>
                   </div>
-                ))}
+                  <div className="rounded-2xl border border-sky-100 bg-sky-50 p-3 text-sky-600">
+                    <Cpu className="h-6 w-6" />
+                  </div>
+                </div>
+                <div className="mt-6 space-y-3">
+                  {[
+                    "Structured paths for beginners and career-switchers",
+                    "Hands-on assignments, projects, and guided feedback",
+                    "Track progress through one learner dashboard",
+                    "Career-facing support for confidence after training",
+                  ].map((item) => (
+                    <div key={item} className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-sky-500" />
+                      <p className="text-sm leading-6 text-slate-600">{item}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </Reveal>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-white/8 bg-white/[0.03]">
-        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 text-sm text-slate-300 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
+      <section className="border-y border-slate-200 bg-white">
+        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 text-sm text-slate-600 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
           {[
-            { icon: GraduationCap, label: "Career tracks designed for the tech sector" },
-            { icon: Layers3, label: "Cohort-based learning with structured milestones" },
+            { icon: Layers3, label: "Career tracks designed for the tech sector" },
+            { icon: Users2, label: "Cohort-based learning with structured milestones" },
             { icon: ShieldCheck, label: "Applied projects instead of passive theory" },
             { icon: Briefcase, label: "Job-facing support for real next steps" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-3">
-              <item.icon className="h-5 w-5 text-cyan-300" />
+              <item.icon className="h-5 w-5 text-sky-500" />
               <span>{item.label}</span>
             </div>
           ))}
@@ -193,6 +205,7 @@ export default async function HomePage() {
             eyebrow="Popular Programs"
             title="Choose a training path that feels current, practical, and worth your time."
             description="Every ELIGNITE program is shaped for real digital work, with clear pacing, hands-on deliverables, and a direct path from learning to execution."
+            className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
           />
         </Reveal>
         <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -201,51 +214,47 @@ export default async function HomePage() {
               <article className="surface-card-strong hover-lift h-full overflow-hidden">
                 <div className="relative h-56">
                   <Image src={program.image} alt={program.title} fill className="object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#07111f] via-[#07111f]/50 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />
                   <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
-                    <Badge className="border-cyan-300/20 bg-cyan-300/10 text-cyan-200">{program.category}</Badge>
-                    <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-slate-200">
+                    <Badge className="border-white/15 bg-white/90 text-sky-700">{program.category}</Badge>
+                    <span className="rounded-full border border-white/20 bg-white/85 px-3 py-1 text-xs text-slate-700">
                       {program.mode}
                     </span>
                   </div>
                 </div>
                 <div className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-xl font-semibold text-white">{program.title}</h3>
-                      <p className="mt-3 text-sm leading-6 text-slate-400">{program.description}</p>
-                    </div>
-                  </div>
+                  <h3 className="text-xl font-semibold text-slate-950">{program.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{program.description}</p>
                   <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                    <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                       <p className="text-slate-500">Duration</p>
-                      <p className="mt-1 font-medium text-slate-100">{program.duration}</p>
+                      <p className="mt-1 font-medium text-slate-900">{program.duration}</p>
                     </div>
-                    <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                       <p className="text-slate-500">Level</p>
-                      <p className="mt-1 font-medium text-slate-100">{program.level}</p>
+                      <p className="mt-1 font-medium text-slate-900">{program.level}</p>
                     </div>
-                    <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                       <p className="text-slate-500">Mode</p>
-                      <p className="mt-1 font-medium text-slate-100">{program.mode}</p>
+                      <p className="mt-1 font-medium text-slate-900">{program.mode}</p>
                     </div>
-                    <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                       <p className="text-slate-500">Price</p>
-                      <p className="mt-1 font-medium text-slate-100">{program.price}</p>
+                      <p className="mt-1 font-medium text-slate-900">{program.price}</p>
                     </div>
                   </div>
                   <div className="mt-5 flex flex-wrap gap-2">
                     {program.highlights.map((item) => (
-                      <span key={item} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">
+                      <span key={item} className="rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs text-sky-700">
                         {item}
                       </span>
                     ))}
                   </div>
                   <div className="mt-6 flex gap-3">
-                    <Button asChild className="flex-1 bg-cyan-400 text-slate-950 hover:bg-cyan-300">
+                    <Button asChild className="flex-1 bg-sky-500 text-white hover:bg-sky-600">
                       <Link href={`/enroll?program=${program.slug}`}>Apply Now</Link>
                     </Button>
-                    <Button asChild variant="outline" className="flex-1 border-white/15 bg-transparent text-white hover:bg-white/10 hover:text-white">
+                    <Button asChild variant="outline" className="flex-1 border-slate-200 bg-white text-slate-900 hover:bg-slate-50">
                       <Link href={`/programs/${program.slug}`}>View Details</Link>
                     </Button>
                   </div>
@@ -256,24 +265,25 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#07111f] px-4 py-20 sm:px-6 lg:px-8">
+      <section className="bg-sky-50/70 px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
             <SectionHeading
               eyebrow="How Learning Works"
               title="A smoother path from curiosity to skill."
               description="The platform combines guided instruction, visible progress, projects, and support so learners always know what comes next."
+              className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
             />
           </Reveal>
           <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {learningSteps.map((step, index) => (
               <Reveal key={step.title} delay={index * 90}>
                 <div className="surface-card hover-lift h-full p-6">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-lg font-semibold text-cyan-300">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-lg font-semibold text-sky-700">
                     0{index + 1}
                   </div>
-                  <h3 className="mt-6 text-xl font-semibold text-white">{step.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-400">{step.description}</p>
+                  <h3 className="mt-6 text-xl font-semibold text-slate-950">{step.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{step.description}</p>
                 </div>
               </Reveal>
             ))}
@@ -289,6 +299,7 @@ export default async function HomePage() {
                 eyebrow="Why ELIGNITE"
                 title="A modern training environment with structure, clarity, and momentum."
                 description="The platform is designed to make programs feel credible, easy to navigate, and motivating to continue."
+                className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
               />
             </div>
           </Reveal>
@@ -301,11 +312,11 @@ export default async function HomePage() {
             ].map((item, index) => (
               <Reveal key={item.title} delay={index * 90}>
                 <div className="surface-card hover-lift h-full p-6">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-300">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
                     <item.icon className="h-5 w-5" />
                   </div>
-                  <h3 className="mt-5 text-xl font-semibold text-white">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-400">{item.text}</p>
+                  <h3 className="mt-5 text-xl font-semibold text-slate-950">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{item.text}</p>
                 </div>
               </Reveal>
             ))}
@@ -313,7 +324,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#07111f] px-4 py-20 sm:px-6 lg:px-8">
+      <section className="bg-slate-50 px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
             <SectionHeading
@@ -321,20 +332,21 @@ export default async function HomePage() {
               title="The experience feels practical, modern, and directed."
               description="The strongest signal is whether learners feel progress. These stories show what that looks like inside the platform."
               align="center"
+              className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
             />
           </Reveal>
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
             {testimonials.map((testimony, index) => (
               <Reveal key={testimony.id} delay={index * 90}>
                 <div className="surface-card hover-lift h-full p-6">
-                  <p className="text-sm uppercase tracking-[0.22em] text-cyan-300">{testimony.program}</p>
-                  <p className="mt-4 text-lg leading-8 text-slate-200">&ldquo;{testimony.text}&rdquo;</p>
+                  <p className="text-sm uppercase tracking-[0.22em] text-sky-600">{testimony.program}</p>
+                  <p className="mt-4 text-lg leading-8 text-slate-700">&ldquo;{testimony.text}&rdquo;</p>
                   <div className="mt-8 flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-white">{testimony.name}</p>
+                      <p className="font-semibold text-slate-950">{testimony.name}</p>
                       <p className="text-sm text-slate-500">{testimony.rating}/5 rating</p>
                     </div>
-                    <div className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-200">
+                    <div className="rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs text-sky-700">
                       Verified
                     </div>
                   </div>
@@ -352,14 +364,15 @@ export default async function HomePage() {
               eyebrow="FAQ"
               title="Common questions from new learners."
               description="The public site now makes the next step clearer, but here are the essentials in one place."
+              className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
             />
           </Reveal>
           <div className="space-y-4">
             {faqs.map((faq, index) => (
               <Reveal key={faq.question} delay={index * 80}>
                 <div className="surface-card hover-lift p-6">
-                  <h3 className="text-lg font-semibold text-white">{faq.question}</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-400">{faq.answer}</p>
+                  <h3 className="text-lg font-semibold text-slate-950">{faq.question}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{faq.answer}</p>
                 </div>
               </Reveal>
             ))}
@@ -367,10 +380,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-white/8 bg-white/[0.03] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-4 text-sm text-slate-400">
+      <section className="border-y border-slate-200 bg-white px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-4 text-sm text-slate-500">
           {partnerLogos.map((partner) => (
-            <div key={partner} className="rounded-full border border-white/10 bg-white/5 px-5 py-2">
+            <div key={partner} className="rounded-full border border-slate-200 bg-slate-50 px-5 py-2">
               {partner}
             </div>
           ))}
@@ -382,19 +395,19 @@ export default async function HomePage() {
           <div className="surface-card-strong overflow-hidden p-8 sm:p-10">
             <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-300">Ready to start</p>
-                <h2 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-600">Ready to start</p>
+                <h2 className="mt-4 text-3xl font-semibold text-slate-950 sm:text-4xl">
                   Join a serious tech training platform built to help you produce real work.
                 </h2>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400">
+                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
                   Browse the tracks, apply to the one that fits your goal, and move into a guided learning environment that feels current and credible.
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-                <Button size="lg" asChild className="bg-cyan-400 text-slate-950 hover:bg-cyan-300">
+                <Button size="lg" asChild className="bg-sky-500 text-white hover:bg-sky-600">
                   <Link href="/enroll">Apply Now</Link>
                 </Button>
-                <Button size="lg" asChild variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                <Button size="lg" asChild variant="outline" className="border-slate-200 bg-white text-slate-900 hover:bg-slate-50">
                   <Link href="/contact">Talk to Admissions</Link>
                 </Button>
               </div>

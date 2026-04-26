@@ -4,30 +4,30 @@
 
 @layer base {
   :root {
-    --background: 220 40% 8%;
-    --foreground: 210 40% 98%;
-    --card: 222 39% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 39% 11%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 190 95% 54%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 222 30% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 220 24% 16%;
-    --muted-foreground: 215 20% 72%;
-    --accent: 219 34% 18%;
-    --accent-foreground: 210 40% 98%;
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 199 95% 56%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 100% 97%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 60% 97%;
+    --muted-foreground: 215 25% 40%;
+    --accent: 34 100% 56%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 220 24% 22%;
-    --input: 220 24% 22%;
-    --ring: 190 95% 54%;
+    --border: 210 35% 90%;
+    --input: 210 35% 90%;
+    --ring: 199 95% 56%;
     --radius: 0.9rem;
   }
 
   * {
-    @apply border-slate-800;
+    @apply border-slate-200;
   }
 
   html {
@@ -35,14 +35,15 @@
   }
 
   body {
-    @apply bg-[#050b16] text-slate-100 antialiased;
+    @apply bg-white text-slate-900 antialiased;
     font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     min-height: 100vh;
     background-image:
-      linear-gradient(180deg, rgba(8, 15, 28, 0.96), rgba(5, 11, 22, 1)),
-      linear-gradient(90deg, rgba(34, 211, 238, 0.05) 0, rgba(34, 211, 238, 0.05) 1px, transparent 1px, transparent 80px),
-      linear-gradient(rgba(34, 211, 238, 0.04) 0, rgba(34, 211, 238, 0.04) 1px, transparent 1px, transparent 80px);
-    background-size: auto, 80px 80px, 80px 80px;
+      radial-gradient(circle at top left, rgba(14, 165, 233, 0.14), transparent 22%),
+      radial-gradient(circle at top right, rgba(249, 115, 22, 0.08), transparent 20%),
+      linear-gradient(90deg, rgba(14, 165, 233, 0.04) 0, rgba(14, 165, 233, 0.04) 1px, transparent 1px, transparent 90px),
+      linear-gradient(rgba(14, 165, 233, 0.04) 0, rgba(14, 165, 233, 0.04) 1px, transparent 1px, transparent 90px);
+    background-size: auto, auto, 90px 90px, 90px 90px;
     background-attachment: fixed;
   }
 
@@ -71,11 +72,11 @@
 
 @layer utilities {
   .surface-card {
-    @apply rounded-[24px] border border-white/10 bg-white/5 shadow-[0_18px_70px_-38px_rgba(34,211,238,0.28)] backdrop-blur;
+    @apply rounded-[24px] border border-slate-200 bg-white shadow-[0_24px_80px_-48px_rgba(14,165,233,0.28)];
   }
 
   .surface-card-strong {
-    @apply rounded-[28px] border border-white/10 bg-slate-950/85 shadow-[0_24px_90px_-42px_rgba(34,211,238,0.3)] backdrop-blur;
+    @apply rounded-[28px] border border-slate-200 bg-white shadow-[0_28px_90px_-52px_rgba(14,165,233,0.32)];
   }
 
   .reveal {
@@ -102,7 +103,42 @@
 
   .hover-lift:hover {
     transform: translateY(-6px);
-    box-shadow: 0 28px 90px -40px rgba(34, 211, 238, 0.24);
-    border-color: rgba(103, 232, 249, 0.34);
+    box-shadow: 0 28px 90px -42px rgba(14, 165, 233, 0.22);
+    border-color: rgba(56, 189, 248, 0.3);
+  }
+
+  .phone-orbit {
+    animation: phone-rotate 18s linear infinite;
+    transform-style: preserve-3d;
+  }
+
+  .phone-screen-slide {
+    animation: screen-fade 8s ease-in-out infinite;
+  }
+
+  @keyframes phone-rotate {
+    0% {
+      transform: rotateY(-18deg) rotateX(4deg);
+    }
+    50% {
+      transform: rotateY(18deg) rotateX(-2deg);
+    }
+    100% {
+      transform: rotateY(-18deg) rotateX(4deg);
+    }
+  }
+
+  @keyframes screen-fade {
+    0%,
+    42% {
+      opacity: 1;
+    }
+    50%,
+    92% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
   }
 }

@@ -88,7 +88,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <DashboardSidebar />
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col bg-[linear-gradient(180deg,#f8fdff_0%,#ffffff_100%)]">
         <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/92 backdrop-blur">
           <div className="flex items-center justify-between gap-4 px-4 py-3 lg:px-6">
             <div className="flex items-center gap-3">

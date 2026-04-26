@@ -64,12 +64,16 @@ export default function CeoProgramsPage() {
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/programs", {
-        method: "POST",
+      const endpoint = editingId ? `/api/programs/${editingId}` : "/api/programs";
+      const method = editingId ? "PATCH" : "POST";
+
+      const res = await fetch(endpoint, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
           tuition: Number(form.tuition),
+          status: "published",
         }),
       });
 
@@ -119,15 +123,15 @@ export default function CeoProgramsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Programs</h1>
-          <p className="text-gray-500 text-sm">{programs.length} programs available</p>
+          <h1 className="text-2xl font-bold text-slate-950">Programs</h1>
+          <p className="text-sm text-slate-500">{programs.length} programs available</p>
         </div>
         <Dialog open={openDialog} onOpenChange={setOpenDialog}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-sky-500 text-white hover:bg-sky-600">
               <Plus className="h-4 w-4 mr-2" />
               Add Program
             </Button>
@@ -143,7 +147,7 @@ export default function CeoProgramsPage() {
                   <Input
                     value={form.title}
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, "-") }))}
-                    placeholder="e.g., BSc Computer Science"
+                    placeholder="e.g., Web Development"
                     required
                   />
                 </div>
@@ -152,7 +156,7 @@ export default function CeoProgramsPage() {
                   <Input
                     value={form.category}
                     onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                    placeholder="e.g., Technology, Business"
+                    placeholder="e.g., Software, AI Productivity"
                     required
                   />
                 </div>
@@ -164,7 +168,7 @@ export default function CeoProgramsPage() {
                   <Input
                     value={form.duration}
                     onChange={(e) => setForm((f) => ({ ...f, duration: e.target.value }))}
-                    placeholder="e.g., 4 Years"
+                    placeholder="e.g., 8 Weeks"
                     required
                   />
                 </div>
@@ -178,6 +182,16 @@ export default function CeoProgramsPage() {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Slug *</Label>
+                <Input
+                  value={form.slug}
+                  onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/\s+/g, "-") }))}
+                  placeholder="e.g., web-development"
+                  required
+                />
               </div>
 
               <div className="space-y-2">
@@ -225,23 +239,23 @@ export default function CeoProgramsPage() {
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
           {programs.map((p) => (
-            <Card key={p.id}>
+            <Card key={p.id} className="border-slate-200 bg-white shadow-[0_24px_80px_-48px_rgba(14,165,233,0.35)] transition-transform duration-300 hover:-translate-y-1">
               <CardContent className="pt-4">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-3 flex-1">
-                    <div className="bg-blue-100 p-2 rounded-lg">
-                      <BookOpen className="h-5 w-5 text-blue-600" />
+                    <div className="rounded-2xl bg-sky-50 p-2">
+                      <BookOpen className="h-5 w-5 text-sky-600" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-semibold text-sm">{p.title}</p>
+                      <p className="text-sm font-semibold text-slate-950">{p.title}</p>
                       <p className="text-xs text-gray-400">{p.duration} · {p.category}</p>
                     </div>
                   </div>
                   <span className="text-sm font-semibold text-primary">₣{p.tuition.toLocaleString()}</span>
                 </div>
-                {p.description && <p className="text-xs text-gray-600 mb-3 line-clamp-2">{p.description}</p>}
+                {p.description && <p className="mb-3 text-xs text-slate-600 line-clamp-2">{p.description}</p>}
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1 h-8" onClick={() => {
+                  <Button size="sm" variant="outline" className="flex-1 h-8 border-slate-200 bg-white hover:bg-slate-50" onClick={() => {
                     setEditingId(p.id);
                     setForm({ title: p.title, slug: p.slug, category: p.category, duration: p.duration, tuition: p.tuition.toString(), description: p.description, requirements: p.requirements || "", outcomes: p.outcomes || "" });
                     setOpenDialog(true);

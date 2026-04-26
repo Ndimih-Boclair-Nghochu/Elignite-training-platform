@@ -2,6 +2,19 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { z } from "zod";
+
+const programSchema = z.object({
+  title: z.string().min(3),
+  slug: z.string().min(3),
+  category: z.string().min(2),
+  duration: z.string().min(2),
+  description: z.string().min(10),
+  tuition: z.coerce.number().min(0),
+  requirements: z.string().optional().or(z.literal("")),
+  outcomes: z.string().optional().or(z.literal("")),
+  status: z.string().optional(),
+});
 
 // GET: Fetch all programs
 export async function GET() {
@@ -32,18 +45,22 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
+    const payload = programSchema.safeParse(body);
+    if (!payload.success) {
+      return NextResponse.json({ error: payload.error.issues[0]?.message || "Invalid program data" }, { status: 400 });
+    }
 
-    if (!body.title || body.tuition === undefined) {
-      return NextResponse.json(
-        { error: "Missing required fields (title, tuition)" },
-        { status: 400 }
-      );
+    const existing = await prisma.program.findUnique({ where: { slug: payload.data.slug } });
+    if (existing) {
+      return NextResponse.json({ error: "A program with this slug already exists" }, { status: 409 });
     }
 
     const program = await prisma.program.create({
       data: {
-        ...body,
-        tuition: Number(body.tuition),
+        ...payload.data,
+        requirements: payload.data.requirements || null,
+        outcomes: payload.data.outcomes || null,
+        status: payload.data.status || "published",
       },
     });
 

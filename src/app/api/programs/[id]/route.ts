@@ -2,6 +2,19 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { z } from "zod";
+
+const programUpdateSchema = z.object({
+  title: z.string().min(3),
+  slug: z.string().min(3),
+  category: z.string().min(2),
+  duration: z.string().min(2),
+  description: z.string().min(10),
+  tuition: z.coerce.number().min(0),
+  requirements: z.string().optional().or(z.literal("")),
+  outcomes: z.string().optional().or(z.literal("")),
+  status: z.string().optional(),
+});
 
 // GET: Fetch single program
 export async function GET(
@@ -45,12 +58,29 @@ export async function PATCH(
     }
 
     const body = await req.json();
+    const payload = programUpdateSchema.safeParse(body);
+    if (!payload.success) {
+      return NextResponse.json({ error: payload.error.issues[0]?.message || "Invalid program data" }, { status: 400 });
+    }
+
+    const existing = await prisma.program.findFirst({
+      where: {
+        slug: payload.data.slug,
+        NOT: { id: parseInt(params.id) },
+      },
+    });
+
+    if (existing) {
+      return NextResponse.json({ error: "Another program already uses this slug" }, { status: 409 });
+    }
 
     const program = await prisma.program.update({
       where: { id: parseInt(params.id) },
       data: {
-        ...body,
-        tuition: body.tuition ? Number(body.tuition) : undefined,
+        ...payload.data,
+        requirements: payload.data.requirements || null,
+        outcomes: payload.data.outcomes || null,
+        status: payload.data.status || "published",
       },
     });
 

@@ -107,26 +107,26 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void }) {
   return (
     <aside
       className={cn(
-        "flex min-h-screen flex-shrink-0 flex-col border-r border-slate-200 bg-slate-950 text-white transition-all duration-300",
+        "flex min-h-screen flex-shrink-0 flex-col border-r border-slate-200 bg-white text-slate-900 transition-all duration-300",
         collapsed ? "w-20" : "w-72"
       )}
     >
-      <div className="border-b border-white/10 p-4">
+      <div className="border-b border-slate-200 p-4">
         <div className="flex items-start justify-between gap-3">
           <Link href="/" className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-            <div className="flex h-11 w-11 items-center justify-center rounded-md bg-white/10 text-sky-300">
+            <div className="flex h-11 w-11 items-center justify-center rounded-md bg-sky-50 text-sky-600">
               <GraduationCap className="h-5 w-5" />
             </div>
             {!collapsed && (
               <div>
               <p className="font-semibold">ELIGNITE</p>
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{roleLabel} Workspace</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{roleLabel} Workspace</p>
               </div>
             )}
           </Link>
           <button
             onClick={() => setCollapsed((prev) => !prev)}
-            className="rounded-md p-2 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+            className="rounded-md p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-950"
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -134,11 +134,11 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void }) {
         </div>
 
         {!collapsed && user && (
-          <div className="mt-4 rounded-md border border-white/10 bg-white/5 p-3">
-            <p className="text-sm font-semibold text-white">
+          <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="text-sm font-semibold text-slate-950">
               {user.firstName} {user.lastName}
             </p>
-            <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">{activeSection}</p>
+            <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">{activeSection}</p>
           </div>
         )}
       </div>
@@ -154,8 +154,8 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void }) {
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
                 active
-                  ? "bg-sky-500 text-slate-950"
-                  : "text-slate-300 hover:bg-white/8 hover:text-white"
+                  ? "bg-sky-500 text-white"
+                  : "text-slate-600 hover:bg-sky-50 hover:text-slate-950"
               )}
             >
               <item.icon className="h-4 w-4 flex-shrink-0" />
@@ -165,13 +165,13 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void }) {
         })}
       </nav>
 
-      <div className="border-t border-white/10 p-3">
+      <div className="border-t border-slate-200 p-3">
         <button
           onClick={() => {
             handleLogout();
             onClose?.();
           }}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-red-600 hover:text-white"
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-red-600 hover:text-white"
         >
           <LogOut className="h-4 w-4" />
           {!collapsed && <span>Logout</span>}
