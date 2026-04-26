@@ -17,38 +17,32 @@ const programSchema = z.object({
   status: z.string().optional(),
 });
 
-// GET: Fetch all programs
 export async function GET() {
   try {
     const programs = await prisma.program.findMany({
       orderBy: { title: "asc" },
+      include: {
+        teachers: { include: { teacher: { include: { user: { select: { firstName: true, lastName: true } } } } } },
+        _count: { select: { students: true, courses: true } },
+      },
     });
-
     return NextResponse.json(programs);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch programs" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch programs" }, { status: 500 });
   }
 }
 
-// POST: Create new program (CEO only)
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
-
     if (!session?.userId || session.role !== "ceo") {
-      return NextResponse.json(
-        { error: "Unauthorized - Only CEO can create programs" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const body = await req.json();
     const payload = programSchema.safeParse(body);
     if (!payload.success) {
-      return NextResponse.json({ error: payload.error.issues[0]?.message || "Invalid program data" }, { status: 400 });
+      return NextResponse.json({ error: payload.error.issues[0]?.message || "Invalid data" }, { status: 400 });
     }
 
     const existing = await prisma.program.findUnique({ where: { slug: payload.data.slug } });
@@ -56,9 +50,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "A program with this slug already exists" }, { status: 409 });
     }
 
+    // Auto-generate programCode: PRG-001, PRG-002, ...
+    const count = await prisma.program.count();
+    const programCode = `PRG-${String(count + 1).padStart(3, "0")}`;
+
     const program = await prisma.program.create({
       data: {
         ...payload.data,
+        programCode,
         requirements: payload.data.requirements || null,
         outcomes: payload.data.outcomes || null,
         imageUrl: payload.data.imageUrl || null,
@@ -68,9 +67,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(program, { status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to create program" },
-      { status: 500 }
-    );
+    console.error(error);
+    return NextResponse.json({ error: "Failed to create program" }, { status: 500 });
   }
 }

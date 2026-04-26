@@ -16,21 +16,30 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized - Only CEO can update staff" }, { status: 403 });
     }
 
-    const { status } = await req.json();
+    const { status, programIds } = await req.json();
     const teacherId = parseInt(params.id);
 
-    // Verify teacher exists
     const teacher = await prisma.teacher.findUnique({ where: { id: teacherId } });
     if (!teacher) {
       return NextResponse.json({ error: "Staff member not found" }, { status: 404 });
     }
 
-    // Update status
     const updated = await prisma.teacher.update({
       where: { id: teacherId },
       data: { status },
       include: { user: { select: { firstName: true, lastName: true, email: true, phone: true } } },
     });
+
+    // Update program assignments if provided
+    if (Array.isArray(programIds)) {
+      await prisma.teacherProgram.deleteMany({ where: { teacherId } });
+      if (programIds.length > 0) {
+        await prisma.teacherProgram.createMany({
+          data: programIds.map((pid: number) => ({ teacherId, programId: pid })),
+          skipDuplicates: true,
+        });
+      }
+    }
 
     return NextResponse.json(updated);
   } catch (error) {

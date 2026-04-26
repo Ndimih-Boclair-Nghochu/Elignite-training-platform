@@ -8,46 +8,55 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Loader2, Clock, CheckCircle, Download } from "lucide-react";
+import { Plus, Search, Loader2, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-interface Student { id: number; studentId: string; firstName: string; lastName: string; email: string; phone: string; program: string; level: number; status: string; }
+interface ProgramOption {
+  id: number;
+  programCode: string;
+  title: string;
+}
 
-interface PendingStudent {
+interface Student {
   id: number;
   studentId: string;
-  matricle: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   program: string;
+  programs: ProgramOption[];
   level: number;
-  approvedAt: string;
-  accountCreatedAt: string;
+  status: string;
+  gender: string;
+  feeDue: number;
+  paidAmount: number;
+  totalFeeAmount: number;
+  isActivated: boolean;
 }
-
-const PROGRAMS = [
-  { id: "bsc-computer-science", title: "BSc Computer Science" },
-  { id: "bsc-business-administration", title: "BSc Business Admin" },
-  { id: "bsc-nursing", title: "BSc Nursing" },
-  { id: "bsc-education", title: "BSc Education" },
-  { id: "hnd-accounting", title: "HND Accounting" },
-  { id: "bsc-civil-engineering", title: "BSc Civil Engineering" },
-];
 
 export default function CeoStudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
-  const [pendingStudents, setPendingStudents] = useState<PendingStudent[]>([]);
+  const [programs, setPrograms] = useState<ProgramOption[]>([]);
   const [search, setSearch] = useState("");
   const [programFilter, setProgramFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [selectedProgramIds, setSelectedProgramIds] = useState<number[]>([]);
   const { toast } = useToast();
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", program: "", level: "1", gender: "male" });
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    level: "1",
+    gender: "male",
+    address: "",
+    parentName: "",
+    parentPhone: "",
+  });
 
   async function fetchStudents() {
     setFetching(true);
@@ -56,36 +65,61 @@ export default function CeoStudentsPage() {
     setFetching(false);
   }
 
-  async function fetchPendingStudents() {
-    const res = await fetch("/api/students/pending-activation");
-    if (res.ok) setPendingStudents(await res.json());
+  async function fetchPrograms() {
+    const res = await fetch("/api/programs");
+    if (res.ok) {
+      const data = await res.json();
+      setPrograms(data.map((p: any) => ({ id: p.id, programCode: p.programCode, title: p.title })));
+    }
   }
 
   useEffect(() => {
     fetchStudents();
-    fetchPendingStudents();
+    fetchPrograms();
   }, []);
 
   const filtered = students.filter((s) => {
     const matchesSearch = `${s.firstName} ${s.lastName} ${s.email} ${s.studentId}`
       .toLowerCase()
       .includes(search.toLowerCase());
-    const matchesProgram = programFilter === "all" || s.program === programFilter;
+    const matchesProgram =
+      programFilter === "all" ||
+      (s.programs && s.programs.some((p) => p.id === Number(programFilter)));
     return matchesSearch && matchesProgram;
   });
 
+  function toggleProgram(id: number) {
+    setSelectedProgramIds((prev) => {
+      if (prev.includes(id)) return prev.filter((p) => p !== id);
+      if (prev.length >= 2) {
+        toast({ title: "A student can follow up to 2 programs", variant: "destructive" });
+        return prev;
+      }
+      return [...prev, id];
+    });
+  }
+
+  function resetForm() {
+    setForm({ firstName: "", lastName: "", email: "", phone: "", level: "1", gender: "male", address: "", parentName: "", parentPhone: "" });
+    setSelectedProgramIds([]);
+  }
+
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
+    if (selectedProgramIds.length === 0) {
+      toast({ title: "Please select at least one program", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     const res = await fetch("/api/students", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, level: Number(form.level) }),
+      body: JSON.stringify({ ...form, level: Number(form.level), programIds: selectedProgramIds }),
     });
     if (res.ok) {
       toast({ title: "Student added successfully" });
       setOpen(false);
-      setForm({ firstName: "", lastName: "", email: "", phone: "", program: "", level: "1", gender: "male" });
+      resetForm();
       fetchStudents();
     } else {
       const d = await res.json();
@@ -102,11 +136,7 @@ export default function CeoStudentsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ program: programFilter, search }),
       });
-
-      if (!response.ok) {
-        throw new Error("Export failed");
-      }
-
+      if (!response.ok) throw new Error("Export failed");
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -116,14 +146,9 @@ export default function CeoStudentsPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-
       toast({ title: "Students exported as PDF" });
-    } catch (error) {
-      toast({
-        title: "Error exporting PDF",
-        description: "Failed to generate PDF",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "Error exporting PDF", description: "Failed to generate PDF", variant: "destructive" });
     } finally {
       setExporting(false);
     }
@@ -136,26 +161,57 @@ export default function CeoStudentsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Students</h1>
           <p className="text-gray-500 text-sm">{students.length} total students</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />Add Student</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Add New Student</DialogTitle></DialogHeader>
             <form onSubmit={handleAdd} className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1"><Label>First Name</Label><Input value={form.firstName} onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))} required /></div>
-                <div className="space-y-1"><Label>Last Name</Label><Input value={form.lastName} onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))} required /></div>
+                <div className="space-y-1">
+                  <Label>First Name *</Label>
+                  <Input value={form.firstName} onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))} required />
+                </div>
+                <div className="space-y-1">
+                  <Label>Last Name *</Label>
+                  <Input value={form.lastName} onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))} required />
+                </div>
               </div>
-              <div className="space-y-1"><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} required /></div>
-              <div className="space-y-1"><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} /></div>
               <div className="space-y-1">
-                <Label>Program</Label>
-                <Select value={form.program} onValueChange={(v) => setForm((f) => ({ ...f, program: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select program" /></SelectTrigger>
-                  <SelectContent>{PROGRAMS.map((p) => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}</SelectContent>
-                </Select>
+                <Label>Email *</Label>
+                <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} required />
               </div>
+              <div className="space-y-1">
+                <Label>Phone</Label>
+                <Input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Programs * <span className="text-xs text-gray-400">(select up to 2)</span></Label>
+                {programs.length === 0 ? (
+                  <p className="text-sm text-gray-400">No programs available yet. Add programs first.</p>
+                ) : (
+                  <div className="border rounded-md p-3 space-y-2 max-h-36 overflow-y-auto">
+                    {programs.map((prog) => (
+                      <label key={prog.id} className="flex items-center gap-2 cursor-pointer text-sm">
+                        <input
+                          type="checkbox"
+                          checked={selectedProgramIds.includes(prog.id)}
+                          onChange={() => toggleProgram(prog.id)}
+                          className="rounded"
+                        />
+                        <span className="font-mono text-xs text-gray-500">{prog.programCode}</span>
+                        <span>{prog.title}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {selectedProgramIds.length > 0 && (
+                  <p className="text-xs text-gray-500">{selectedProgramIds.length}/2 program(s) selected</p>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label>Level</Label>
@@ -175,7 +231,23 @@ export default function CeoStudentsPage() {
                   </Select>
                 </div>
               </div>
-              <p className="text-xs text-gray-400">Default password: <strong>student123</strong> (student can change after login)</p>
+
+              <div className="space-y-1">
+                <Label>Address</Label>
+                <Input value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Parent Name</Label>
+                  <Input value={form.parentName} onChange={(e) => setForm((f) => ({ ...f, parentName: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Parent Phone</Label>
+                  <Input value={form.parentPhone} onChange={(e) => setForm((f) => ({ ...f, parentPhone: e.target.value }))} />
+                </div>
+              </div>
+
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Adding...</> : "Add Student"}
               </Button>
@@ -189,19 +261,16 @@ export default function CeoStudentsPage() {
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <CardTitle>All Students</CardTitle>
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="w-40">
-                <Label htmlFor="program-filter" className="text-xs text-gray-600 block mb-1">
-                  Filter by Program
-                </Label>
+              <div className="w-44">
                 <Select value={programFilter} onValueChange={setProgramFilter}>
-                  <SelectTrigger id="program-filter" className="h-8 text-sm">
-                    <SelectValue />
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="All Programs" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Programs</SelectItem>
-                    {PROGRAMS.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.title}
+                    {programs.map((p) => (
+                      <SelectItem key={p.id} value={String(p.id)}>
+                        {p.programCode} — {p.title}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -216,22 +285,11 @@ export default function CeoStudentsPage() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleExportPDF}
-                disabled={exporting}
-              >
+              <Button size="sm" variant="outline" onClick={handleExportPDF} disabled={exporting}>
                 {exporting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Exporting...
-                  </>
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exporting...</>
                 ) : (
-                  <>
-                    <Download className="h-4 w-4 mr-2" />
-                    Export PDF
-                  </>
+                  <><Download className="h-4 w-4 mr-2" />Export PDF</>
                 )}
               </Button>
             </div>
@@ -245,12 +303,12 @@ export default function CeoStudentsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-[100px]">Student ID</TableHead>
-                    <TableHead className="min-w-[150px]">Name</TableHead>
-                    <TableHead className="min-w-[200px]">Email</TableHead>
-                    <TableHead className="min-w-[150px]">Program</TableHead>
-                    <TableHead className="min-w-[80px]">Level</TableHead>
-                    <TableHead className="min-w-[80px]">Status</TableHead>
+                    <TableHead>Student ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Programs</TableHead>
+                    <TableHead>Level</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -259,12 +317,32 @@ export default function CeoStudentsPage() {
                       <TableCell className="font-mono text-sm">{s.studentId}</TableCell>
                       <TableCell className="font-medium">{s.firstName} {s.lastName}</TableCell>
                       <TableCell className="text-gray-500 text-sm">{s.email}</TableCell>
-                      <TableCell className="text-sm">{PROGRAMS.find((p) => p.id === s.program)?.title || s.program}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {s.programs && s.programs.length > 0 ? (
+                            s.programs.map((p) => (
+                              <Badge key={p.id} variant="outline" className="text-xs font-mono">
+                                {p.programCode}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-gray-400 text-xs">{s.program || "—"}</span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>Level {s.level}</TableCell>
-                      <TableCell><Badge variant={s.status === "active" ? "default" : "secondary"} className="text-xs capitalize">{s.status}</Badge></TableCell>
+                      <TableCell>
+                        <Badge variant={s.status === "active" ? "default" : "secondary"} className="text-xs capitalize">
+                          {s.status}
+                        </Badge>
+                      </TableCell>
                     </TableRow>
                   ))}
-                  {filtered.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-gray-400 py-8">No students found</TableCell></TableRow>}
+                  {filtered.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-gray-400 py-8">No students found</TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
