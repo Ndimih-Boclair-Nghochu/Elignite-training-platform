@@ -121,7 +121,7 @@ export default async function HomePage() {
             priority
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(118deg,rgba(255,255,255,0.95),rgba(255,255,255,0.9),rgba(37,99,235,0.16))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(118deg,rgba(224,242,254,0.82),rgba(240,249,255,0.74),rgba(14,165,233,0.34))]" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(37,99,235,0.04)_0,rgba(37,99,235,0.04)_1px,transparent_1px,transparent_88px),linear-gradient(rgba(37,99,235,0.04)_0,rgba(37,99,235,0.04)_1px,transparent_1px,transparent_88px)] bg-[size:88px_88px]" />
         </div>
 
