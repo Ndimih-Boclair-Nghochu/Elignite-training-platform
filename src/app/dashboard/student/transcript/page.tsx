@@ -32,24 +32,31 @@ export default function TranscriptPage() {
 
   useEffect(() => {
     fetch("/api/results/me")
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!d || d.error) { setData(null); return; }
-        const records: ResultRecord[] = (d.exercises?.records || []).map((r: any) => ({
-          courseCode: r.exercise.course.code,
-          courseTitle: r.exercise.course.title,
-          credits: 3,
-          total: r.score ?? 0,
-          grade: scoreToGrade(r.score ?? 0),
-        }));
-        setData({
-          results: records,
-          exerciseAvg: d.exercises?.averageScore ?? 0,
-          attendancePct: d.attendance?.percentage ?? 0,
-          projectAvg: d.projects?.averageScore ?? 0,
-          overallScore: d.overall?.score ?? 0,
-        });
+        try {
+          const records: ResultRecord[] = (Array.isArray(d.exercises?.records) ? d.exercises.records : [])
+            .filter((r: any) => r?.exercise?.course)
+            .map((r: any) => ({
+              courseCode: r.exercise.course?.code ?? "N/A",
+              courseTitle: r.exercise.course?.title ?? "Unknown",
+              credits: 3,
+              total: r.score ?? 0,
+              grade: scoreToGrade(r.score ?? 0),
+            }));
+          setData({
+            results: records,
+            exerciseAvg: d.exercises?.averageScore ?? 0,
+            attendancePct: d.attendance?.percentage ?? 0,
+            projectAvg: d.projects?.averageScore ?? 0,
+            overallScore: d.overall?.score ?? 0,
+          });
+        } catch {
+          setData(null);
+        }
       })
+      .catch(() => setData(null))
       .finally(() => setLoading(false));
   }, []);
 

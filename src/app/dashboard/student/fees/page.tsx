@@ -13,7 +13,11 @@ export default function StudentFeesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/fees").then((r) => r.json()).then(setFees).finally(() => setLoading(false));
+    fetch("/api/fees")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setFees(Array.isArray(d) ? d : []))
+      .catch(() => setFees([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const paid = fees.filter((f) => f.status === "paid").reduce((s, f) => s + f.amount, 0);

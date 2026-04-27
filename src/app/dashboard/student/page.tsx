@@ -24,10 +24,10 @@ export default function StudentDashboardPage() {
   const [courseCount, setCourseCount] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("/api/results").then((r) => r.json()).then(setResults).catch(() => {});
-    fetch("/api/fees").then((r) => r.json()).then(setFees).catch(() => {});
-    fetch("/api/announcements").then((r) => r.json()).then(setAnnouncements).catch(() => {});
-    fetch("/api/courses/mine").then((r) => r.ok ? r.json() : []).then((d: unknown[]) => setCourseCount(d.length)).catch(() => {});
+    fetch("/api/results").then((r) => r.ok ? r.json() : []).then((d) => setResults(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch("/api/fees").then((r) => r.ok ? r.json() : []).then((d) => setFees(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch("/api/announcements").then((r) => r.ok ? r.json() : []).then((d) => setAnnouncements(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch("/api/courses/mine").then((r) => r.ok ? r.json() : []).then((d: unknown) => setCourseCount(Array.isArray(d) ? d.length : 0)).catch(() => {});
   }, []);
 
   const totalDue = fees.filter((f) => f.status !== "paid").reduce((s, f) => s + f.amount, 0);

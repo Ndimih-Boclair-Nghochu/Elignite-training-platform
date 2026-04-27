@@ -18,7 +18,11 @@ export default function StudentInfoPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/student/info").then((r) => r.json()).then(setInfo).finally(() => setLoading(false));
+    fetch("/api/student/info")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setInfo(d && !d.error ? d : null))
+      .catch(() => setInfo(null))
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;

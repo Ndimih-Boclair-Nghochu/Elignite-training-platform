@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -12,13 +12,24 @@ export async function GET() {
     if (!student) return NextResponse.json([]);
     const fees = await prisma.fee.findMany({
       where: { studentId: student.id },
-      orderBy: { createdAt: "desc" },
+      orderBy: { dueDate: "asc" },
     });
     return NextResponse.json(fees);
   }
 
   if (session.role !== "ceo") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const studentId = searchParams.get("studentId");
+
+  if (studentId) {
+    const fees = await prisma.fee.findMany({
+      where: { studentId: parseInt(studentId) },
+      orderBy: { dueDate: "asc" },
+    });
+    return NextResponse.json(fees);
   }
 
   const fees = await prisma.fee.findMany({
