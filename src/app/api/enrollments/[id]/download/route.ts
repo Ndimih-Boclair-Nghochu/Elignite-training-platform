@@ -14,9 +14,10 @@ export async function GET(
     const session = await getSession();
     const { searchParams } = new URL(req.url);
     const token = searchParams.get("token");
-    const enrollment = await prisma.enrollment.findUnique({
-      where: { id: parseInt(params.id) },
-    });
+    const [enrollment, school] = await Promise.all([
+      prisma.enrollment.findUnique({ where: { id: parseInt(params.id) } }),
+      prisma.schoolSettings.findFirst(),
+    ]);
 
     if (!enrollment) {
       return NextResponse.json(
@@ -33,7 +34,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const pdfBuffer = await generateEnrollmentPDF(enrollment);
+    const pdfBuffer = await generateEnrollmentPDF(enrollment, school);
     const body = new Uint8Array(pdfBuffer);
 
     return new Response(body, {
@@ -51,7 +52,7 @@ export async function GET(
   }
 }
 
-async function generateEnrollmentPDF(enrollment: any): Promise<Buffer> {
+async function generateEnrollmentPDF(enrollment: any, school: any): Promise<Buffer> {
   return new Promise(async (resolve, reject) => {
     const doc = new PDFDocument({ margin: 50 });
     const chunks: Buffer[] = [];
@@ -60,20 +61,13 @@ async function generateEnrollmentPDF(enrollment: any): Promise<Buffer> {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    // 📁 Paths (VERY IMPORTANT)
-    const fontPath = path.join(
-      process.cwd(),
-      "public/fonts/Roboto-Regular.ttf"
-    );
+    const fontPath = path.join(process.cwd(), "public/fonts/Roboto-Regular.ttf");
     const logoPath = path.join(process.cwd(), "public/logo.png");
+    const schoolName = school?.schoolName || "ELIGNITE";
 
-    // ✅ Use custom font (fixes Vercel error)
     doc.font(fontPath);
 
-    // 🔗 Generate QR Code
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     const verificationUrl = `${baseUrl}/verify/${enrollment.id}`;
     const qrImage = await QRCode.toBuffer(verificationUrl);
 
@@ -81,18 +75,21 @@ async function generateEnrollmentPDF(enrollment: any): Promise<Buffer> {
     const textColor = "#333";
 
     // ================= HEADER =================
-    doc.image(logoPath, 50, 40, { width: 60 });
+    // Use school logo from DB if available, else fallback to logo.png
+    try {
+      if (school?.schoolLogoUrl?.startsWith("data:")) {
+        const base64Data = school.schoolLogoUrl.split(",")[1];
+        const logoBuffer = Buffer.from(base64Data, "base64");
+        doc.image(logoBuffer, 50, 40, { width: 60 });
+      } else {
+        doc.image(logoPath, 50, 40, { width: 60 });
+      }
+    } catch {
+      // Skip logo if it fails to render
+    }
 
-    doc
-      .fontSize(20)
-      .fillColor(headerColor)
-      .text("EDUMANAGE", 120, 50);
-
-    doc
-      .fontSize(12)
-      .fillColor("#666")
-      .text("Enrollment Application Form", 120, 75);
-
+    doc.fontSize(20).fillColor(headerColor).text(schoolName, 120, 50);
+    doc.fontSize(12).fillColor("#666").text("Enrollment Application Form", 120, 75);
     doc.moveDown(2);
 
     doc
@@ -104,9 +101,7 @@ async function generateEnrollmentPDF(enrollment: any): Promise<Buffer> {
 
     doc.moveDown(1.5);
 
-    const enrollmentDate = new Date(
-      enrollment.createdAt
-    ).toLocaleDateString();
+    const enrollmentDate = new Date(enrollment.createdAt).toLocaleDateString();
 
     // ================= STATUS =================
     sectionTitle(doc, "Application Status");
@@ -120,17 +115,8 @@ async function generateEnrollmentPDF(enrollment: any): Promise<Buffer> {
     if (enrollment.matricle) {
       doc.rect(50, doc.y, doc.page.width - 100, 70).stroke("#0284c7");
 
-      doc
-        .fontSize(10)
-        .fillColor("#666")
-        .text("STUDENT MATRICLE", 60, doc.y + 10);
-
-      doc
-        .fontSize(22)
-        .fillColor("#0284c7")
-        .text(enrollment.matricle, 60, doc.y + 25, {
-          align: "center",
-        });
+      doc.fontSize(10).fillColor("#666").text("STUDENT MATRICLE", 60, doc.y + 10);
+      doc.fontSize(22).fillColor("#0284c7").text(enrollment.matricle, 60, doc.y + 25, { align: "center" });
 
       doc.moveDown(4);
     }
@@ -155,9 +141,7 @@ async function generateEnrollmentPDF(enrollment: any): Promise<Buffer> {
     sectionTitle(doc, "Verification");
 
     doc.text("Scan to verify this enrollment:");
-    doc.image(qrImage, doc.page.width - 150, doc.y - 20, {
-      width: 100,
-    });
+    doc.image(qrImage, doc.page.width - 150, doc.y - 20, { width: 100 });
 
     doc.moveDown(4);
 
@@ -175,20 +159,14 @@ async function generateEnrollmentPDF(enrollment: any): Promise<Buffer> {
     // ================= FOOTER =================
     doc.moveDown(3);
 
-    doc
-      .fontSize(9)
-      .fillColor("#666")
-      .text(
-        "Official document generated by EduManage System",
-        50,
-        doc.y,
-        { align: "center" }
-      );
-
-    doc.text(
-      "Generated on: " + new Date().toLocaleString(),
+    doc.fontSize(9).fillColor("#666").text(
+      `Official document generated by ${schoolName}`,
+      50,
+      doc.y,
       { align: "center" }
     );
+
+    doc.text("Generated on: " + new Date().toLocaleString(), { align: "center" });
 
     doc.end();
   });

@@ -12,11 +12,20 @@ import { ArrowRight, CheckCircle2, Layers3, Users2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
+const DEFAULT_HIGHLIGHTS = ["Practical skills", "Expert guidance", "Career-focused"];
+const DEFAULT_OUTCOMES = ["Portfolio-ready projects", "Career advancement", "Practical experience"];
+const DEFAULT_REQUIREMENTS = [
+  "Interest in the field and commitment to practice",
+  "Basic computer access for assignments",
+  "Willingness to build projects consistently",
+];
+
 export default async function ProgramDetailsPage({ params }: { params: { slug: string } }) {
   const fallback = techPrograms.find((item) => item.slug === params.slug);
 
   let dbProgram: any = null;
   let instructorName = "ELIGNITE Faculty";
+  let instructorPhotoUrl: string | null = null;
   let enrolledCount = 0;
   let testimonies: Array<{ id: number; name: string; text: string; program: string }> = [];
 
@@ -28,10 +37,11 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
 
     if (dbProgram) {
       const firstTeacher = dbProgram.teachers?.[0]?.teacher;
-      instructorName =
-        [firstTeacher?.user?.firstName, firstTeacher?.user?.lastName]
-          .filter(Boolean)
-          .join(" ") || instructorName;
+      if (firstTeacher?.user) {
+        const name = [firstTeacher.user.firstName, firstTeacher.user.lastName].filter(Boolean).join(" ");
+        if (name) instructorName = name;
+        instructorPhotoUrl = firstTeacher.user.photoUrl || null;
+      }
 
       const [studentCount, approvedTestimonies] = await Promise.all([
         prisma.student.count({ where: { program: dbProgram.title } }),
@@ -50,40 +60,29 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
     console.error("Program details fallback:", error);
   }
 
-  const program =
-    dbProgram && fallback
-      ? {
-          slug: dbProgram.slug,
-          title: dbProgram.title,
-          category: dbProgram.category,
-          duration: dbProgram.duration,
-          description: dbProgram.description,
-          level: fallback.level,
-          mode: fallback.mode,
-          price: `${dbProgram.tuition.toLocaleString()} XAF`,
-          highlights: fallback.highlights,
-          outcomes: dbProgram.outcomes
-            ? dbProgram.outcomes.split(/[\n,]/).map((item: string) => item.trim()).filter(Boolean)
-            : fallback.outcomes,
-          requirements: dbProgram.requirements
-            ? dbProgram.requirements.split(/[\n,]/).map((item: string) => item.trim()).filter(Boolean)
-            : [
-                "Interest in the field and commitment to practice",
-                "Basic computer access for assignments",
-                "Willingness to build projects consistently",
-              ],
-          image: fallback.image,
-        }
-      : fallback
-        ? {
-            ...fallback,
-            requirements: [
-              "Interest in the field and commitment to practice",
-              "Basic computer access for assignments",
-              "Willingness to build projects consistently",
-            ],
-          }
-        : null;
+  // Build program object: DB takes priority; fall back to static data; 404 only if neither exists
+  const program = dbProgram
+    ? {
+        slug: dbProgram.slug,
+        title: dbProgram.title,
+        category: dbProgram.category,
+        duration: dbProgram.duration,
+        description: dbProgram.description,
+        level: fallback?.level ?? "Beginner to Intermediate",
+        mode: fallback?.mode ?? "Hybrid",
+        price: `${dbProgram.tuition.toLocaleString()} XAF`,
+        highlights: fallback?.highlights ?? DEFAULT_HIGHLIGHTS,
+        outcomes: dbProgram.outcomes
+          ? dbProgram.outcomes.split(/[\n,]/).map((s: string) => s.trim()).filter(Boolean)
+          : fallback?.outcomes ?? DEFAULT_OUTCOMES,
+        requirements: dbProgram.requirements
+          ? dbProgram.requirements.split(/[\n,]/).map((s: string) => s.trim()).filter(Boolean)
+          : DEFAULT_REQUIREMENTS,
+        image: (dbProgram.imageUrl as string | null) || fallback?.image || techPrograms[0].image,
+      }
+    : fallback
+      ? { ...fallback, requirements: DEFAULT_REQUIREMENTS }
+      : null;
 
   if (!program) notFound();
 
@@ -91,13 +90,24 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
     ? testimonies
     : [{ id: 1, name: "ELIGNITE Learner", text: "The modules were clear, the tasks were practical, and I finished with something concrete to show.", program: program.title }];
 
+  const instructorInitials = instructorName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
       <section className="relative overflow-hidden border-b border-blue-100">
         <div className="absolute inset-0">
-          <Image src={program.image} alt={program.title} fill className="object-cover" />
+          {program.image.startsWith("data:") ? (
+            <img src={program.image} alt={program.title} className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <Image src={program.image} alt={program.title} fill className="object-cover" />
+          )}
           <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.93),rgba(255,255,255,0.84),rgba(37,99,235,0.15))]" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
@@ -121,7 +131,20 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
                 <div className="mt-6 grid gap-4">
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                     <p className="text-sm text-slate-500">Instructor</p>
-                    <p className="mt-1 text-lg font-semibold text-slate-950">{instructorName}</p>
+                    <div className="mt-2 flex items-center gap-3">
+                      {instructorPhotoUrl ? (
+                        <img
+                          src={instructorPhotoUrl}
+                          alt={instructorName}
+                          className="h-10 w-10 rounded-full object-cover border border-slate-200 shrink-0"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm shrink-0">
+                          {instructorInitials}
+                        </div>
+                      )}
+                      <p className="text-lg font-semibold text-slate-950">{instructorName}</p>
+                    </div>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                     <p className="text-sm text-slate-500">Learners tracked</p>
