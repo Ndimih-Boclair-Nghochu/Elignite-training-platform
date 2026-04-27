@@ -26,7 +26,11 @@ export default function StudentProjectsPage() {
   const [links, setLinks] = useState<Record<number, string>>({});
 
   useEffect(() => {
-    fetch("/api/projects/me").then((r) => r.json()).then(setProjects).finally(() => setLoading(false));
+    fetch("/api/projects/me")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setProjects(Array.isArray(d) ? d : []))
+      .catch(() => setProjects([]))
+      .finally(() => setLoading(false));
   }, []);
 
   async function handleSubmit(e: FormEvent, projectId: number) {

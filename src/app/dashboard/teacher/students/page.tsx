@@ -22,8 +22,9 @@ export default function TeacherStudentsPage() {
   useEffect(() => {
     if (!teacherId) { setLoading(false); return; }
     fetch(`/api/teachers/${teacherId}/students`)
-      .then((r) => r.json())
-      .then(setStudents)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setStudents(Array.isArray(d) ? d : []))
+      .catch(() => setStudents([]))
       .finally(() => setLoading(false));
   }, [teacherId]);
 

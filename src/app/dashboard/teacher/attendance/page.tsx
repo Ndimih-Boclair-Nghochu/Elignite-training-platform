@@ -71,7 +71,7 @@ export default function TeacherAttendancePage() {
 
   const summary = useMemo(() => {
     let present = 0, absent = 0, late = 0;
-    students.forEach((s) => s.attendances.forEach((a) => {
+    students.forEach((s) => (s.attendances || []).forEach((a) => {
       if (a.status === "present") present++;
       else if (a.status === "absent") absent++;
       else if (a.status === "late") late++;

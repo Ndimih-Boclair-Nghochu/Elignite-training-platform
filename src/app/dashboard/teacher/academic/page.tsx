@@ -25,9 +25,10 @@ export default function TeacherAcademicPage() {
         fetch("/api/teachers/courses"),
         teacherId ? fetch(`/api/teachers/${teacherId}/students`) : Promise.resolve(null),
       ]);
-      if (cRes.ok) setCourses(await cRes.json());
+      if (cRes.ok) { const d = await cRes.json(); setCourses(Array.isArray(d) ? d : []); }
       if (sRes && sRes.ok) {
-        const students: { status: string }[] = await sRes.json();
+        const d = await sRes.json();
+        const students: { status: string }[] = Array.isArray(d) ? d : [];
         setActiveStudents(students.filter((s) => s.status === "active").length);
       }
       setLoading(false);
