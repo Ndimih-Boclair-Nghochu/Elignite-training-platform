@@ -79,7 +79,7 @@ export async function GET(
     const teacherName = firstTeacher
       ? `${firstTeacher.user.firstName} ${firstTeacher.user.lastName}`
       : null;
-    const teacherTitle = "Program Instructor";
+    const teacherTitle = firstTeacher?.occupation || "Program Instructor";
     const issueDate = certificate.issuedDate 
       ? new Date(certificate.issuedDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
       : "Not yet issued";

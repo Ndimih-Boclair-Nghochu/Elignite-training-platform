@@ -23,15 +23,13 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
   try {
     dbProgram = await prisma.program.findUnique({
       where: { slug: params.slug },
-      include: {
-        teachers: { include: { teacher: { include: { user: true } } }, take: 1 },
-      },
+      include: { teachers: { include: { teacher: { include: { user: true } } }, take: 1 } },
     });
 
     if (dbProgram) {
-      const firstInstructor = dbProgram.teachers?.[0]?.teacher;
+      const firstTeacher = dbProgram.teachers?.[0]?.teacher;
       instructorName =
-        [firstInstructor?.user?.firstName, firstInstructor?.user?.lastName]
+        [firstTeacher?.user?.firstName, firstTeacher?.user?.lastName]
           .filter(Boolean)
           .join(" ") || instructorName;
 

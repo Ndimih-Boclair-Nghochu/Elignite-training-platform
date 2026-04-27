@@ -259,12 +259,12 @@ export async function GET(
       .text("EduManage Computer Training Center", 50, signatureY + 25);
 
     // Course Creator Signature (Right)
-    const firstProgramTeacher = program?.teachers?.[0]?.teacher;
-    if (firstProgramTeacher) {
+    const programTeacher = program?.teachers?.[0]?.teacher;
+    if (programTeacher) {
       doc
         .font("Helvetica-Bold")
         .fontSize(11)
-        .text(`${firstProgramTeacher.user.firstName} ${firstProgramTeacher.user.lastName}`, 350, signatureY)
+        .text(`${programTeacher.user.firstName} ${programTeacher.user.lastName}`, 350, signatureY)
         .fontSize(9)
         .font("Helvetica")
         .text("Program Coordinator", 350, signatureY + 15)
