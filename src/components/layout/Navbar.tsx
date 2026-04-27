@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -19,8 +19,20 @@ const links = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const [schoolLogoUrl, setSchoolLogoUrl] = useState<string | null>(null);
+  const [schoolName, setSchoolName] = useState("ELIGNITE");
   const { user } = useAuth();
   const pathname = usePathname();
+
+  useEffect(() => {
+    fetch("/api/public/settings")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => {
+        if (d?.schoolLogoUrl) setSchoolLogoUrl(d.schoolLogoUrl);
+        if (d?.schoolName) setSchoolName(d.schoolName);
+      })
+      .catch(() => {});
+  }, []);
 
   const dashLink = useMemo(() => {
     if (!user) return null;
@@ -33,11 +45,15 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 border-b border-blue-900/80 bg-[#0d5bd7]/95 text-white backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3 text-white">
-          <div className="relative h-11 w-11 overflow-hidden rounded-xl border border-white/20 bg-white shadow-sm">
-            <Image src="/logo.svg" alt="ELIGNITE logo" fill className="object-contain p-2" />
+          <div className="relative h-11 w-11 overflow-hidden rounded-xl border border-white/20 bg-white shadow-sm flex items-center justify-center">
+            {schoolLogoUrl ? (
+              <img src={schoolLogoUrl} alt={`${schoolName} logo`} className="h-full w-full object-contain p-1" />
+            ) : (
+              <Image src="/logo.svg" alt="ELIGNITE logo" fill className="object-contain p-2" />
+            )}
           </div>
           <div className="leading-tight">
-            <p className="text-sm font-semibold sm:text-base">ELIGNITE</p>
+            <p className="text-sm font-semibold sm:text-base">{schoolName}</p>
             <p className="text-[11px] uppercase tracking-[0.18em] text-blue-100">Tech Training Platform</p>
           </div>
         </Link>

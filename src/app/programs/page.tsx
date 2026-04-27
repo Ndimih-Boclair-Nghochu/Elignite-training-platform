@@ -12,6 +12,9 @@ import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
+const DEFAULT_HIGHLIGHTS = ["Practical skills", "Expert guidance", "Career-focused"];
+const DEFAULT_OUTCOMES = ["Portfolio-ready projects", "Career advancement", "Practical experience"];
+
 export default async function ProgramsPage() {
   let programs = techPrograms;
 
@@ -22,20 +25,20 @@ export default async function ProgramsPage() {
     });
 
     if (dbPrograms.length > 0) {
-      programs = dbPrograms.map((program, index) => {
-        const fallback = techPrograms.find((item) => item.slug === program.slug) || techPrograms[index % techPrograms.length];
+      programs = dbPrograms.map((program) => {
+        const fallback = techPrograms.find((item) => item.slug === program.slug);
         return {
           slug: program.slug,
           title: program.title,
           category: program.category,
           duration: program.duration,
           description: program.description,
-          level: fallback.level,
+          level: fallback?.level ?? "Beginner to Intermediate",
           price: `${program.tuition.toLocaleString()} XAF`,
-          mode: fallback.mode,
-          highlights: fallback.highlights,
-          outcomes: fallback.outcomes,
-          image: fallback.image,
+          mode: fallback?.mode ?? "Hybrid",
+          highlights: fallback?.highlights ?? DEFAULT_HIGHLIGHTS,
+          outcomes: fallback?.outcomes ?? DEFAULT_OUTCOMES,
+          image: (program.imageUrl as string | null) || fallback?.image || techPrograms[0].image,
         };
       });
     }
@@ -75,7 +78,15 @@ export default async function ProgramsPage() {
             <Reveal key={program.slug} delay={index * 60}>
               <article className="surface-card-strong hover-lift h-full overflow-hidden">
                 <div className="relative h-56">
-                  <Image src={program.image} alt={program.title} fill className="object-cover" />
+                  {program.image.startsWith("data:") ? (
+                    <img
+                      src={program.image}
+                      alt={program.title}
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  ) : (
+                    <Image src={program.image} alt={program.title} fill className="object-cover" />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/10 to-transparent" />
                   <div className="absolute left-5 right-5 top-5 flex items-center justify-between">
                     <Badge className="border-white/20 bg-white/90 text-blue-700">{program.category}</Badge>
