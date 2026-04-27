@@ -31,8 +31,9 @@ export async function GET(
     const programRecord = certificate ? await prisma.program.findFirst({
       where: { slug: certificate.student.program },
       include: {
-        teacher: {
-          include: { user: { select: { firstName: true, lastName: true } } }
+        teachers: {
+          include: { teacher: { include: { user: { select: { firstName: true, lastName: true } } } } },
+          take: 1,
         }
       }
     }) : null;
@@ -74,10 +75,11 @@ export async function GET(
     const studentName = `${certificate.student.user.firstName} ${certificate.student.user.lastName}`;
     const programName = certificate.student.program || "Program";
     const ceoName = `${schoolSettings.ceoFirstName} ${schoolSettings.ceoLastName}`;
-    const teacherName = programRecord?.teacher
-      ? `${programRecord.teacher.user.firstName} ${programRecord.teacher.user.lastName}`
+    const firstTeacher = programRecord?.teachers?.[0]?.teacher;
+    const teacherName = firstTeacher
+      ? `${firstTeacher.user.firstName} ${firstTeacher.user.lastName}`
       : null;
-    const teacherTitle = programRecord?.teacher?.occupation || "Program Instructor";
+    const teacherTitle = "Program Instructor";
     const issueDate = certificate.issuedDate 
       ? new Date(certificate.issuedDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
       : "Not yet issued";

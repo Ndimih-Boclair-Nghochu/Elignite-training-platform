@@ -197,69 +197,30 @@ async function main() {
     },
   });
 
-  const programs = [
-    {
-      slug: "web-development",
-      title: "Web Development",
-      category: "Software",
-      duration: "8 Weeks",
-      description: "Learn HTML, CSS, JavaScript, React, deployment, and portfolio-ready frontend delivery.",
-      tuition: 180000,
-      requirements: "Basic computer use, willingness to practice, internet access for assignments",
-      outcomes: "Responsive websites, React interfaces, deployment workflow",
-      teacherId: teacher.id,
-    },
-    {
-      slug: "software-engineering",
-      title: "Software Engineering",
-      category: "Engineering",
-      duration: "12 Weeks",
-      description: "Build backend and frontend thinking with Git, APIs, testing, and team-ready software habits.",
-      tuition: 260000,
-      requirements: "Comfort with beginner programming concepts or strong learning commitment",
-      outcomes: "Project architecture, backend services, version control discipline",
-      teacherId: teacher.id,
-    },
-    {
-      slug: "cloud-devops",
-      title: "Cloud & DevOps",
-      category: "Infrastructure",
-      duration: "10 Weeks",
-      description: "Work through Linux basics, cloud deployment, CI/CD, and modern delivery workflows.",
-      tuition: 220000,
-      requirements: "Basic technical confidence and laptop access",
-      outcomes: "Deployment confidence, CI/CD familiarity, cloud operations basics",
-      teacherId: teacher.id,
-    },
-    {
-      slug: "graphic-design",
-      title: "Graphic Design",
-      category: "Creative Tech",
-      duration: "8 Weeks",
-      description: "Create digital brand assets, social media graphics, client-ready layouts, and visual campaigns.",
-      tuition: 140000,
-      requirements: "Beginner-friendly, creativity and consistency",
-      outcomes: "Design portfolio, brand systems, campaign graphics",
-      teacherId: teacher.id,
-    },
-    {
-      slug: "ai-tools",
-      title: "AI Tools for Work",
-      category: "AI Productivity",
-      duration: "5 Weeks",
-      description: "Use AI tools for writing, research, business workflows, and responsible productivity gains.",
-      tuition: 95000,
-      requirements: "No technical background required",
-      outcomes: "Prompt workflows, faster research, better digital output",
-      teacherId: teacher.id,
-    },
+  const programsData = [
+    { slug: "web-development", programCode: "WEB-01", title: "Web Development", category: "Software", duration: "8 Weeks", description: "Learn HTML, CSS, JavaScript, React, deployment, and portfolio-ready frontend delivery.", tuition: 180000, requirements: "Basic computer use, willingness to practice, internet access for assignments", outcomes: "Responsive websites, React interfaces, deployment workflow" },
+    { slug: "software-engineering", programCode: "SWE-01", title: "Software Engineering", category: "Engineering", duration: "12 Weeks", description: "Build backend and frontend thinking with Git, APIs, testing, and team-ready software habits.", tuition: 260000, requirements: "Comfort with beginner programming concepts or strong learning commitment", outcomes: "Project architecture, backend services, version control discipline" },
+    { slug: "cloud-devops", programCode: "CLD-01", title: "Cloud & DevOps", category: "Infrastructure", duration: "10 Weeks", description: "Work through Linux basics, cloud deployment, CI/CD, and modern delivery workflows.", tuition: 220000, requirements: "Basic technical confidence and laptop access", outcomes: "Deployment confidence, CI/CD familiarity, cloud operations basics" },
+    { slug: "graphic-design", programCode: "GFX-01", title: "Graphic Design", category: "Creative Tech", duration: "8 Weeks", description: "Create digital brand assets, social media graphics, client-ready layouts, and visual campaigns.", tuition: 140000, requirements: "Beginner-friendly, creativity and consistency", outcomes: "Design portfolio, brand systems, campaign graphics" },
+    { slug: "ai-tools", programCode: "AIT-01", title: "AI Tools for Work", category: "AI Productivity", duration: "5 Weeks", description: "Use AI tools for writing, research, business workflows, and responsible productivity gains.", tuition: 95000, requirements: "No technical background required", outcomes: "Prompt workflows, faster research, better digital output" },
   ];
 
-  for (const program of programs) {
-    await prisma.program.upsert({
+  const createdPrograms: { id: number; slug: string }[] = [];
+  for (const program of programsData) {
+    const p = await prisma.program.upsert({
       where: { slug: program.slug },
       update: program,
       create: program,
+    });
+    createdPrograms.push({ id: p.id, slug: p.slug });
+  }
+
+  // Assign teacher to all programs via junction table
+  for (const p of createdPrograms) {
+    await prisma.teacherProgram.upsert({
+      where: { teacherId_programId: { teacherId: teacher.id, programId: p.id } },
+      update: {},
+      create: { teacherId: teacher.id, programId: p.id },
     });
   }
 
