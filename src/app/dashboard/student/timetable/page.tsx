@@ -38,7 +38,7 @@ export default function TimetablePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">My Timetable</h1>
-          <p className="text-gray-500 text-sm">Courses scheduled for your enrolled program this semester.</p>
+          <p className="text-gray-500 text-sm">Courses scheduled for your enrolled program.</p>
         </div>
         <div className="rounded-full bg-slate-50 px-3 py-1 text-sm font-medium text-slate-700">Student View</div>
       </div>

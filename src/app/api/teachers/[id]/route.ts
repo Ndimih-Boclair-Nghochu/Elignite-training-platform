@@ -16,17 +16,38 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized - Only CEO can update staff" }, { status: 403 });
     }
 
-    const { status, programIds } = await req.json();
+    const body = await req.json();
+    const { status, programIds, firstName, lastName, email, phone, specialization, qualifications, office } = body;
     const teacherId = parseInt(params.id);
 
-    const teacher = await prisma.teacher.findUnique({ where: { id: teacherId } });
+    const teacher = await prisma.teacher.findUnique({ where: { id: teacherId }, include: { user: true } });
     if (!teacher) {
       return NextResponse.json({ error: "Staff member not found" }, { status: 404 });
     }
 
+    // Update user fields (never allow changing matricule or teacherId)
+    await prisma.user.update({
+      where: { id: teacher.userId },
+      data: {
+        ...(firstName !== undefined && { firstName }),
+        ...(lastName !== undefined && { lastName }),
+        ...(email !== undefined && { email }),
+        ...(phone !== undefined && { phone }),
+      },
+    });
+
     const updated = await prisma.teacher.update({
       where: { id: teacherId },
-      data: { status },
+      data: {
+        ...(status !== undefined && { status }),
+        ...(specialization !== undefined && { specialization }),
+        ...(qualifications !== undefined && { qualifications }),
+        ...(office !== undefined && { office }),
+        // Remove occupation, department, quotes — set to null
+        occupation: null,
+        department: teacher.department, // keep existing department
+        quotes: null,
+      },
       include: { user: { select: { firstName: true, lastName: true, email: true, phone: true } } },
     });
 

@@ -10,7 +10,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { DollarSign, TrendingUp, TrendingDown, Search, Loader2 } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Search, Loader2, Download } from "lucide-react";
 
 interface Student {
   id: number;
@@ -119,9 +119,14 @@ export default function Page() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      <div>
-        <h1 className="text-xl font-bold sm:text-2xl">Finance Overview</h1>
-        <p className="text-sm text-gray-500">All enrolled students — fee collection and finance review.</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-xl font-bold sm:text-2xl">Finance Overview</h1>
+          <p className="text-sm text-gray-500">All enrolled students — fee collection and finance review.</p>
+        </div>
+        <a href="/api/fees/export-pdf" download>
+          <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-2" />Export Report</Button>
+        </a>
       </div>
 
       {/* Real stats */}

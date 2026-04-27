@@ -22,10 +22,9 @@ export async function GET() {
       id: t.id,
       teacherId: t.teacherId,
       matricle: t.matricle,
-      occupation: t.occupation,
-      profession: t.profession,
-      department: t.department,
-      quotes: t.quotes,
+      specialization: t.specialization,
+      qualifications: t.qualifications,
+      office: t.office,
       status: t.status,
       programs: t.teacherPrograms.map((tp) => tp.program),
       user: {
@@ -45,11 +44,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const { firstName, lastName, email, phone, occupation, profession, department, quotes, programIds } =
-    await req.json();
+  const { firstName, lastName, email, phone, specialization, qualifications, office, programIds } = await req.json();
 
-  if (!firstName || !lastName || !email || !occupation || !department) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  if (!firstName || !lastName || !email) {
+    return NextResponse.json({ error: "First name, last name and email are required" }, { status: 400 });
   }
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -69,10 +67,14 @@ export async function POST(req: NextRequest) {
   const matricle = `MAT${Date.now().toString().slice(-8)}`;
 
   const teacher = await prisma.teacher.create({
-    data: { teacherId, matricle, userId: user.id, occupation, profession, quotes, department, status: "inactive" },
+    data: {
+      teacherId, matricle, userId: user.id, status: "inactive",
+      ...(specialization && { specialization }),
+      ...(qualifications && { qualifications }),
+      ...(office && { office }),
+    },
   });
 
-  // Assign teacher to selected programs
   if (Array.isArray(programIds) && programIds.length > 0) {
     await prisma.teacherProgram.createMany({
       data: programIds.map((pid: number) => ({ teacherId: teacher.id, programId: pid })),
@@ -82,10 +84,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(
     {
-      id: teacher.id,
-      teacherId: teacher.teacherId,
-      matricle: teacher.matricle,
-      department: teacher.department,
+      id: teacher.id, teacherId: teacher.teacherId, matricle: teacher.matricle,
       status: teacher.status,
       user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.phone },
     },

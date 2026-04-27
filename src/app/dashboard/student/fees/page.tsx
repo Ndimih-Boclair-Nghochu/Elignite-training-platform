@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CreditCard, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { CreditCard, AlertCircle, CheckCircle, Loader2, Download } from "lucide-react";
 
 interface Fee { id: number; description: string; amount: number; dueDate: string; paidDate: string | null; status: string; receiptNo: string | null; }
 
@@ -21,7 +22,15 @@ export default function StudentFeesPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Fee Statement</h1>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h1 className="text-2xl font-bold text-gray-900">Fee Statement</h1>
+        <a href="/api/fees/receipt" download>
+          <Button variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Download Receipt
+          </Button>
+        </a>
+      </div>
 
       {loading ? <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div> : (
         <>
@@ -45,7 +54,7 @@ export default function StudentFeesPage() {
 
           {hasOverdue && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+              <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
               <p className="text-sm text-red-700">You have overdue payments. Please contact the accounts office immediately.</p>
             </div>
           )}
