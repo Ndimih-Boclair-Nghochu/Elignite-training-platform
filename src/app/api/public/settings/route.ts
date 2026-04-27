@@ -9,8 +9,18 @@ export async function GET() {
       schoolName: settings?.schoolName || "ELIGNITE",
       schoolLogoUrl: settings?.schoolLogoUrl || null,
       schoolMotto: settings?.schoolMotto || null,
+      schoolAddress: settings?.schoolAddress || null,
+      schoolEmail: settings?.schoolEmail || null,
+      schoolPhone: settings?.schoolPhone || null,
     });
   } catch {
-    return NextResponse.json({ schoolName: "ELIGNITE", schoolLogoUrl: null, schoolMotto: null });
+    return NextResponse.json({
+      schoolName: "ELIGNITE",
+      schoolLogoUrl: null,
+      schoolMotto: null,
+      schoolAddress: null,
+      schoolEmail: null,
+      schoolPhone: null,
+    });
   }
 }

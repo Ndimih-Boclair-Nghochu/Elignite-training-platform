@@ -74,9 +74,8 @@ export default async function HomePage() {
 
     if (dbPrograms.length > 0) {
       programs = dbPrograms.map((program, index) => {
-        const fallback =
-          techPrograms.find((item) => item.slug === program.slug) ||
-          techPrograms[index % techPrograms.length];
+        const fallback = techPrograms.find((item) => item.slug === program.slug);
+        const defaultFallback = techPrograms[index % techPrograms.length];
 
         return {
           slug: program.slug,
@@ -84,12 +83,12 @@ export default async function HomePage() {
           category: program.category,
           duration: program.duration,
           description: program.description,
-          level: fallback.level,
-          mode: fallback.mode,
+          level: fallback?.level ?? defaultFallback.level,
+          mode: fallback?.mode ?? defaultFallback.mode,
           price: `${program.tuition.toLocaleString()} XAF`,
-          highlights: fallback.highlights,
-          outcomes: fallback.outcomes,
-          image: fallback.image,
+          highlights: fallback?.highlights ?? defaultFallback.highlights,
+          outcomes: fallback?.outcomes ?? defaultFallback.outcomes,
+          image: (program.imageUrl as string | null) || fallback?.image || defaultFallback.image,
         };
       });
     }
@@ -288,7 +287,11 @@ export default async function HomePage() {
               <Reveal key={program.slug} delay={index * 70}>
                 <article className="surface-card-strong hover-lift h-full overflow-hidden">
                   <div className="relative h-56">
-                    <Image src={program.image} alt={program.title} fill className="object-cover" />
+                    {program.image.startsWith("data:") ? (
+                      <img src={program.image} alt={program.title} className="absolute inset-0 h-full w-full object-cover" />
+                    ) : (
+                      <Image src={program.image} alt={program.title} fill className="object-cover" />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />
                     <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
                       <Badge className="border-white/15 bg-white/92 text-blue-700">

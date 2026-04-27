@@ -195,25 +195,38 @@ export default function Page() {
       return;
     }
 
-    try {
-      setLoading(true);
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const base64 = event.target?.result as string;
-        if (schoolSettings) {
-          setSchoolSettings((s) => s ? { ...s, schoolLogoUrl: base64 } : null);
-          toast({ title: "Success", description: "School logo updated" });
+    setLoading(true);
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64 = event.target?.result as string;
+      if (!schoolSettings) { setLoading(false); return; }
+
+      // Update local preview immediately
+      setSchoolSettings((s) => s ? { ...s, schoolLogoUrl: base64 } : null);
+
+      // Persist to DB right away so the logo shows everywhere
+      try {
+        const res = await fetch("/api/admin/school-settings", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...schoolSettings, schoolLogoUrl: base64 }),
+        });
+        if (res.ok) {
+          toast({ title: "Logo saved", description: "School logo updated and applied across the platform." });
+        } else {
+          toast({ title: "Preview updated", description: "Logo preview set. Click Save School Settings to persist." });
         }
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to upload logo",
-      });
-    } finally {
+      } catch {
+        toast({ title: "Preview updated", description: "Logo preview set. Click Save School Settings to persist." });
+      } finally {
+        setLoading(false);
+      }
+    };
+    reader.onerror = () => {
+      toast({ title: "Error", description: "Failed to read the image file." });
       setLoading(false);
-    }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSaveApplicationSettings = async () => {
