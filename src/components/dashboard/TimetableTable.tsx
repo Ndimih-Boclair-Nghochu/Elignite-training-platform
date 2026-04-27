@@ -82,7 +82,7 @@ export function TimetableTable({
             {subtitle ? <p className="text-sm text-gray-500 mt-1">{subtitle}</p> : null}
           </div>
           <div className="flex gap-2">
-            <Badge className="text-sm px-3 py-1">Semester 1 · 2024/2025</Badge>
+            <Badge className="text-sm px-3 py-1">{new Date().getFullYear()}</Badge>
             {isCEO && onAdd && (
               <Button size="sm" onClick={onAdd}>
                 <Plus className="h-4 w-4 mr-2" />

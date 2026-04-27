@@ -54,20 +54,20 @@ export default function StudentAIHelperPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       <div className="flex items-center gap-3">
-        <div className="bg-purple-100 p-2 rounded-lg"><Brain className="h-6 w-6 text-purple-600" /></div>
+        <div className="bg-purple-100 p-2 rounded-lg shrink-0"><Brain className="h-6 w-6 text-purple-600" /></div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">AI Learning Helper</h1>
+          <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">AI Learning Helper</h1>
           <p className="text-gray-500 text-sm">Your personal academic assistant</p>
         </div>
       </div>
 
       <Tabs defaultValue="explain">
-        <TabsList className="grid grid-cols-3 w-full max-w-lg">
-          <TabsTrigger value="explain"><Lightbulb className="h-4 w-4 mr-1" />Explain</TabsTrigger>
-          <TabsTrigger value="summarize"><FileText className="h-4 w-4 mr-1" />Summarize</TabsTrigger>
-          <TabsTrigger value="questions"><HelpCircle className="h-4 w-4 mr-1" />Practice</TabsTrigger>
+        <TabsList className="grid grid-cols-3 w-full">
+          <TabsTrigger value="explain" className="text-xs sm:text-sm"><Lightbulb className="h-3.5 w-3.5 mr-1 hidden sm:inline" />Explain</TabsTrigger>
+          <TabsTrigger value="summarize" className="text-xs sm:text-sm"><FileText className="h-3.5 w-3.5 mr-1 hidden sm:inline" />Summarize</TabsTrigger>
+          <TabsTrigger value="questions" className="text-xs sm:text-sm"><HelpCircle className="h-3.5 w-3.5 mr-1 hidden sm:inline" />Practice</TabsTrigger>
         </TabsList>
 
         <TabsContent value="explain" className="space-y-4">
@@ -76,9 +76,9 @@ export default function StudentAIHelperPage() {
             <CardContent>
               <form onSubmit={handleExplain} className="space-y-3">
                 <div className="space-y-1"><Label>Concept or Topic</Label><Input placeholder="e.g. Recursion, Photosynthesis" value={conceptForm.concept} onChange={e=>setConceptForm(f=>({...f,concept:e.target.value}))} required /></div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1"><Label>Subject</Label><Input placeholder="e.g. Computer Science" value={conceptForm.subject} onChange={e=>setConceptForm(f=>({...f,subject:e.target.value}))} required /></div>
-                  <div className="space-y-1"><Label>Level</Label><Select value={conceptForm.level} onValueChange={v=>setConceptForm(f=>({...f,level:v}))}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["100 Level","200 Level","300 Level","400 Level"].map(l=><SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-1"><Label>Level</Label><Select value={conceptForm.level} onValueChange={v=>setConceptForm(f=>({...f,level:v}))}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["Beginner","Intermediate","Advanced","Expert"].map(l=><SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent></Select></div>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>{loading?<><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Explaining...</>:<><Brain className="mr-2 h-4 w-4"/>Explain This Concept</>}</Button>
               </form>
@@ -89,7 +89,7 @@ export default function StudentAIHelperPage() {
               <CardContent className="pt-4 space-y-4">
                 <div><h3 className="font-semibold mb-2">Explanation</h3><p className="text-sm text-gray-600 leading-relaxed">{conceptResult.explanation}</p></div>
                 <div><h3 className="font-semibold mb-2">Examples</h3><ul className="space-y-1">{conceptResult.examples.map((ex,i)=><li key={i} className="text-sm text-gray-600 flex gap-2"><span className="text-purple-500">•</span>{ex}</li>)}</ul></div>
-                <div><h3 className="font-semibold mb-2">Key Points</h3>{conceptResult.keyPoints.map((kp,i)=><div key={i} className="flex items-start gap-2 text-sm text-gray-600 mb-1"><CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5"/>{kp}</div>)}</div>
+                <div><h3 className="font-semibold mb-2">Key Points</h3>{conceptResult.keyPoints.map((kp,i)=><div key={i} className="flex items-start gap-2 text-sm text-gray-600 mb-1"><CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5"/>{kp}</div>)}</div>
                 <div className="bg-white rounded-lg p-3 border"><p className="text-sm font-semibold mb-1">📚 Further Reading</p><p className="text-sm text-gray-600">{conceptResult.furtherReading}</p></div>
               </CardContent>
             </Card>
@@ -111,7 +111,7 @@ export default function StudentAIHelperPage() {
               <CardContent className="pt-4 space-y-4">
                 <div><h3 className="font-semibold mb-2">Summary</h3><p className="text-sm text-gray-600">{docResult.summary}</p></div>
                 <div><h3 className="font-semibold mb-2">Main Topics</h3><div className="flex flex-wrap gap-2">{docResult.mainTopics.map((t,i)=><Badge key={i} variant="secondary">{t}</Badge>)}</div></div>
-                {docResult.actionItems.length>0&&<div><h3 className="font-semibold mb-2">Action Items</h3>{docResult.actionItems.map((a,i)=><div key={i} className="flex items-start gap-2 text-sm text-gray-600 mb-1"><CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0"/>{a}</div>)}</div>}
+                {docResult.actionItems.length>0&&<div><h3 className="font-semibold mb-2">Action Items</h3>{docResult.actionItems.map((a,i)=><div key={i} className="flex items-start gap-2 text-sm text-gray-600 mb-1"><CheckCircle className="h-4 w-4 text-green-500 shrink-0"/>{a}</div>)}</div>}
               </CardContent>
             </Card>
           )}
@@ -122,11 +122,11 @@ export default function StudentAIHelperPage() {
             <CardHeader><CardTitle className="text-base">Practice Question Generator</CardTitle></CardHeader>
             <CardContent>
               <form onSubmit={handleQuestions} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1"><Label>Topic</Label><Input placeholder="e.g. Linked Lists" value={qForm.topic} onChange={e=>setQForm(f=>({...f,topic:e.target.value}))} required /></div>
                   <div className="space-y-1"><Label>Subject</Label><Input placeholder="e.g. Computer Science" value={qForm.subject} onChange={e=>setQForm(f=>({...f,subject:e.target.value}))} required /></div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1"><Label>Difficulty</Label><Select value={qForm.difficulty} onValueChange={v=>setQForm(f=>({...f,difficulty:v}))}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="easy">Easy</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="hard">Hard</SelectItem></SelectContent></Select></div>
                   <div className="space-y-1"><Label>Questions</Label><Select value={qForm.count} onValueChange={v=>setQForm(f=>({...f,count:v}))}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["3","5","10"].map(n=><SelectItem key={n} value={n}>{n} questions</SelectItem>)}</SelectContent></Select></div>
                 </div>

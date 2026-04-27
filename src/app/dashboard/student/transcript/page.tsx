@@ -1,35 +1,141 @@
 "use client";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, FileText } from "lucide-react";
-const TRANSCRIPT = [
-  {semester:"Year 1 – Semester 1",courses:[{code:"CS101",title:"Intro to Programming",credits:3,grade:"A",points:12},{code:"MATH101",title:"Calculus I",credits:3,grade:"B+",points:10.5},{code:"ENG101",title:"English I",credits:2,grade:"A",points:8},{code:"PHY101",title:"Physics I",credits:3,grade:"B",points:9}]},
-  {semester:"Year 1 – Semester 2",courses:[{code:"CS102",title:"Data Structures",credits:3,grade:"A+",points:12},{code:"MATH102",title:"Calculus II",credits:3,grade:"A",points:12},{code:"ENG102",title:"English II",credits:2,grade:"B+",points:7},{code:"CS103",title:"Computer Architecture",credits:3,grade:"A",points:12}]},
-];
-function gpa(courses:{credits:number;points:number}[]){return(courses.reduce((s,c)=>s+c.points,0)/courses.reduce((s,c)=>s+c.credits,0)).toFixed(2);}
+import { Download, FileText, Loader2 } from "lucide-react";
+
+interface ResultRecord {
+  courseCode: string; courseTitle: string; credits: number; total: number; grade: string;
+}
+
+interface TranscriptData {
+  results: ResultRecord[];
+  exerciseAvg: number; attendancePct: number; projectAvg: number; overallScore: number;
+}
+
+function scoreToGrade(score: number): string {
+  if (score >= 90) return "A+";
+  if (score >= 80) return "A";
+  if (score >= 75) return "B+";
+  if (score >= 70) return "B";
+  if (score >= 65) return "C+";
+  if (score >= 60) return "C";
+  if (score >= 55) return "D+";
+  if (score >= 50) return "D";
+  return "F";
+}
+
 export default function TranscriptPage() {
-  const all=TRANSCRIPT.flatMap(s=>s.courses);
+  const [data, setData] = useState<TranscriptData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/results/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d || d.error) { setData(null); return; }
+        const records: ResultRecord[] = (d.exercises?.records || []).map((r: any) => ({
+          courseCode: r.exercise.course.code,
+          courseTitle: r.exercise.course.title,
+          credits: 3,
+          total: r.score ?? 0,
+          grade: scoreToGrade(r.score ?? 0),
+        }));
+        setData({
+          results: records,
+          exerciseAvg: d.exercises?.averageScore ?? 0,
+          attendancePct: d.attendance?.percentage ?? 0,
+          projectAvg: d.projects?.averageScore ?? 0,
+          overallScore: d.overall?.score ?? 0,
+        });
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
   return (
     <div className="p-6 space-y-6 max-w-3xl">
-      <div className="flex items-center justify-between"><h1 className="text-2xl font-bold">Academic Transcript</h1><Button><Download className="h-4 w-4 mr-2"/>Download PDF</Button></div>
-      <Card className="bg-blue-50 border-blue-200"><CardContent className="pt-4 flex items-center justify-between">
-        <div className="flex items-center gap-3"><FileText className="h-8 w-8 text-blue-600"/><div><p className="font-bold">Student Portal · Transcript</p><p className="text-sm text-gray-500">BSc Computer Science</p></div></div>
-        <div className="text-right"><p className="text-3xl font-bold text-blue-700">{gpa(all)}</p><p className="text-xs text-gray-500">Cumulative GPA</p></div>
-      </CardContent></Card>
-      {TRANSCRIPT.map(sem=>(
-        <Card key={sem.semester}>
-          <CardHeader className="pb-2"><div className="flex justify-between items-center"><CardTitle className="text-base">{sem.semester}</CardTitle><span className="text-sm font-semibold text-primary">GPA: {gpa(sem.courses)}</span></div></CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Course</TableHead><TableHead className="text-center">Credits</TableHead><TableHead className="text-center">Grade</TableHead><TableHead className="text-center">Points</TableHead></TableRow></TableHeader>
-              <TableBody>{sem.courses.map(c=>(
-                <TableRow key={c.code}><TableCell className="font-mono text-sm">{c.code}</TableCell><TableCell className="text-sm">{c.title}</TableCell><TableCell className="text-center">{c.credits}</TableCell><TableCell className="text-center font-semibold text-primary">{c.grade}</TableCell><TableCell className="text-center">{c.points}</TableCell></TableRow>
-              ))}</TableBody>
-            </Table>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Academic Transcript</h1>
+        <a href="/api/fees/receipt" download>
+          <span className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium border rounded-md hover:bg-gray-50 cursor-pointer">
+            <Download className="h-4 w-4" />Download Receipt
+          </span>
+        </a>
+      </div>
+
+      {!data || (data.results.length === 0 && data.overallScore === 0) ? (
+        <Card>
+          <CardContent className="pt-8 text-center">
+            <FileText className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+            <p className="text-gray-500">No academic records available yet.</p>
           </CardContent>
         </Card>
-      ))}
+      ) : (
+        <>
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="pt-4 flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <FileText className="h-8 w-8 text-blue-600" />
+                <div>
+                  <p className="font-bold">Academic Record</p>
+                  <p className="text-sm text-gray-500">Exercises 20% · Attendance 10% · Projects 70%</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-blue-700">{data.overallScore}</p>
+                <p className="text-xs text-gray-500">Overall Score / 100</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-3 gap-4">
+            <Card className="text-center"><CardContent className="pt-4">
+              <p className="text-2xl font-bold text-purple-600">{data.exerciseAvg}%</p>
+              <p className="text-xs text-gray-500 mt-1">Exercises (20%)</p>
+            </CardContent></Card>
+            <Card className="text-center"><CardContent className="pt-4">
+              <p className="text-2xl font-bold text-orange-600">{data.attendancePct}%</p>
+              <p className="text-xs text-gray-500 mt-1">Attendance (10%)</p>
+            </CardContent></Card>
+            <Card className="text-center"><CardContent className="pt-4">
+              <p className="text-2xl font-bold text-blue-600">{data.projectAvg}%</p>
+              <p className="text-xs text-gray-500 mt-1">Projects (70%)</p>
+            </CardContent></Card>
+          </div>
+
+          {data.results.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Exercise Results by Course</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader><TableRow>
+                    <TableHead>Code</TableHead><TableHead>Course</TableHead>
+                    <TableHead className="text-center">Score</TableHead>
+                    <TableHead className="text-center">Grade</TableHead>
+                  </TableRow></TableHeader>
+                  <TableBody>
+                    {data.results.map((r, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-mono text-sm">{r.courseCode}</TableCell>
+                        <TableCell className="text-sm">{r.courseTitle}</TableCell>
+                        <TableCell className="text-center">{r.total}%</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className="font-semibold text-primary">{r.grade}</Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
     </div>
   );
 }

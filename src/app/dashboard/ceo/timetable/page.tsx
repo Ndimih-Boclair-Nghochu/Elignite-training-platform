@@ -42,7 +42,6 @@ export default function CeoTimetablePage() {
     startTime: "",
     endTime: "",
     room: "",
-    semester: "1",
     year: new Date().getFullYear().toString(),
   });
 
@@ -144,7 +143,6 @@ export default function CeoTimetablePage() {
       startTime: "",
       endTime: "",
       room: "",
-      semester: "1",
       year: new Date().getFullYear().toString(),
     });
     setEditingId(null);
@@ -158,7 +156,6 @@ export default function CeoTimetablePage() {
       startTime: entry.startTime,
       endTime: entry.endTime,
       room: entry.room || "",
-      semester: entry.semester,
       year: entry.year.toString(),
     });
     setOpenDialog(true);
@@ -266,29 +263,15 @@ export default function CeoTimetablePage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Semester *</Label>
-                <Select value={form.semester} onValueChange={(value) => setForm((f) => ({ ...f, semester: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Semester 1</SelectItem>
-                    <SelectItem value="2">Semester 2</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Year *</Label>
-                <Input
-                  type="number"
-                  value={form.year}
-                  onChange={(e) => setForm((f) => ({ ...f, year: e.target.value }))}
-                  placeholder="2024"
-                  required
-                />
-              </div>
+            <div className="space-y-2">
+              <Label>Year *</Label>
+              <Input
+                type="number"
+                value={form.year}
+                onChange={(e) => setForm((f) => ({ ...f, year: e.target.value }))}
+                placeholder="2024"
+                required
+              />
             </div>
 
             <Button type="submit" className="w-full" disabled={submitting}>

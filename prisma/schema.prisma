@@ -326,15 +326,18 @@ model Testimony {
 }
 
 model Message {
-    id        Int      @id @default(autoincrement())
-    fromName  String
-    fromEmail String
-    fromRole  String   @default("student")
-    toRole    String   @default("ceo")
-    subject   String
-    body      String
-    read      Boolean  @default(false)
-    createdAt DateTime @default(now())
+    id          Int      @id @default(autoincrement())
+    fromName    String
+    fromEmail   String
+    fromRole    String   @default("student")
+    fromUserId  Int?
+    toRole      String   @default("ceo")
+    toUserId    Int?
+    toProgramId Int?
+    subject     String
+    body        String
+    read        Boolean  @default(false)
+    createdAt   DateTime @default(now())
 }
 
 model Settings {
@@ -379,18 +382,19 @@ model Project {
 }
 
 model ProjectScore {
-    id          Int       @id @default(autoincrement())
-    projectId   Int
-    project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-    studentId   Int
-    student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-    score       Float     @default(0)
-    feedback    String?
-    submittedAt DateTime?
-    gradedAt    DateTime?
-    gradedBy    Int?
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
+    id             Int       @id @default(autoincrement())
+    projectId      Int
+    project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    studentId      Int
+    student        Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    score          Float     @default(0)
+    feedback       String?
+    submissionLink String?
+    submittedAt    DateTime?
+    gradedAt       DateTime?
+    gradedBy       Int?
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
 
     @@unique([projectId, studentId])
 }

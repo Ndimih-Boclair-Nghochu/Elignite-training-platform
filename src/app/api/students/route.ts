@@ -14,7 +14,7 @@ export async function GET() {
       user: { select: { firstName: true, lastName: true, email: true, phone: true, isActivated: true } },
       fees: true,
       payments: true,
-      studentPrograms: { include: { program: { select: { id: true, programCode: true, title: true } } } },
+      studentPrograms: { include: { program: { select: { id: true, programCode: true, title: true, duration: true } } } },
     },
     orderBy: { enrollmentDate: "desc" },
   });

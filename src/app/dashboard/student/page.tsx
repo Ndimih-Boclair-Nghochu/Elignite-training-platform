@@ -21,10 +21,13 @@ export default function StudentDashboardPage() {
   const [fees, setFees] = useState<{ status: string; amount: number }[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
+  const [courseCount, setCourseCount] = useState<number | null>(null);
+
   useEffect(() => {
     fetch("/api/results").then((r) => r.json()).then(setResults).catch(() => {});
     fetch("/api/fees").then((r) => r.json()).then(setFees).catch(() => {});
     fetch("/api/announcements").then((r) => r.json()).then(setAnnouncements).catch(() => {});
+    fetch("/api/courses/mine").then((r) => r.ok ? r.json() : []).then((d: unknown[]) => setCourseCount(d.length)).catch(() => {});
   }, []);
 
   const totalDue = fees.filter((f) => f.status !== "paid").reduce((s, f) => s + f.amount, 0);
@@ -35,7 +38,7 @@ export default function StudentDashboardPage() {
 
   const stats = [
     { label: "Avg Score", value: avgScore ? `${avgScore}%` : "–", icon: TrendingUp, color: "text-green-500", bg: "bg-green-50" },
-    { label: "Courses", value: results.length || "–", icon: BookOpen, color: "text-blue-500", bg: "bg-blue-50" },
+    { label: "Courses", value: courseCount ?? (results.length || "–"), icon: BookOpen, color: "text-blue-500", bg: "bg-blue-50" },
     { label: "Fees Due", value: totalDue ? `₣${(totalDue / 1000).toFixed(0)}K` : "₣0", icon: CreditCard, color: "text-orange-500", bg: "bg-orange-50" },
     { label: "Announcements", value: announcements.length, icon: Bell, color: "text-purple-500", bg: "bg-purple-50" },
   ];
