@@ -25,8 +25,8 @@ export default function TeacherProgramsPage() {
 
   useEffect(() => {
     fetch("/api/teachers/programs")
-      .then((r) => r.json())
-      .then((data: Program[]) => setPrograms(data))
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setPrograms(Array.isArray(d) ? d : []))
       .catch(() => toast({ title: "Failed to load programs", variant: "destructive" }))
       .finally(() => setLoading(false));
   }, []);
@@ -68,7 +68,9 @@ export default function TeacherProgramsPage() {
                     </div>
                     <p className="font-semibold">{p.title}</p>
                   </div>
-                  <span className="text-sm font-semibold text-primary shrink-0">₣{p.tuition.toLocaleString()}</span>
+                  {p.tuition != null && (
+                    <span className="text-sm font-semibold text-primary shrink-0">₣{p.tuition.toLocaleString()}</span>
+                  )}
                 </div>
                 {p.description && (
                   <p className="text-xs text-gray-600 mb-3 line-clamp-2">{p.description}</p>

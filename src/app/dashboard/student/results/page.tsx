@@ -41,13 +41,30 @@ export default function StudentResultsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/results/me").then((r) => r.json()).then(setData).catch(console.error).finally(() => setLoading(false));
+    fetch("/api/results/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d && !d.error) setData(d); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  if (!data) return <div className="p-6"><Card><CardContent className="pt-6 text-center text-gray-500">No results available yet.</CardContent></Card></div>;
+  if (!data) return (
+    <div className="p-6">
+      <Card>
+        <CardContent className="pt-8 pb-8 text-center">
+          <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500 font-medium">No results available yet.</p>
+          <p className="text-gray-400 text-sm mt-1">Results will appear here once exercises, attendance, and projects are recorded.</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
 
-  const { overall, attendance, projects, exercises } = data;
+  const overall = data.overall ?? { score: 0, remark: "Below Required", composition: { exercisesWeight: 0.2, attendanceWeight: 0.1, projectsWeight: 0.7 } };
+  const attendance = data.attendance ?? { records: [], totalClasses: 0, present: 0, absent: 0, late: 0, percentage: 0, remark: "Below Required" };
+  const projects = data.projects ?? { records: [], totalProjects: 0, gradedProjects: 0, averageScore: 0, remark: "Below Required" };
+  const exercises = data.exercises ?? { records: [], totalGraded: 0, averageScore: 0, remark: "Below Required" };
 
   return (
     <div className="p-6 space-y-6">
@@ -100,8 +117,8 @@ export default function StudentResultsPage() {
               {exercises.records.map((r) => (
                 <div key={r.id} className="bg-gray-50 rounded-lg p-3 border flex items-center justify-between gap-3">
                   <div>
-                    <p className="font-medium text-sm">{r.exercise.title}</p>
-                    <p className="text-xs text-gray-500">{r.exercise.course.code} — {r.exercise.course.title}</p>
+                    <p className="font-medium text-sm">{r.exercise?.title}</p>
+                    <p className="text-xs text-gray-500">{r.exercise?.course?.code} — {r.exercise?.course?.title}</p>
                     {r.feedback && <p className="text-xs text-gray-600 mt-1">💬 {r.feedback}</p>}
                   </div>
                   <div className="text-right shrink-0">

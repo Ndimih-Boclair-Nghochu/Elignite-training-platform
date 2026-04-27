@@ -14,7 +14,15 @@ export async function GET(req: NextRequest) {
 
     const teacherPrograms = await prisma.teacherProgram.findMany({
       where: { teacherId: teacher.id },
-      include: { program: { select: { id: true, programCode: true, title: true, slug: true } } },
+      include: {
+        program: {
+          select: {
+            id: true, programCode: true, title: true, slug: true,
+            category: true, duration: true, description: true,
+            tuition: true, requirements: true, outcomes: true, status: true,
+          },
+        },
+      },
     });
 
     // Also pick up programs from courses the teacher teaches (backward compat)
@@ -32,7 +40,11 @@ export async function GET(req: NextRequest) {
     if (extraSlugs.length > 0) {
       const extraPrograms = await prisma.program.findMany({
         where: { slug: { in: extraSlugs as string[] }, id: { notIn: Array.from(junctionIds) } },
-        select: { id: true, programCode: true, title: true, slug: true },
+        select: {
+          id: true, programCode: true, title: true, slug: true,
+          category: true, duration: true, description: true,
+          tuition: true, requirements: true, outcomes: true, status: true,
+        },
       });
       fromJunction.push(...extraPrograms);
     }
