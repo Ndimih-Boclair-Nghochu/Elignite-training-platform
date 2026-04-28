@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues[0]?.message || "Invalid form data" }, { status: 400 });
     }
-
+    console.error("[contact POST]", error);
     return NextResponse.json({ error: "Unable to send message right now" }, { status: 500 });
   }
 }
