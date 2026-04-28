@@ -45,14 +45,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: payload.error.issues[0]?.message || "Invalid data" }, { status: 400 });
     }
 
-    const existing = await prisma.program.findUnique({ where: { slug: payload.data.slug } });
-    if (existing) {
+    const slugConflict = await prisma.program.findUnique({ where: { slug: payload.data.slug } });
+    if (slugConflict) {
       return NextResponse.json({ error: "A program with this slug already exists" }, { status: 409 });
     }
 
     // Auto-generate programCode: PRG-001, PRG-002, ...
-    const count = await prisma.program.count();
-    const programCode = `PRG-${String(count + 1).padStart(3, "0")}`;
+    // Use max existing number to avoid collisions after deletions
+    const allCodes = await prisma.program.findMany({ select: { programCode: true } });
+    const maxNum = allCodes.reduce((max, p) => {
+      const m = p.programCode.match(/PRG-(\d+)/);
+      return m ? Math.max(max, parseInt(m[1], 10)) : max;
+    }, 0);
+    const programCode = `PRG-${String(maxNum + 1).padStart(3, "0")}`;
 
     const program = await prisma.program.create({
       data: {
