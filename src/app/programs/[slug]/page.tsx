@@ -8,12 +8,11 @@ import { Reveal } from "@/components/marketing/reveal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { techPrograms } from "@/lib/site-content";
+import { toMarketingProgram } from "@/lib/programs";
 import { ArrowRight, CheckCircle2, Layers3, Users2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-const DEFAULT_HIGHLIGHTS = ["Practical skills", "Expert guidance", "Career-focused"];
-const DEFAULT_OUTCOMES = ["Portfolio-ready projects", "Career advancement", "Practical experience"];
 const DEFAULT_REQUIREMENTS = [
   "Interest in the field and commitment to practice",
   "Basic computer access for assignments",
@@ -30,8 +29,8 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
   let testimonies: Array<{ id: number; name: string; text: string; program: string }> = [];
 
   try {
-    dbProgram = await prisma.program.findUnique({
-      where: { slug: params.slug },
+    dbProgram = await prisma.program.findFirst({
+      where: { slug: { equals: params.slug, mode: "insensitive" } },
       include: { teachers: { include: { teacher: { include: { user: true } } }, take: 1 } },
     });
 
@@ -39,14 +38,23 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
       const firstTeacher = dbProgram.teachers?.[0]?.teacher;
       if (firstTeacher?.user) {
         const name = [firstTeacher.user.firstName, firstTeacher.user.lastName].filter(Boolean).join(" ");
-        if (name) instructorName = name;
+        if (name) {
+          instructorName = name;
+        }
         instructorPhotoUrl = firstTeacher.user.photoUrl || null;
       }
 
       const [studentCount, approvedTestimonies] = await Promise.all([
-        prisma.student.count({ where: { program: dbProgram.title } }),
+        prisma.student.count({
+          where: {
+            OR: [{ program: dbProgram.slug }, { program: dbProgram.title }],
+          },
+        }),
         prisma.testimony.findMany({
-          where: { status: "approved", program: dbProgram.title },
+          where: {
+            status: "approved",
+            OR: [{ program: dbProgram.title }, { program: dbProgram.slug }],
+          },
           orderBy: { createdAt: "desc" },
           take: 3,
           select: { id: true, name: true, text: true, program: true },
@@ -60,39 +68,34 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
     console.error("Program details fallback:", error);
   }
 
-  // Build program object: DB takes priority; fall back to static data; 404 only if neither exists
-  const program = dbProgram
-    ? {
-        slug: dbProgram.slug,
-        title: dbProgram.title,
-        category: dbProgram.category,
-        duration: dbProgram.duration,
-        description: dbProgram.description,
-        level: fallback?.level ?? "Beginner to Intermediate",
-        mode: fallback?.mode ?? "Hybrid",
-        price: `${dbProgram.tuition.toLocaleString()} XAF`,
-        highlights: fallback?.highlights ?? DEFAULT_HIGHLIGHTS,
-        outcomes: dbProgram.outcomes
-          ? dbProgram.outcomes.split(/[\n,]/).map((s: string) => s.trim()).filter(Boolean)
-          : fallback?.outcomes ?? DEFAULT_OUTCOMES,
-        requirements: dbProgram.requirements
-          ? dbProgram.requirements.split(/[\n,]/).map((s: string) => s.trim()).filter(Boolean)
-          : DEFAULT_REQUIREMENTS,
-        image: (dbProgram.imageUrl as string | null) || fallback?.image || techPrograms[0].image,
-      }
-    : fallback
-      ? { ...fallback, requirements: DEFAULT_REQUIREMENTS }
-      : null;
+  const program =
+    dbProgram
+      ? toMarketingProgram(dbProgram)
+      : fallback
+        ? {
+            ...fallback,
+            requirements: DEFAULT_REQUIREMENTS,
+          }
+        : null;
 
-  if (!program) notFound();
+  if (!program) {
+    notFound();
+  }
 
   const socialProof = testimonies.length
     ? testimonies
-    : [{ id: 1, name: "ELIGNITE Learner", text: "The modules were clear, the tasks were practical, and I finished with something concrete to show.", program: program.title }];
+    : [
+        {
+          id: 1,
+          name: "ELIGNITE Learner",
+          text: "The modules were clear, the tasks were practical, and I finished with something concrete to show.",
+          program: program.title,
+        },
+      ];
 
   const instructorInitials = instructorName
     .split(" ")
-    .map((n) => n[0])
+    .map((name) => name[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
@@ -136,10 +139,10 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
                         <img
                           src={instructorPhotoUrl}
                           alt={instructorName}
-                          className="h-10 w-10 rounded-full object-cover border border-slate-200 shrink-0"
+                          className="h-10 w-10 shrink-0 rounded-full border border-slate-200 object-cover"
                         />
                       ) : (
-                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm shrink-0">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
                           {instructorInitials}
                         </div>
                       )}

@@ -1,8 +1,37 @@
 export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import PDFDocument from "pdfkit";
+import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+
+type ReportStudent = {
+  studentId: string;
+  program: string;
+  level: number;
+  status: string;
+  gender: string | null;
+  address: string | null;
+  parentName: string | null;
+  parentPhone: string | null;
+  user: {
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    phone: string | null;
+    isActivated: boolean;
+  };
+  fees: Array<{ amount: number }>;
+  payments: Array<{ amount: number }>;
+  studentPrograms: Array<{
+    program: {
+      id: number;
+      title: string;
+      programCode: string;
+      duration: string;
+    };
+  }>;
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,30 +42,69 @@ export async function POST(req: NextRequest) {
 
     const { program, search } = await req.json();
 
-    let students = await prisma.student.findMany({
-      where: {
-        ...(program && program !== "all" && { program }),
+    const studentsRaw = await prisma.student.findMany({
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            isActivated: true,
+          },
+        },
+        fees: { select: { amount: true } },
+        payments: { select: { amount: true } },
+        studentPrograms: {
+          include: {
+            program: {
+              select: {
+                id: true,
+                title: true,
+                programCode: true,
+                duration: true,
+              },
+            },
+          },
+        },
       },
-      include: { user: true },
       orderBy: { studentId: "asc" },
+    });
+
+    let students = studentsRaw.filter((student) => {
+      if (!program || program === "all") {
+        return true;
+      }
+
+      return student.studentPrograms.some((entry) => String(entry.program.id) === program);
     });
 
     if (search && search.trim()) {
       const searchLower = search.toLowerCase();
-      students = students.filter((s) =>
-        `${s.user?.firstName || ""} ${s.user?.lastName || ""} ${s.user?.email || ""} ${s.studentId}`
+      students = students.filter((student) =>
+        [
+          student.studentId,
+          student.user.firstName || "",
+          student.user.lastName || "",
+          student.user.email || "",
+          student.program,
+          student.studentPrograms.map((entry) => entry.program.title).join(" "),
+        ]
+          .join(" ")
           .toLowerCase()
           .includes(searchLower)
       );
     }
 
-    const pdfBuffer = await generateStudentsPDF(students);
-    const body = new Uint8Array(pdfBuffer);
+    const reportBuffer = await generateStudentsReport(students, {
+      selectedProgram: program,
+      search,
+    });
 
-    return new Response(body, {
+    return new Response(new Uint8Array(reportBuffer), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="students-list-${new Date().toISOString().split("T")[0]}.pdf"`,
+        "Content-Disposition": `attachment; filename="students-report-${new Date().toISOString().split("T")[0]}.pdf"`,
       },
     });
   } catch (error) {
@@ -45,78 +113,144 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function generateStudentsPDF(students: any[]): Promise<Buffer> {
+async function generateStudentsReport(
+  students: ReportStudent[],
+  filters: { selectedProgram?: string; search?: string }
+): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
+    const doc = new PDFDocument({ margin: 42, size: "A4" });
     const chunks: Buffer[] = [];
 
     doc.on("data", (chunk: Buffer) => chunks.push(chunk));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    const headerColor = "#1e40af";
-    const textColor = "#333";
-    const tableHeaderBg = "#e0e7ff";
-
-    doc.fontSize(24).fillColor(headerColor).text("Student List Report", { align: "center" });
-    doc.fontSize(10).fillColor("#666").text(
-      `Generated on ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`,
-      { align: "center" }
-    );
-    doc.moveDown(0.5);
-    doc.strokeColor(headerColor).lineWidth(2).moveTo(40, doc.y).lineTo(doc.page.width - 40, doc.y).stroke();
-    doc.moveDown(1);
-
-    const columnPositions = { studentId: 50, firstName: 130, lastName: 220, email: 310, phone: 450, program: 550, level: 680 };
-    const columnWidths = { studentId: 75, firstName: 85, lastName: 85, email: 135, phone: 95, program: 125, level: 40 };
-
-    const drawTableHeader = (y: number) => {
-      doc.fillColor(tableHeaderBg).rect(40, y, doc.page.width - 80, 25).fill();
-      doc.fillColor(textColor).fontSize(9);
-      doc.text("Student ID", columnPositions.studentId, y + 6, { width: columnWidths.studentId });
-      doc.text("First Name", columnPositions.firstName, y + 6, { width: columnWidths.firstName });
-      doc.text("Last Name", columnPositions.lastName, y + 6, { width: columnWidths.lastName });
-      doc.text("Email", columnPositions.email, y + 6, { width: columnWidths.email });
-      doc.text("Phone", columnPositions.phone, y + 6, { width: columnWidths.phone });
-      doc.text("Program", columnPositions.program, y + 6, { width: columnWidths.program });
-      doc.text("Level", columnPositions.level, y + 6, { width: columnWidths.level });
+    const colors = {
+      primary: "#1d4ed8",
+      text: "#0f172a",
+      muted: "#475569",
+      border: "#cbd5e1",
+      surface: "#f8fafc",
+      success: "#16a34a",
+      warning: "#d97706",
     };
 
-    const headerY = doc.y;
-    drawTableHeader(headerY);
-    doc.moveDown(1.5);
+    const totalPaid = students.reduce(
+      (sum, student) => sum + student.payments.reduce((paymentTotal, payment) => paymentTotal + payment.amount, 0),
+      0
+    );
+    const totalInvoiced = students.reduce(
+      (sum, student) => sum + student.fees.reduce((feeTotal, fee) => feeTotal + fee.amount, 0),
+      0
+    );
+    const totalBalance = Math.max(totalInvoiced - totalPaid, 0);
+    const activeCount = students.filter((student) => student.status === "active").length;
+    const activatedCount = students.filter((student) => student.user.isActivated).length;
 
-    let rowY = doc.y;
-    const rowHeight = 18;
-    const pageBottom = doc.page.height - 40;
+    doc.rect(0, 0, doc.page.width, 110).fill(colors.primary);
+    doc.fillColor("#ffffff").font("Helvetica-Bold").fontSize(22).text("ELIGNITE Student Master Report", 42, 36);
+    doc.font("Helvetica").fontSize(10).text(
+      `Generated ${new Date().toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      })}`,
+      42,
+      66
+    );
 
-    students.forEach((student, index) => {
-      if (rowY + rowHeight > pageBottom) {
-        doc.addPage();
-        rowY = 40;
-        drawTableHeader(rowY);
-        doc.fontSize(8).fillColor(textColor);
-        rowY += 25 + 8;
-      }
+    doc
+      .fontSize(10)
+      .text(
+        `Filter: ${filters.selectedProgram && filters.selectedProgram !== "all" ? `Program ID ${filters.selectedProgram}` : "All programs"}${filters.search ? ` | Search: ${filters.search}` : ""}`,
+        42,
+        82
+      );
 
-      if (index % 2 === 1) {
-        doc.fillColor("#f8f9fa").rect(40, rowY - 2, doc.page.width - 80, rowHeight).fill();
-        doc.fillColor(textColor);
-      }
+    let y = 132;
 
-      doc.fontSize(8).fillColor(textColor);
-      doc.text(student.studentId, columnPositions.studentId, rowY, { width: columnWidths.studentId });
-      doc.text(student.user?.firstName || "", columnPositions.firstName, rowY, { width: columnWidths.firstName });
-      doc.text(student.user?.lastName || "", columnPositions.lastName, rowY, { width: columnWidths.lastName });
-      doc.text(student.user?.email || "", columnPositions.email, rowY, { width: columnWidths.email });
-      doc.text(student.user?.phone || "", columnPositions.phone, rowY, { width: columnWidths.phone });
-      doc.text(student.program || "", columnPositions.program, rowY, { width: columnWidths.program });
-      doc.text(student.level.toString(), columnPositions.level, rowY, { width: columnWidths.level });
+    const summaryCards = [
+      { label: "Students", value: `${students.length}` },
+      { label: "Active", value: `${activeCount}` },
+      { label: "Activated", value: `${activatedCount}` },
+      { label: "Outstanding", value: `${totalBalance.toLocaleString()} XAF` },
+    ];
 
-      rowY += rowHeight;
+    summaryCards.forEach((card, index) => {
+      const x = 42 + index * 128;
+      doc.roundedRect(x, y, 116, 64, 14).fillAndStroke(colors.surface, colors.border);
+      doc.fillColor(colors.muted).font("Helvetica").fontSize(9).text(card.label, x + 12, y + 12);
+      doc.fillColor(colors.text).font("Helvetica-Bold").fontSize(15).text(card.value, x + 12, y + 32);
     });
 
-    doc.fontSize(8).fillColor("#999").text(`Total Students: ${students.length}`, 40, doc.page.height - 30, { align: "left" });
+    y += 88;
+
+    doc.fillColor(colors.text).font("Helvetica-Bold").fontSize(14).text("Student Records", 42, y);
+    y += 24;
+
+    if (students.length === 0) {
+      doc.roundedRect(42, y, doc.page.width - 84, 72, 14).fillAndStroke(colors.surface, colors.border);
+      doc.fillColor(colors.muted).font("Helvetica").fontSize(11).text("No students matched the selected filters.", 58, y + 28);
+      doc.end();
+      return;
+    }
+
+    students.forEach((student, index) => {
+      const paidAmount = student.payments.reduce((sum, payment) => sum + payment.amount, 0);
+      const invoiceAmount = student.fees.reduce((sum, fee) => sum + fee.amount, 0);
+      const balance = Math.max(invoiceAmount - paidAmount, 0);
+      const cardHeight = 160;
+
+      if (y + cardHeight > doc.page.height - 48) {
+        doc.addPage();
+        y = 42;
+      }
+
+      doc.roundedRect(42, y, doc.page.width - 84, cardHeight, 16).fillAndStroke("#ffffff", colors.border);
+
+      doc.fillColor(colors.primary).font("Helvetica-Bold").fontSize(12).text(
+        `${index + 1}. ${student.user.firstName || ""} ${student.user.lastName || ""}`.trim() || student.studentId,
+        58,
+        y + 16
+      );
+      doc.fillColor(colors.muted).font("Helvetica").fontSize(9).text(student.studentId, 58, y + 36);
+
+      const programLabel =
+        student.studentPrograms.length > 0
+          ? student.studentPrograms.map((entry) => `${entry.program.programCode} (${entry.program.title})`).join(", ")
+          : student.program;
+      const durationLabel =
+        student.studentPrograms.length > 0
+          ? student.studentPrograms.map((entry) => entry.program.duration).filter(Boolean).join(" / ")
+          : "Not set";
+      const statusColor = student.status === "active" ? colors.success : colors.warning;
+      const activationLabel = student.user.isActivated ? "Activated" : "Pending activation";
+
+      doc.fillColor(colors.text).font("Helvetica").fontSize(10);
+      doc.text(`Programs: ${programLabel}`, 58, y + 56, { width: 320 });
+      doc.text(`Duration: ${durationLabel}`, 58, y + 74, { width: 320 });
+      doc.text(`Level: ${student.level} | Status: ${student.status}`, 58, y + 92, { width: 320 });
+
+      doc.text(`Email: ${student.user.email || "Not provided"}`, 360, y + 56, { width: 170 });
+      doc.text(`Phone: ${student.user.phone || "Not provided"}`, 360, y + 74, { width: 170 });
+      doc.fillColor(statusColor).text(activationLabel, 360, y + 92, { width: 170 });
+
+      doc.fillColor(colors.text);
+      doc.text(`Fees billed: ${invoiceAmount.toLocaleString()} XAF`, 58, y + 118);
+      doc.text(`Payments: ${paidAmount.toLocaleString()} XAF`, 240, y + 118);
+      doc.text(`Balance: ${balance.toLocaleString()} XAF`, 410, y + 118);
+
+      doc.fillColor(colors.muted).fontSize(9);
+      doc.text(
+        `Address: ${student.address || "Not provided"} | Parent/Guardian: ${student.parentName || "Not provided"} | Contact: ${student.parentPhone || "Not provided"}`,
+        58,
+        y + 138,
+        { width: doc.page.width - 116 }
+      );
+
+      y += cardHeight + 14;
+    });
+
     doc.end();
   });
 }

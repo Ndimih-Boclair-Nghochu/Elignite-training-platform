@@ -4,19 +4,19 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Reveal } from "@/components/marketing/reveal";
 import { SectionHeading } from "@/components/marketing/section-heading";
+import { ProgramJumpSelect } from "@/components/marketing/program-jump-select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 import { techPrograms } from "@/lib/site-content";
+import { programSelectOptions, toMarketingProgram, truncateWords } from "@/lib/programs";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-const DEFAULT_HIGHLIGHTS = ["Practical skills", "Expert guidance", "Career-focused"];
-const DEFAULT_OUTCOMES = ["Portfolio-ready projects", "Career advancement", "Practical experience"];
-
 export default async function ProgramsPage() {
   let programs = techPrograms;
+  let programOptions = programSelectOptions(techPrograms);
 
   try {
     const dbPrograms = await prisma.program.findMany({
@@ -25,22 +25,8 @@ export default async function ProgramsPage() {
     });
 
     if (dbPrograms.length > 0) {
-      programs = dbPrograms.map((program) => {
-        const fallback = techPrograms.find((item) => item.slug === program.slug);
-        return {
-          slug: program.slug,
-          title: program.title,
-          category: program.category,
-          duration: program.duration,
-          description: program.description,
-          level: fallback?.level ?? "Beginner to Intermediate",
-          price: `${program.tuition.toLocaleString()} XAF`,
-          mode: fallback?.mode ?? "Hybrid",
-          highlights: fallback?.highlights ?? DEFAULT_HIGHLIGHTS,
-          outcomes: fallback?.outcomes ?? DEFAULT_OUTCOMES,
-          image: (program.imageUrl as string | null) || fallback?.image || techPrograms[0].image,
-        };
-      });
+      programOptions = programSelectOptions(dbPrograms);
+      programs = dbPrograms.map((program, index) => toMarketingProgram(program, index));
     }
   } catch (error) {
     console.error("Programs fallback:", error);
@@ -65,9 +51,14 @@ export default async function ProgramsPage() {
             <SectionHeading
               eyebrow="Tech Training Tracks"
               title="Programs built for practical digital careers, not vague promises."
-              description="Browse focused training tracks across software, cloud, design, AI tools, productivity, and digital growth. Every card shows the essentials: level, mode, duration, and where it can take you."
+              description="Browse focused training tracks across software, cloud, design, AI tools, productivity, and digital growth. Every card shows the essentials while the full details stay inside the program page."
               className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
             />
+          </Reveal>
+          <Reveal delay={60}>
+            <div className="mt-8 max-w-xl">
+              <ProgramJumpSelect programs={programOptions} />
+            </div>
           </Reveal>
         </div>
       </section>
@@ -98,7 +89,9 @@ export default async function ProgramsPage() {
 
                 <div className="p-6">
                   <h2 className="text-2xl font-semibold text-slate-950">{program.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{program.description}</p>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">
+                    {truncateWords(program.description, 24)}
+                  </p>
 
                   <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -120,7 +113,7 @@ export default async function ProgramsPage() {
                   </div>
 
                   <div className="mt-5 space-y-2">
-                    {program.highlights.map((item) => (
+                    {program.highlights.slice(0, 3).map((item) => (
                       <div key={item} className="flex items-center gap-3 text-sm text-slate-600">
                         <CheckCircle2 className="h-4 w-4 text-blue-500" />
                         <span>{item}</span>

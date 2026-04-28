@@ -9,19 +9,15 @@ import { Reveal } from "@/components/marketing/reveal";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { PhoneShowcase } from "@/components/marketing/phone-showcase";
 import { TestimonialsCarousel } from "@/components/marketing/testimonials-carousel";
-import {
-  faqs,
-  learningSteps,
-  partnerLogos,
-  techPrograms,
-} from "@/lib/site-content";
+import { ProgramJumpSelect } from "@/components/marketing/program-jump-select";
+import { faqs, learningSteps, partnerLogos, techPrograms } from "@/lib/site-content";
+import { programSelectOptions, toMarketingProgram, truncateWords } from "@/lib/programs";
 import {
   ArrowRight,
   Briefcase,
   CheckCircle2,
   Clock3,
   Cpu,
-  GraduationCap,
   Layers3,
   ShieldCheck,
   Sparkles,
@@ -32,6 +28,7 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   let programs = techPrograms.slice(0, 6);
+  let allProgramOptions = programSelectOptions(techPrograms);
   let approvedTestimonials: Array<{
     id: number;
     name: string;
@@ -42,27 +39,24 @@ export default async function HomePage() {
 
   let studentCount = 0;
   let programCount = 0;
-  let facultyCount = 0;
+  let activeProgramCount = 0;
   let graduateCount = 0;
 
   try {
-    const [dbPrograms, dbTestimonials, sCount, pCount, fCount, gCount] = await Promise.all([
+    const [dbPrograms, dbTestimonials, sCount, pCount, activePrograms, gCount] = await Promise.all([
       prisma.program.findMany({
         where: { status: "published" },
         orderBy: { createdAt: "desc" },
-        take: 6,
       }),
       prisma.testimony.findMany({
         where: { status: "approved" },
         orderBy: { createdAt: "desc" },
-        take: 3,
+        take: 6,
         select: { id: true, name: true, program: true, text: true, rating: true },
       }),
       prisma.student.count(),
       prisma.program.count({ where: { status: "published" } }),
-      // Active programs where at least one student is enrolled
       prisma.student.findMany({ select: { program: true }, distinct: ["program"] }),
-      // Students who have received at least one issued certificate
       prisma.student.count({
         where: { certificates: { some: { status: "issued" } } },
       }),
@@ -70,28 +64,12 @@ export default async function HomePage() {
 
     studentCount = sCount;
     programCount = pCount;
-    facultyCount = (fCount as { program: string }[]).length;
+    activeProgramCount = activePrograms.length;
     graduateCount = gCount;
 
     if (dbPrograms.length > 0) {
-      programs = dbPrograms.map((program, index) => {
-        const fallback = techPrograms.find((item) => item.slug === program.slug);
-        const defaultFallback = techPrograms[index % techPrograms.length];
-
-        return {
-          slug: program.slug,
-          title: program.title,
-          category: program.category,
-          duration: program.duration,
-          description: program.description,
-          level: fallback?.level ?? defaultFallback.level,
-          mode: fallback?.mode ?? defaultFallback.mode,
-          price: `${program.tuition.toLocaleString()} XAF`,
-          highlights: fallback?.highlights ?? defaultFallback.highlights,
-          outcomes: fallback?.outcomes ?? defaultFallback.outcomes,
-          image: (program.imageUrl as string | null) || fallback?.image || defaultFallback.image,
-        };
-      });
+      allProgramOptions = programSelectOptions(dbPrograms);
+      programs = dbPrograms.slice(0, 6).map((program, index) => toMarketingProgram(program, index));
     }
 
     approvedTestimonials = dbTestimonials;
@@ -129,7 +107,7 @@ export default async function HomePage() {
   const liveStats = [
     { label: "Students Enrolled", value: studentCount.toString() },
     { label: "Published Programs", value: programCount.toString() },
-    { label: "Active Programs", value: facultyCount.toString() },
+    { label: "Active Programs", value: activeProgramCount.toString() },
     { label: "Graduates", value: graduateCount.toString() },
   ];
 
@@ -137,7 +115,6 @@ export default async function HomePage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Navbar />
 
-      {/* ── HERO ── */}
       <section className="relative overflow-hidden border-b border-blue-100">
         <div className="absolute inset-0">
           <Image
@@ -147,9 +124,8 @@ export default async function HomePage() {
             priority
             className="object-cover"
           />
-          {/* Lighter overlay — image stays clearly visible */}
-          <div className="absolute inset-0 bg-[linear-gradient(118deg,rgba(186,230,253,0.60),rgba(224,242,254,0.45),rgba(14,165,233,0.18))]" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(37,99,235,0.03)_0,rgba(37,99,235,0.03)_1px,transparent_1px,transparent_88px),linear-gradient(rgba(37,99,235,0.03)_0,rgba(37,99,235,0.03)_1px,transparent_1px,transparent_88px)] bg-[size:88px_88px]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(125,211,252,0.58),rgba(56,189,248,0.46),rgba(37,99,235,0.34))] lg:bg-[linear-gradient(118deg,rgba(191,219,254,0.7),rgba(224,242,254,0.5),rgba(37,99,235,0.28))]" />
+          <div className="absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(37,99,235,0.04)_0,rgba(37,99,235,0.04)_1px,transparent_1px,transparent_88px),linear-gradient(rgba(37,99,235,0.04)_0,rgba(37,99,235,0.04)_1px,transparent_1px,transparent_88px)] bg-[size:88px_88px] lg:block" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-24 sm:px-6 lg:px-8 lg:pb-24 lg:pt-28">
@@ -176,7 +152,6 @@ export default async function HomePage() {
                 </Button>
               </div>
 
-              {/* Real DB stats */}
               <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
                 {liveStats.map((stat, index) => (
                   <Reveal key={stat.label} delay={index * 80} className="surface-card hover-lift p-5">
@@ -187,7 +162,6 @@ export default async function HomePage() {
               </div>
             </Reveal>
 
-            {/* Hero right — Learning Experience only */}
             <Reveal delay={160}>
               <div className="surface-card p-6">
                 <div className="flex items-center justify-between gap-4">
@@ -225,7 +199,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── FEATURES STRIP ── */}
       <section className="border-b border-blue-100 bg-white">
         <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 text-sm text-slate-600 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
           {[
@@ -242,7 +215,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── CAMPAIGN PREVIEW (moved here, below features strip) ── */}
       <section className="border-b border-blue-100 bg-blue-50/40 px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-center">
@@ -254,11 +226,14 @@ export default async function HomePage() {
                 Training communication presented with the same clarity as the platform.
               </h2>
               <p className="mt-4 text-base leading-7 text-slate-600">
-                See how ELIGNITE presents its training programmes — clear offers, structured information, and a consistent brand voice that builds trust from first contact.
+                See how ELIGNITE presents its training programmes with structured information, clear offers, and a stronger visual identity that helps visitors trust the platform quickly.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button size="lg" asChild className="bg-blue-600 text-white hover:bg-blue-700">
-                  <Link href="/enroll">Apply Now <ArrowRight className="h-4 w-4" /></Link>
+                  <Link href="/enroll">
+                    Apply Now
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild className="border-slate-200 bg-white text-slate-900 hover:bg-slate-50">
                   <Link href="/programs">View Programs</Link>
@@ -272,7 +247,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── POPULAR PROGRAMS ── */}
       <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
@@ -282,6 +256,11 @@ export default async function HomePage() {
               description="Every ELIGNITE program is shaped for real digital work, with clean pacing, hands-on deliverables, and a direct path from learning to execution."
               className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
             />
+          </Reveal>
+          <Reveal delay={60}>
+            <div className="mt-8 max-w-xl">
+              <ProgramJumpSelect programs={allProgramOptions} />
+            </div>
           </Reveal>
           <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {programs.map((program, index) => (
@@ -305,7 +284,9 @@ export default async function HomePage() {
                   </div>
                   <div className="p-6">
                     <h3 className="text-xl font-semibold text-slate-950">{program.title}</h3>
-                    <p className="mt-3 text-sm leading-6 text-slate-600">{program.description}</p>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      {truncateWords(program.description, 18)}
+                    </p>
                     <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
                       <div className="rounded-2xl border border-blue-100 bg-blue-50/50 px-4 py-3">
                         <p className="text-slate-500">Duration</p>
@@ -325,7 +306,7 @@ export default async function HomePage() {
                       </div>
                     </div>
                     <div className="mt-5 flex flex-wrap gap-2">
-                      {program.highlights.map((item) => (
+                      {program.highlights.slice(0, 2).map((item) => (
                         <span
                           key={item}
                           className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs text-blue-700"
@@ -351,10 +332,19 @@ export default async function HomePage() {
               </Reveal>
             ))}
           </div>
+          <Reveal delay={160}>
+            <div className="mt-10 flex justify-center">
+              <Button asChild size="lg" variant="outline" className="border-blue-200 bg-white text-slate-900 hover:bg-blue-50">
+                <Link href="/programs">
+                  View More Programs
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* ── HOW LEARNING WORKS ── */}
       <section className="border-y border-blue-100 bg-blue-50/65 px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
@@ -381,7 +371,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── WHY ELIGNITE ── */}
       <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.95fr_1.05fr]">
           <Reveal>
@@ -392,7 +381,7 @@ export default async function HomePage() {
                 description="The platform is designed to make programs feel credible, easy to navigate, and motivating to continue."
                 className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
               />
-              <div className="relative mt-6 w-full overflow-hidden rounded-2xl h-56 sm:h-64">
+              <div className="relative mt-6 h-56 w-full overflow-hidden rounded-2xl sm:h-64">
                 <Image
                   src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80"
                   alt="Learners collaborating in a modern training environment"
@@ -440,7 +429,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ── */}
       <section className="border-y border-blue-100 bg-slate-50 px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
@@ -458,7 +446,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── FAQ ── */}
       <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
           <Reveal>
@@ -468,7 +455,7 @@ export default async function HomePage() {
               description="The public site now makes the next step clearer, but here are the essentials in one place."
               className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
             />
-            <div className="relative mt-6 w-full overflow-hidden rounded-2xl h-56 sm:h-64">
+            <div className="relative mt-6 h-56 w-full overflow-hidden rounded-2xl sm:h-64">
               <Image
                 src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80"
                 alt="Learner reviewing course materials and asking questions"
@@ -491,7 +478,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── PARTNERS ── */}
       <section className="border-y border-blue-100 bg-blue-50/40 px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-4 text-sm text-slate-500">
           {partnerLogos.map((partner) => (
@@ -502,7 +488,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
       <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
         <Reveal>
           <div className="surface-card-strong overflow-hidden p-8 sm:p-10">
