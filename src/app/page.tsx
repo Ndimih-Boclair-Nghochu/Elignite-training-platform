@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Reveal } from "@/components/marketing/reveal";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { PhoneShowcase } from "@/components/marketing/phone-showcase";
+import { TestimonialsCarousel } from "@/components/marketing/testimonials-carousel";
 import {
   faqs,
   learningSteps,
@@ -391,14 +392,14 @@ export default async function HomePage() {
                 description="The platform is designed to make programs feel credible, easy to navigate, and motivating to continue."
                 className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
               />
-              <div className="relative mt-6 w-full overflow-hidden rounded-2xl">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="https://storyset.com/image/tech-company/rafiki"
-                  alt="Tech company illustration by Storyset"
-                  className="w-full object-contain"
-                  loading="lazy"
+              <div className="relative mt-6 w-full overflow-hidden rounded-2xl h-56 sm:h-64">
+                <Image
+                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80"
+                  alt="Learners collaborating in a modern training environment"
+                  fill
+                  className="object-cover"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-950/30 to-transparent" />
               </div>
             </div>
           </Reveal>
@@ -451,28 +452,8 @@ export default async function HomePage() {
               className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
             />
           </Reveal>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {testimonials.map((testimony, index) => (
-              <Reveal key={testimony.id} delay={index * 90}>
-                <div className="surface-card hover-lift h-full p-6">
-                  <p className="text-sm uppercase tracking-[0.22em] text-blue-700">
-                    {testimony.program}
-                  </p>
-                  <p className="mt-4 text-lg leading-8 text-slate-700">
-                    &ldquo;{testimony.text}&rdquo;
-                  </p>
-                  <div className="mt-8 flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-slate-950">{testimony.name}</p>
-                      <p className="text-sm text-slate-500">{testimony.rating}/5 rating</p>
-                    </div>
-                    <div className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs text-blue-700">
-                      Verified
-                    </div>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
+          <div className="mt-12">
+            <TestimonialsCarousel items={testimonials} />
           </div>
         </div>
       </section>
@@ -487,14 +468,14 @@ export default async function HomePage() {
               description="The public site now makes the next step clearer, but here are the essentials in one place."
               className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
             />
-            <div className="mt-6 w-full overflow-hidden rounded-2xl">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://storyset.com/image/thinking-face/rafiki"
-                alt="Thinking illustration by Storyset"
-                className="w-full max-h-64 object-contain"
-                loading="lazy"
+            <div className="relative mt-6 w-full overflow-hidden rounded-2xl h-56 sm:h-64">
+              <Image
+                src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80"
+                alt="Learner reviewing course materials and asking questions"
+                fill
+                className="object-cover"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-blue-950/25 to-transparent" />
             </div>
           </Reveal>
           <div className="space-y-4">
