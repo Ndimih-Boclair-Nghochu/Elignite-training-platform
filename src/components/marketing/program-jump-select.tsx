@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, ListFilter } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { programDetailSlug } from "@/lib/programs";
 
 type ProgramJumpSelectProps = {
   programs: Array<{ slug: string; title: string }>;
@@ -41,7 +42,8 @@ export function ProgramJumpSelect({
             return;
           }
 
-          router.push(`/programs/${nextValue}`);
+          const selectedProgram = items.find((program) => program.slug === nextValue);
+          router.push(`/programs/${programDetailSlug(selectedProgram || { slug: nextValue, title: nextValue })}`);
         }}
       >
         <SelectTrigger className="h-12 rounded-2xl border-blue-100 bg-white text-left text-sm shadow-sm">

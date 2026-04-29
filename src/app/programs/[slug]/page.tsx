@@ -8,7 +8,7 @@ import { Reveal } from "@/components/marketing/reveal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { techPrograms } from "@/lib/site-content";
-import { toMarketingProgram } from "@/lib/programs";
+import { slugifyProgramValue, toMarketingProgram } from "@/lib/programs";
 import { ArrowRight, CheckCircle2, Layers3, Users2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,10 @@ const DEFAULT_REQUIREMENTS = [
 ];
 
 export default async function ProgramDetailsPage({ params }: { params: { slug: string } }) {
-  const fallback = techPrograms.find((item) => item.slug === params.slug);
+  const normalizedSlug = slugifyProgramValue(decodeURIComponent(params.slug));
+  const fallback = techPrograms.find(
+    (item) => item.slug === params.slug || slugifyProgramValue(item.slug) === normalizedSlug || slugifyProgramValue(item.title) === normalizedSlug
+  );
 
   let dbProgram: any = null;
   let instructorName = "ELIGNITE Faculty";
@@ -30,9 +33,28 @@ export default async function ProgramDetailsPage({ params }: { params: { slug: s
 
   try {
     dbProgram = await prisma.program.findFirst({
-      where: { slug: { equals: params.slug, mode: "insensitive" } },
+      where: {
+        OR: [
+          { slug: { equals: params.slug, mode: "insensitive" } },
+          { slug: { equals: normalizedSlug, mode: "insensitive" } },
+          { title: { equals: decodeURIComponent(params.slug), mode: "insensitive" } },
+        ],
+      },
       include: { teachers: { include: { teacher: { include: { user: true } } }, take: 1 } },
     });
+
+    if (!dbProgram) {
+      const programs = await prisma.program.findMany({
+        include: { teachers: { include: { teacher: { include: { user: true } } }, take: 1 } },
+      });
+
+      dbProgram =
+        programs.find(
+          (program) =>
+            slugifyProgramValue(program.slug) === normalizedSlug ||
+            slugifyProgramValue(program.title) === normalizedSlug
+        ) || null;
+    }
 
     if (dbProgram) {
       const firstTeacher = dbProgram.teachers?.[0]?.teacher;

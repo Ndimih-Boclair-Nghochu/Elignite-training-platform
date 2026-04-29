@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Edit2, FileDown, Loader2, Plus, Search } from "lucide-react";
+import { Download, Edit2, FileDown, Loader2, Plus, Search, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProgramOption {
@@ -215,7 +215,9 @@ export default function CeoStudentsPage() {
       const url = window.URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `students-report-${new Date().toISOString().split("T")[0]}.pdf`;
+      const disposition = response.headers.get("Content-Disposition");
+      const matchedFilename = disposition?.match(/filename="?([^"]+)"?/i)?.[1];
+      anchor.download = matchedFilename || `students-report-${new Date().toISOString().split("T")[0]}.html`;
       document.body.appendChild(anchor);
       anchor.click();
       window.URL.revokeObjectURL(url);
@@ -231,6 +233,32 @@ export default function CeoStudentsPage() {
     } finally {
       setExporting(false);
     }
+  }
+
+  async function handleDeleteStudent(student: Student) {
+    const confirmed = window.confirm(
+      `Delete ${student.firstName} ${student.lastName} from the system?\n\nThis will permanently remove the student account, linked profile data, and access to the platform.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const response = await fetch(`/api/students/${student.id}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      toast({ title: "Student deleted successfully" });
+      fetchStudents();
+      return;
+    }
+
+    const payload = await response.json().catch(() => null);
+    toast({
+      title: payload?.error || "Failed to delete student",
+      variant: "destructive",
+    });
   }
 
   return (
@@ -546,6 +574,10 @@ export default function CeoStudentsPage() {
                               <FileDown className="h-3.5 w-3.5" />
                             </Button>
                           </a>
+                          <Button size="sm" variant="destructive" onClick={() => handleDeleteStudent(student)}>
+                            <Trash2 className="h-3.5 w-3.5 mr-1" />
+                            Delete
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>

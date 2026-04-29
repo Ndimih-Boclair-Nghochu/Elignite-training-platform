@@ -45,16 +45,16 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 border-b border-blue-900/80 bg-[#0d5bd7]/95 text-white backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3 text-white">
-          <div className="relative h-11 w-11 overflow-hidden rounded-xl border border-white/20 bg-white shadow-sm flex items-center justify-center">
+          <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border-2 border-white/55 bg-white p-1.5 shadow-[0_16px_40px_-20px_rgba(15,23,42,0.8)] ring-1 ring-blue-200/40 sm:h-16 sm:w-16">
             {schoolLogoUrl ? (
-              <img src={schoolLogoUrl} alt={`${schoolName} logo`} className="h-full w-full object-contain p-1" />
+              <img src={schoolLogoUrl} alt={`${schoolName} logo`} className="h-full w-full object-contain" />
             ) : (
-              <Image src="/logo.svg" alt="ELIGNITE logo" fill className="object-contain p-2" />
+              <Image src="/logo.svg" alt="ELIGNITE logo" fill className="object-contain p-1.5" />
             )}
           </div>
           <div className="leading-tight">
-            <p className="text-sm font-semibold sm:text-base">{schoolName}</p>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-blue-100">Tech Training Platform</p>
+            <p className="text-base font-bold tracking-[0.01em] text-white sm:text-lg">{schoolName}</p>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-blue-100">Tech Training Platform</p>
           </div>
         </Link>
 

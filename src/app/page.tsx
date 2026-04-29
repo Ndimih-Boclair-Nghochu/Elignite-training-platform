@@ -11,7 +11,7 @@ import { PhoneShowcase } from "@/components/marketing/phone-showcase";
 import { TestimonialsCarousel } from "@/components/marketing/testimonials-carousel";
 import { ProgramJumpSelect } from "@/components/marketing/program-jump-select";
 import { faqs, learningSteps, partnerLogos, techPrograms } from "@/lib/site-content";
-import { programSelectOptions, toMarketingProgram, truncateWords } from "@/lib/programs";
+import { programDetailSlug, programSelectOptions, toMarketingProgram, truncateWords } from "@/lib/programs";
 import {
   ArrowRight,
   Briefcase,
@@ -324,7 +324,7 @@ export default async function HomePage() {
                         variant="outline"
                         className="flex-1 border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
                       >
-                        <Link href={`/programs/${program.slug}`}>View Details</Link>
+                        <Link href={`/programs/${programDetailSlug(program)}`}>View Details</Link>
                       </Button>
                     </div>
                   </div>

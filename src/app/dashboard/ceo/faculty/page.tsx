@@ -118,7 +118,7 @@ export default function CeoStaffPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Delete this staff member?")) return;
+    if (!confirm("Delete this teacher from the system?\n\nThis will permanently remove the teacher account, assigned programs, and dashboard access.")) return;
     const res = await fetch(`/api/teachers/${id}`, { method: "DELETE" });
     if (res.ok) { toast({ title: "Staff deleted" }); fetchStaff(); }
     else { const d = await res.json(); toast({ title: d.error || "Failed to delete", variant: "destructive" }); }
@@ -280,7 +280,10 @@ export default function CeoStaffPage() {
                           <Button size="sm" variant={t.status === "active" ? "secondary" : "default"} onClick={() => handleToggleStatus(t.id, t.status === "active" ? "inactive" : "active")}>
                             {t.status === "active" ? "Suspend" : "Activate"}
                           </Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleDelete(t.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleDelete(t.id)}>
+                            <Trash2 className="h-3.5 w-3.5 mr-1" />
+                            Delete
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>

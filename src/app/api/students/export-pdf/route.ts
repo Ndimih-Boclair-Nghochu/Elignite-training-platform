@@ -1,13 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import PDFDocument from "pdfkit";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
-type ReportStudent = {
+type StudentExportRow = {
   studentId: string;
-  program: string;
   level: number;
   status: string;
   gender: string | null;
@@ -87,8 +85,8 @@ export async function POST(req: NextRequest) {
           student.user.firstName || "",
           student.user.lastName || "",
           student.user.email || "",
-          student.program,
           student.studentPrograms.map((entry) => entry.program.title).join(" "),
+          student.studentPrograms.map((entry) => entry.program.programCode).join(" "),
         ]
           .join(" ")
           .toLowerCase()
@@ -96,161 +94,152 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const reportBuffer = await generateStudentsReport(students, {
+    const school = await prisma.schoolSettings.findFirst();
+    const html = renderReportHtml(students, school?.schoolName || "ELIGNITE Training Platform", {
       selectedProgram: program,
       search,
     });
 
-    return new Response(new Uint8Array(reportBuffer), {
+    return new Response(html, {
       headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="students-report-${new Date().toISOString().split("T")[0]}.pdf"`,
+        "Content-Type": "text/html; charset=utf-8",
+        "Content-Disposition": `attachment; filename="students-report-${new Date().toISOString().split("T")[0]}.html"`,
       },
     });
   } catch (error) {
-    console.error("Export error:", error);
+    console.error("Student report export error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
-async function generateStudentsReport(
-  students: ReportStudent[],
+function renderReportHtml(
+  students: StudentExportRow[],
+  schoolName: string,
   filters: { selectedProgram?: string; search?: string }
-): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 42, size: "A4" });
-    const chunks: Buffer[] = [];
+) {
+  const totalPaid = students.reduce(
+    (sum, student) => sum + student.payments.reduce((paymentTotal, payment) => paymentTotal + payment.amount, 0),
+    0
+  );
+  const totalInvoiced = students.reduce(
+    (sum, student) => sum + student.fees.reduce((feeTotal, fee) => feeTotal + fee.amount, 0),
+    0
+  );
+  const totalBalance = Math.max(totalInvoiced - totalPaid, 0);
+  const activeCount = students.filter((student) => student.status === "active").length;
+  const activatedCount = students.filter((student) => student.user.isActivated).length;
 
-    doc.on("data", (chunk: Buffer) => chunks.push(chunk));
-    doc.on("end", () => resolve(Buffer.concat(chunks)));
-    doc.on("error", reject);
-
-    const colors = {
-      primary: "#1d4ed8",
-      text: "#0f172a",
-      muted: "#475569",
-      border: "#cbd5e1",
-      surface: "#f8fafc",
-      success: "#16a34a",
-      warning: "#d97706",
-    };
-
-    const totalPaid = students.reduce(
-      (sum, student) => sum + student.payments.reduce((paymentTotal, payment) => paymentTotal + payment.amount, 0),
-      0
-    );
-    const totalInvoiced = students.reduce(
-      (sum, student) => sum + student.fees.reduce((feeTotal, fee) => feeTotal + fee.amount, 0),
-      0
-    );
-    const totalBalance = Math.max(totalInvoiced - totalPaid, 0);
-    const activeCount = students.filter((student) => student.status === "active").length;
-    const activatedCount = students.filter((student) => student.user.isActivated).length;
-
-    doc.rect(0, 0, doc.page.width, 110).fill(colors.primary);
-    doc.fillColor("#ffffff").font("Helvetica-Bold").fontSize(22).text("ELIGNITE Student Master Report", 42, 36);
-    doc.font("Helvetica").fontSize(10).text(
-      `Generated ${new Date().toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      })}`,
-      42,
-      66
-    );
-
-    doc
-      .fontSize(10)
-      .text(
-        `Filter: ${filters.selectedProgram && filters.selectedProgram !== "all" ? `Program ID ${filters.selectedProgram}` : "All programs"}${filters.search ? ` | Search: ${filters.search}` : ""}`,
-        42,
-        82
-      );
-
-    let y = 132;
-
-    const summaryCards = [
-      { label: "Students", value: `${students.length}` },
-      { label: "Active", value: `${activeCount}` },
-      { label: "Activated", value: `${activatedCount}` },
-      { label: "Outstanding", value: `${totalBalance.toLocaleString()} XAF` },
-    ];
-
-    summaryCards.forEach((card, index) => {
-      const x = 42 + index * 128;
-      doc.roundedRect(x, y, 116, 64, 14).fillAndStroke(colors.surface, colors.border);
-      doc.fillColor(colors.muted).font("Helvetica").fontSize(9).text(card.label, x + 12, y + 12);
-      doc.fillColor(colors.text).font("Helvetica-Bold").fontSize(15).text(card.value, x + 12, y + 32);
-    });
-
-    y += 88;
-
-    doc.fillColor(colors.text).font("Helvetica-Bold").fontSize(14).text("Student Records", 42, y);
-    y += 24;
-
-    if (students.length === 0) {
-      doc.roundedRect(42, y, doc.page.width - 84, 72, 14).fillAndStroke(colors.surface, colors.border);
-      doc.fillColor(colors.muted).font("Helvetica").fontSize(11).text("No students matched the selected filters.", 58, y + 28);
-      doc.end();
-      return;
-    }
-
-    students.forEach((student, index) => {
+  const rows = students
+    .map((student, index) => {
       const paidAmount = student.payments.reduce((sum, payment) => sum + payment.amount, 0);
       const invoiceAmount = student.fees.reduce((sum, fee) => sum + fee.amount, 0);
       const balance = Math.max(invoiceAmount - paidAmount, 0);
-      const cardHeight = 160;
-
-      if (y + cardHeight > doc.page.height - 48) {
-        doc.addPage();
-        y = 42;
-      }
-
-      doc.roundedRect(42, y, doc.page.width - 84, cardHeight, 16).fillAndStroke("#ffffff", colors.border);
-
-      doc.fillColor(colors.primary).font("Helvetica-Bold").fontSize(12).text(
-        `${index + 1}. ${student.user.firstName || ""} ${student.user.lastName || ""}`.trim() || student.studentId,
-        58,
-        y + 16
-      );
-      doc.fillColor(colors.muted).font("Helvetica").fontSize(9).text(student.studentId, 58, y + 36);
-
       const programLabel =
         student.studentPrograms.length > 0
-          ? student.studentPrograms.map((entry) => `${entry.program.programCode} (${entry.program.title})`).join(", ")
-          : student.program;
+          ? student.studentPrograms
+              .map((entry) => `${escapeHtml(entry.program.programCode)} - ${escapeHtml(entry.program.title)}`)
+              .join("<br />")
+          : "Not assigned";
       const durationLabel =
         student.studentPrograms.length > 0
-          ? student.studentPrograms.map((entry) => entry.program.duration).filter(Boolean).join(" / ")
+          ? student.studentPrograms.map((entry) => escapeHtml(entry.program.duration)).join(" / ")
           : "Not set";
-      const statusColor = student.status === "active" ? colors.success : colors.warning;
-      const activationLabel = student.user.isActivated ? "Activated" : "Pending activation";
 
-      doc.fillColor(colors.text).font("Helvetica").fontSize(10);
-      doc.text(`Programs: ${programLabel}`, 58, y + 56, { width: 320 });
-      doc.text(`Duration: ${durationLabel}`, 58, y + 74, { width: 320 });
-      doc.text(`Level: ${student.level} | Status: ${student.status}`, 58, y + 92, { width: 320 });
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${escapeHtml(student.studentId)}</td>
+          <td>
+            <strong>${escapeHtml(`${student.user.firstName || ""} ${student.user.lastName || ""}`.trim() || "Unnamed")}</strong><br />
+            <span class="muted">${escapeHtml(student.user.email || "No email")}</span><br />
+            <span class="muted">${escapeHtml(student.user.phone || "No phone")}</span>
+          </td>
+          <td>${programLabel}</td>
+          <td>${durationLabel}</td>
+          <td>Level ${student.level}<br /><span class="muted">${escapeHtml(student.status)}</span></td>
+          <td>${student.user.isActivated ? "Activated" : "Pending activation"}</td>
+          <td>${invoiceAmount.toLocaleString()} XAF<br /><span class="muted">Paid ${paidAmount.toLocaleString()} XAF</span><br /><strong>${balance.toLocaleString()} XAF due</strong></td>
+          <td>
+            ${escapeHtml(student.address || "No address")}<br />
+            <span class="muted">${escapeHtml(student.parentName || "No guardian")} | ${escapeHtml(student.parentPhone || "No guardian phone")}</span>
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
 
-      doc.text(`Email: ${student.user.email || "Not provided"}`, 360, y + 56, { width: 170 });
-      doc.text(`Phone: ${student.user.phone || "Not provided"}`, 360, y + 74, { width: 170 });
-      doc.fillColor(statusColor).text(activationLabel, 360, y + 92, { width: 170 });
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Master Report</title>
+    <style>
+      body { font-family: Arial, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 32px; }
+      .sheet { max-width: 1400px; margin: 0 auto; background: #ffffff; border: 1px solid #dbeafe; border-radius: 20px; padding: 28px; box-shadow: 0 24px 80px -48px rgba(37,99,235,0.35); }
+      .hero { background: linear-gradient(135deg, #1d4ed8, #2563eb); color: white; border-radius: 18px; padding: 24px 28px; }
+      .hero h1 { margin: 0; font-size: 28px; }
+      .hero p { margin: 8px 0 0; color: rgba(255,255,255,0.86); }
+      .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 24px 0; }
+      .stat { border: 1px solid #dbeafe; background: #eff6ff; border-radius: 16px; padding: 18px; }
+      .stat .label { color: #475569; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
+      .stat .value { margin-top: 10px; font-size: 24px; font-weight: 700; color: #0f172a; }
+      .meta { display: flex; justify-content: space-between; gap: 12px; margin-top: 20px; color: #475569; font-size: 13px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 13px; }
+      th { background: #dbeafe; color: #1e3a8a; text-align: left; padding: 12px; border-bottom: 1px solid #bfdbfe; }
+      td { padding: 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+      tr:nth-child(even) td { background: #f8fafc; }
+      .muted { color: #64748b; font-size: 12px; }
+      @media print { body { background: white; padding: 0; } .sheet { box-shadow: none; border: none; padding: 0; } }
+    </style>
+  </head>
+  <body>
+    <div class="sheet">
+      <div class="hero">
+        <h1>${escapeHtml(schoolName)} Student Master Report</h1>
+        <p>Generated ${escapeHtml(
+          new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })
+        )}</p>
+      </div>
+      <div class="meta">
+        <div>Filter: ${escapeHtml(filters.selectedProgram && filters.selectedProgram !== "all" ? `Program ID ${filters.selectedProgram}` : "All programs")}</div>
+        <div>${escapeHtml(filters.search ? `Search: ${filters.search}` : "Search: none")}</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="label">Students</div><div class="value">${students.length}</div></div>
+        <div class="stat"><div class="label">Active</div><div class="value">${activeCount}</div></div>
+        <div class="stat"><div class="label">Activated</div><div class="value">${activatedCount}</div></div>
+        <div class="stat"><div class="label">Outstanding</div><div class="value">${totalBalance.toLocaleString()} XAF</div></div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student ID</th>
+            <th>Learner</th>
+            <th>Programs</th>
+            <th>Duration</th>
+            <th>Status</th>
+            <th>Account</th>
+            <th>Finance</th>
+            <th>Guardian / Address</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `<tr><td colspan="9" style="text-align:center;padding:24px;color:#64748b;">No students matched the selected filters.</td></tr>`}
+        </tbody>
+      </table>
+      <p class="muted" style="margin-top:18px;">Total invoiced: ${totalInvoiced.toLocaleString()} XAF | Total paid: ${totalPaid.toLocaleString()} XAF</p>
+    </div>
+  </body>
+</html>`;
+}
 
-      doc.fillColor(colors.text);
-      doc.text(`Fees billed: ${invoiceAmount.toLocaleString()} XAF`, 58, y + 118);
-      doc.text(`Payments: ${paidAmount.toLocaleString()} XAF`, 240, y + 118);
-      doc.text(`Balance: ${balance.toLocaleString()} XAF`, 410, y + 118);
-
-      doc.fillColor(colors.muted).fontSize(9);
-      doc.text(
-        `Address: ${student.address || "Not provided"} | Parent/Guardian: ${student.parentName || "Not provided"} | Contact: ${student.parentPhone || "Not provided"}`,
-        58,
-        y + 138,
-        { width: doc.page.width - 116 }
-      );
-
-      y += cardHeight + 14;
-    });
-
-    doc.end();
-  });
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }

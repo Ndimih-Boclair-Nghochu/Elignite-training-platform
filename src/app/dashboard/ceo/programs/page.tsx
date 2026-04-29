@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { BookOpen, Plus, Loader2, Trash2, Edit2, ImageIcon, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { slugifyProgramValue } from "@/lib/programs";
 
 interface Program {
   id: number;
@@ -173,7 +174,7 @@ export default function CeoProgramsPage() {
                   <Label>Program Title *</Label>
                   <Input
                     value={form.title}
-                    onChange={(e) => setForm((f) => ({ ...f, title: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, "-") }))}
+                    onChange={(e) => setForm((f) => ({ ...f, title: e.target.value, slug: slugifyProgramValue(e.target.value) }))}
                     placeholder="e.g., Web Development"
                     required
                   />
@@ -215,7 +216,7 @@ export default function CeoProgramsPage() {
                 <Label>Slug *</Label>
                 <Input
                   value={form.slug}
-                  onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/\s+/g, "-") }))}
+                  onChange={(e) => setForm((f) => ({ ...f, slug: slugifyProgramValue(e.target.value) }))}
                   placeholder="e.g., web-development"
                   required
                 />

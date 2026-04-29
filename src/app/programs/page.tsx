@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 import { techPrograms } from "@/lib/site-content";
-import { programSelectOptions, toMarketingProgram, truncateWords } from "@/lib/programs";
+import { programDetailSlug, programSelectOptions, toMarketingProgram, truncateWords } from "@/lib/programs";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -126,7 +126,7 @@ export default async function ProgramsPage() {
                       <Link href={`/enroll?program=${program.slug}`}>Apply Now</Link>
                     </Button>
                     <Button asChild variant="outline" className="flex-1 border-slate-200 bg-white text-slate-900 hover:bg-slate-50">
-                      <Link href={`/programs/${program.slug}`}>
+                      <Link href={`/programs/${programDetailSlug(program)}`}>
                         View Details
                         <ArrowRight className="h-4 w-4" />
                       </Link>

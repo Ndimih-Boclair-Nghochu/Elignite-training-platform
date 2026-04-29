@@ -31,6 +31,15 @@ const defaultRequirements = [
   "Willingness to learn through guided tasks and feedback",
 ];
 
+export function slugifyProgramValue(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
+}
+
 function normalizeItems(value: string | null | undefined, fallback: string[]): string[] {
   const parsed =
     value
@@ -123,4 +132,13 @@ export function toMarketingProgram(
     requirements: normalizeItems(program.requirements, defaultRequirements),
     image: program.imageUrl || inferImage(program.slug, program.category, fallbackIndex),
   };
+}
+
+export function programDetailSlug(program: { slug?: string | null; title: string }) {
+  const safeSlug = slugifyProgramValue(program.slug || "");
+  if (safeSlug) {
+    return safeSlug;
+  }
+
+  return slugifyProgramValue(program.title);
 }

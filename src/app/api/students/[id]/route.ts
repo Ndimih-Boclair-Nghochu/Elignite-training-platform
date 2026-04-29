@@ -54,3 +54,25 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   return NextResponse.json({ success: true });
 }
+
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const session = await getSession();
+  if (!session.userId || session.role !== "ceo") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
+  const studentId = parseInt(params.id, 10);
+  const student = await prisma.student.findUnique({
+    where: { id: studentId },
+    include: { user: true },
+  });
+
+  if (!student) {
+    return NextResponse.json({ error: "Student not found" }, { status: 404 });
+  }
+
+  await prisma.student.delete({ where: { id: studentId } });
+  await prisma.user.delete({ where: { id: student.userId } });
+
+  return NextResponse.json({ success: true });
+}
