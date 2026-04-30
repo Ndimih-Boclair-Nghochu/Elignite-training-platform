@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
+const MAX_INLINE_VIDEO_LENGTH = 950000;
+
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     await ensureRuntimeSchema();
@@ -14,6 +16,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     const body = await req.json();
+    const videoUrl = body.videoUrl ? String(body.videoUrl).trim() : null;
+
+    if (videoUrl?.startsWith("data:") && videoUrl.length > MAX_INLINE_VIDEO_LENGTH) {
+      return NextResponse.json(
+        { error: "Inline video upload is too large. Please use a hosted video URL for large files." },
+        { status: 413 }
+      );
+    }
+
     const galleryItems = Array.isArray(body.galleryItems)
       ? body.galleryItems.filter((item: unknown) => typeof item === "string" && item.trim())
       : [];
@@ -28,7 +39,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         ...(body.eventDate !== undefined && { eventDate: new Date(body.eventDate) }),
         ...(body.location !== undefined && { location: body.location ? String(body.location).trim() : null }),
         ...(body.coverImageUrl !== undefined && { coverImageUrl: String(body.coverImageUrl).trim() }),
-        ...(body.videoUrl !== undefined && { videoUrl: body.videoUrl ? String(body.videoUrl).trim() : null }),
+        ...(body.videoUrl !== undefined && { videoUrl }),
         ...(body.galleryItems !== undefined && { galleryItems }),
         ...(body.isPublished !== undefined && { isPublished: Boolean(body.isPublished) }),
       },

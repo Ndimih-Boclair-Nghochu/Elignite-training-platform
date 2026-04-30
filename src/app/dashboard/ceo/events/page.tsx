@@ -39,6 +39,8 @@ const emptyForm = {
   isPublished: true,
 };
 
+const MAX_INLINE_VIDEO_BYTES = 700 * 1024;
+
 function readFileAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -145,6 +147,16 @@ export default function CeoEventsPage() {
   async function handleVideoUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    if (file.size > MAX_INLINE_VIDEO_BYTES) {
+      toast({
+        title: "Video is too large for direct upload",
+        description: "Use a hosted video URL for larger files. Small clips under 700 KB can be saved directly.",
+        variant: "destructive",
+      });
+      event.target.value = "";
+      return;
+    }
 
     try {
       setUploadingVideo(true);
@@ -275,6 +287,9 @@ export default function CeoEventsPage() {
                 <Input value={form.videoUrl} onChange={(e) => setForm((current) => ({ ...current, videoUrl: e.target.value }))} placeholder="Direct video file URL or hosted media URL" />
                 <Input type="file" accept="video/*" onChange={handleVideoUpload} disabled={uploadingVideo} />
                 {uploadingVideo ? <p className="text-xs text-slate-500">Uploading video...</p> : null}
+                <p className="text-xs text-slate-500">
+                  For production use, large videos should be hosted and pasted as a URL. Direct device upload is only for very small clips.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label>Gallery Image URLs</Label>

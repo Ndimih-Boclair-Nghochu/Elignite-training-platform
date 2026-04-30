@@ -6,6 +6,8 @@ import { getSession } from "@/lib/session";
 import { slugifyProgramValue } from "@/lib/programs";
 import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
+const MAX_INLINE_VIDEO_LENGTH = 950000;
+
 export async function GET() {
   try {
     await ensureRuntimeSchema();
@@ -37,9 +39,17 @@ export async function POST(req: NextRequest) {
     const description = String(body.description || "").trim();
     const category = String(body.category || "").trim();
     const coverImageUrl = String(body.coverImageUrl || "").trim();
+    const videoUrl = body.videoUrl ? String(body.videoUrl).trim() : null;
 
     if (!title || !excerpt || !description || !category || !coverImageUrl || !body.eventDate) {
       return NextResponse.json({ error: "Missing required event fields" }, { status: 400 });
+    }
+
+    if (videoUrl?.startsWith("data:") && videoUrl.length > MAX_INLINE_VIDEO_LENGTH) {
+      return NextResponse.json(
+        { error: "Inline video upload is too large. Please use a hosted video URL for large files." },
+        { status: 413 }
+      );
     }
 
     const baseSlug = slugifyProgramValue(title);
@@ -65,7 +75,7 @@ export async function POST(req: NextRequest) {
         eventDate: new Date(body.eventDate),
         location: body.location ? String(body.location).trim() : null,
         coverImageUrl,
-        videoUrl: body.videoUrl ? String(body.videoUrl).trim() : null,
+        videoUrl,
         galleryItems,
         isPublished: body.isPublished !== false,
       },
