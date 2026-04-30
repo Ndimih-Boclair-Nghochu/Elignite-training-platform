@@ -4,10 +4,23 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { normalizeRole } from "@/lib/roles";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  identifier: z.string().trim().optional(),
+  email: z.string().trim().optional(),
+  matricle: z.string().trim().optional(),
+  password: z.string().min(1, "Password is required"),
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const { identifier, email, matricle, password } = await req.json();
+    const parsed = loginSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0]?.message || "Invalid login payload" }, { status: 400 });
+    }
+
+    const { identifier, email, matricle, password } = parsed.data;
     const loginValue = (identifier ?? email ?? matricle ?? "").trim();
 
     if (!loginValue || !password) {

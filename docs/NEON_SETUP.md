@@ -1,6 +1,6 @@
 # Neon Setup Guide
 
-This project currently develops against SQLite. To move it to Neon for production, use this order:
+This project uses PostgreSQL in production. Neon is a good hosted PostgreSQL option, and this guide shows the safest setup order.
 
 ## 1. Create your Neon database
 
@@ -18,9 +18,9 @@ Neon’s docs show that pooled strings use `-pooler` in the hostname, while dire
 - [Connecting Neon to your stack](https://neon.com/docs/get-started-with-neon/connect-neon)
 - [Connection pooling](https://neon.com/docs/connect/connection-pooling)
 
-## 2. Update Prisma for PostgreSQL
+## 2. Verify Prisma datasource
 
-Change `prisma/schema.prisma` from SQLite to PostgreSQL:
+This repository should already be using PostgreSQL in `prisma/schema.prisma`:
 
 ```prisma
 datasource db {
@@ -54,7 +54,7 @@ SESSION_SECRET
 
 ## 4. Generate the SQL migration script
 
-After changing the Prisma datasource to PostgreSQL, generate the SQL Prisma wants to run:
+Generate the SQL Prisma wants to run:
 
 ```powershell
 npx prisma generate
@@ -147,5 +147,5 @@ LIMIT 10;
 - Use the pooled URL in `DATABASE_URL` for the running app.
 - Use the direct URL in `DIRECT_DATABASE_URL` for schema changes and heavy admin work.
 - Set a strong `SESSION_SECRET`.
-- After moving to Neon, remove local SQLite-only assumptions from deployment.
+- Keep deployment docs and environment variables PostgreSQL-only.
 - Do not hand-maintain the schema in raw SQL long-term; let Prisma generate and track the SQL so your database stays aligned with the app.

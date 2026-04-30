@@ -47,8 +47,8 @@ export default function RegisterPage() {
       toast({ title: "All fields are required", variant: "destructive" });
       return;
     }
-    if (form.password.length < 6) {
-      return setPasswordError("Password must be at least 6 characters");
+    if (form.password.length < 8) {
+      return setPasswordError("Password must be at least 8 characters");
     }
     if (form.password !== form.confirmPassword) {
       return setPasswordError("Passwords do not match");
@@ -160,7 +160,7 @@ export default function RegisterPage() {
                     id="password"
                     name="password"
                     type="password"
-                    placeholder="At least 6 characters"
+                    placeholder="At least 8 characters"
                     value={form.password}
                     onChange={handleChange}
                     required

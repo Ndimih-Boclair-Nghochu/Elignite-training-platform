@@ -4,36 +4,36 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { recordStudentCreated } from "@/lib/platform-metrics";
+import { z } from "zod";
+
+const registerSchema = z.object({
+  matricule: z.string().trim().min(1, "Matricule is required"),
+  email: z.string().trim().email("A valid email is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string().min(1, "Password confirmation is required"),
+}).superRefine((value, ctx) => {
+  if (value.password !== value.confirmPassword) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["confirmPassword"],
+      message: "Passwords do not match",
+    });
+  }
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const { matricule, email, password, confirmPassword } = await req.json();
-    const normalizedMatricule = String(matricule || "").trim();
-    const normalizedEmail = String(email || "").trim().toLowerCase();
-
-    // Validate required fields
-    if (!normalizedMatricule || !normalizedEmail || !password || !confirmPassword) {
+    const parsed = registerSchema.safeParse(await req.json());
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Matricule, email, password, and password confirmation are required" },
+        { error: parsed.error.issues[0]?.message || "Invalid registration payload" },
         { status: 400 }
       );
     }
 
-    // Check password match
-    if (password !== confirmPassword) {
-      return NextResponse.json(
-        { error: "Passwords do not match" },
-        { status: 400 }
-      );
-    }
-
-    // Check password length
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: "Password must be at least 6 characters" },
-        { status: 400 }
-      );
-    }
+    const normalizedMatricule = parsed.data.matricule;
+    const normalizedEmail = parsed.data.email.toLowerCase();
+    const password = parsed.data.password;
 
     let enrollmentData = null;
     let existingStudent = null;

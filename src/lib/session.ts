@@ -1,6 +1,7 @@
 import { getIronSession, IronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { isCeoRole, isPartnerRole } from "@/lib/roles";
+import { getSessionSecret } from "@/lib/env";
 
 /* -------------------- TYPES -------------------- */
 
@@ -19,10 +20,7 @@ export interface SessionData {
 
 /* -------------------- CONFIG -------------------- */
 
-const FALLBACK_SECRET = "elignite-fallback-session-secret-32chars!";
-
-const sessionSecret =
-  process.env.SESSION_SECRET || FALLBACK_SECRET;
+const sessionSecret = getSessionSecret();
 
 const sessionOptions = {
   password: sessionSecret,
@@ -76,6 +74,16 @@ export async function requirePartner(): Promise<IronSession<SessionData>> {
 
   if (!isPartnerRole(session.role)) {
     throw new Error("Unauthorized - Partner only");
+  }
+
+  return session;
+}
+
+export async function requireRole(...roles: SessionData["role"][]) {
+  const session = await requireAuth();
+
+  if (!roles.includes(session.role)) {
+    throw new Error("Unauthorized - Forbidden");
   }
 
   return session;

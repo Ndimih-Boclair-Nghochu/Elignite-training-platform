@@ -42,10 +42,10 @@ export default function ActivateAccountPage() {
       toast({ title: "Passwords do not match", variant: "destructive" });
       return;
     }
-    if (password.length < 6) {
+    if (password.length < 8) {
       toast({
         title: "Password too short",
-        description: "Use at least 6 characters.",
+        description: "Use at least 8 characters.",
         variant: "destructive",
       });
       return;
@@ -158,7 +158,7 @@ export default function ActivateAccountPage() {
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="At least 6 characters"
+                        placeholder="At least 8 characters"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         disabled={loading}

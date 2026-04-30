@@ -2,34 +2,36 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { default as bcrypt } from "bcryptjs";
+import { z } from "zod";
+
+const activateSchema = z.object({
+  identifier: z.string().trim().min(1, "Identifier is required"),
+  email: z.string().trim().email("A valid email is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string().min(1, "Password confirmation is required"),
+}).superRefine((value, ctx) => {
+  if (value.password !== value.confirmPassword) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["confirmPassword"],
+      message: "Passwords do not match",
+    });
+  }
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const { identifier, email, password, confirmPassword } = await req.json();
-    const loginValue = String(identifier || "").trim();
-    const normalizedEmail = String(email || "").trim().toLowerCase();
-
-    // Validate inputs
-    if (!loginValue || !normalizedEmail || !password || !confirmPassword) {
+    const parsed = activateSchema.safeParse(await req.json());
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Identifier, email, and password fields are required" },
+        { error: parsed.error.issues[0]?.message || "Invalid activation payload" },
         { status: 400 }
       );
     }
 
-    if (password !== confirmPassword) {
-      return NextResponse.json(
-        { error: "Passwords do not match" },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: "Password must be at least 6 characters" },
-        { status: 400 }
-      );
-    }
+    const loginValue = parsed.data.identifier;
+    const normalizedEmail = parsed.data.email.toLowerCase();
+    const password = parsed.data.password;
 
     // Find the student or teacher by matricle or generated student ID / teacher ID
     const student = await prisma.student.findFirst({
