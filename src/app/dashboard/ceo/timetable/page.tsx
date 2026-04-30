@@ -17,32 +17,28 @@ interface TimetableResponse {
   error?: string;
 }
 
-interface Course {
+interface ProgramOption {
   id: number;
-  code: string;
   title: string;
-  program: string;
-  level: number;
-  semester: string;
-  year: number;
+  programCode?: string;
 }
 
 export default function CeoTimetablePage() {
   const { toast } = useToast();
   const [data, setData] = useState<TimetableEntry[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [programs, setPrograms] = useState<ProgramOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [coursesLoading, setCoursesLoading] = useState(false);
+  const [programsLoading, setProgramsLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
-    courseId: "",
+    programId: "",
     dayOfWeek: "",
     startTime: "",
     endTime: "",
     room: "",
-    semester: "",
+    semester: "Semester 1",
     year: new Date().getFullYear().toString(),
   });
 
@@ -63,24 +59,24 @@ export default function CeoTimetablePage() {
     }
   }
 
-  async function fetchCourses() {
+  async function fetchPrograms() {
     try {
-      setCoursesLoading(true);
-      const res = await fetch("/api/courses");
+      setProgramsLoading(true);
+      const res = await fetch("/api/programs");
       if (res.ok) {
-        const coursesData = await res.json();
-        setCourses(coursesData);
+        const programsData = await res.json();
+        setPrograms(programsData);
       }
     } catch (error) {
-      console.error("Error fetching courses:", error);
+      console.error("Error fetching programs:", error);
     } finally {
-      setCoursesLoading(false);
+      setProgramsLoading(false);
     }
   }
 
   useEffect(() => {
     fetchTimetable();
-    fetchCourses();
+    fetchPrograms();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -96,7 +92,7 @@ export default function CeoTimetablePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          courseId: parseInt(form.courseId),
+          programId: parseInt(form.programId),
           year: parseInt(form.year),
         }),
       });
@@ -139,12 +135,12 @@ export default function CeoTimetablePage() {
 
   function resetForm() {
     setForm({
-      courseId: "",
+      programId: "",
       dayOfWeek: "",
       startTime: "",
       endTime: "",
       room: "",
-      semester: "",
+      semester: "Semester 1",
       year: new Date().getFullYear().toString(),
     });
     setEditingId(null);
@@ -153,7 +149,7 @@ export default function CeoTimetablePage() {
   function handleEdit(entry: TimetableEntry) {
     setEditingId(entry.id);
     setForm({
-      courseId: entry.courseId.toString(),
+      programId: String(entry.programId ?? ""),
       dayOfWeek: entry.dayOfWeek,
       startTime: entry.startTime,
       endTime: entry.endTime,
@@ -162,15 +158,6 @@ export default function CeoTimetablePage() {
       year: entry.year.toString(),
     });
     setOpenDialog(true);
-  }
-
-  function handleCourseChange(value: string) {
-    const course = courses.find((item) => item.id.toString() === value);
-    setForm((current) => ({
-      ...current,
-      courseId: value,
-      semester: course?.semester || current.semester,
-    }));
   }
 
   function handleAdd() {
@@ -209,18 +196,18 @@ export default function CeoTimetablePage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Course *</Label>
-                <Select value={form.courseId} onValueChange={handleCourseChange}>
+                <Label>Program *</Label>
+                <Select value={form.programId} onValueChange={(value) => setForm((current) => ({ ...current, programId: value }))}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a course" />
+                    <SelectValue placeholder="Select a program" />
                   </SelectTrigger>
                   <SelectContent>
-                    {coursesLoading ? (
-                      <div className="p-2 text-center text-sm text-gray-500">Loading courses...</div>
+                    {programsLoading ? (
+                      <div className="p-2 text-center text-sm text-gray-500">Loading programs...</div>
                     ) : (
-                      courses.map((course) => (
-                        <SelectItem key={course.id} value={course.id.toString()}>
-                          {course.code} - {course.title}
+                      programs.map((program) => (
+                        <SelectItem key={program.id} value={program.id.toString()}>
+                          {program.programCode ? `${program.programCode} - ` : ""}{program.title}
                         </SelectItem>
                       ))
                     )}

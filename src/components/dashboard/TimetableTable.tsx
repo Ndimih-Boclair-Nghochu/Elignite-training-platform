@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/use-auth";
 export interface TimetableEntry {
   id: number;
   courseId: number;
+  programId?: number | null;
+  programTitle?: string | null;
   courseCode: string;
   courseTitle: string;
   program: string;
@@ -111,7 +113,9 @@ export function TimetableTable({
                         <div className="font-medium text-gray-900">{entry.courseCode}</div>
                         <div className="text-sm text-gray-600">{entry.courseTitle}</div>
                         {showProgram && (
-                          <div className="text-xs text-gray-500 capitalize">{entry.program.replace(/-/g, " ")}</div>
+                          <div className="text-xs text-gray-500 capitalize">
+                            {(entry.programTitle || entry.program).replace(/-/g, " ")}
+                          </div>
                         )}
                       </div>
                       <div className="text-sm text-gray-600">

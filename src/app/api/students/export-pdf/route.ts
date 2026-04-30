@@ -35,7 +35,7 @@ type StudentExportRow = {
     program: {
       id: number;
       title: string;
-      programCode: string;
+      slug: string;
       duration: string;
     };
   }>;
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
               select: {
                 id: true,
                 title: true,
-                programCode: true,
+                slug: true,
                 duration: true,
               },
             },
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
           student.user.lastName || "",
           student.user.email || "",
           student.studentPrograms.map((entry) => entry.program.title).join(" "),
-          student.studentPrograms.map((entry) => entry.program.programCode).join(" "),
+          student.studentPrograms.map((entry) => entry.program.slug).join(" "),
         ]
           .join(" ")
           .toLowerCase()
@@ -195,7 +195,7 @@ async function buildStudentReportPdf(
     const programLabel =
       student.studentPrograms.length > 0
         ? student.studentPrograms
-            .map((entry) => `${entry.program.programCode} - ${entry.program.title}`)
+            .map((entry) => entry.program.title)
             .join(", ")
         : "Not assigned";
     const durationLabel =

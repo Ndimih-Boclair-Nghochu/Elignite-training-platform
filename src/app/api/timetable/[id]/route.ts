@@ -4,6 +4,50 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
+async function resolveProgramCourse(programIdValue: number) {
+  const program = await prisma.program.findUnique({
+    where: { id: programIdValue },
+    select: { id: true, title: true, slug: true, programCode: true },
+  });
+
+  if (!program) {
+    return null;
+  }
+
+  const existingCourse = await prisma.course.findFirst({
+    where: {
+      OR: [
+        { programId: program.id },
+        { program: program.slug },
+      ],
+    },
+    orderBy: [{ level: "asc" }, { code: "asc" }],
+  });
+
+  if (existingCourse) {
+    return existingCourse;
+  }
+
+  const safeCodeBase = (program.programCode || program.slug || `PRG${program.id}`)
+    .replace(/[^A-Za-z0-9]/g, "")
+    .slice(0, 8)
+    .toUpperCase();
+
+  return prisma.course.create({
+    data: {
+      code: `${safeCodeBase || "PROGRAM"}TT`,
+      title: `${program.title} Schedule`,
+      description: `General timetable anchor for ${program.title}`,
+      credits: 0,
+      program: program.slug,
+      programId: program.id,
+      level: 1,
+      semester: "Semester 1",
+      year: new Date().getFullYear(),
+    },
+  });
+}
+
 // PATCH: Update timetable entry (CEO only)
 export async function PATCH(
   req: NextRequest,
@@ -21,9 +65,9 @@ export async function PATCH(
     }
 
     const body = await req.json();
-    const { courseId, dayOfWeek, startTime, endTime, room, semester, year } = body;
+    const { courseId, programId, dayOfWeek, startTime, endTime, room, semester, year } = body;
 
-    if (!courseId || !dayOfWeek || !startTime || !endTime || !semester || !year) {
+    if ((!courseId && !programId) || !dayOfWeek || !startTime || !endTime || !semester || !year) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -43,13 +87,20 @@ export async function PATCH(
     }
 
     // Check if course exists
-    const course = await prisma.course.findUnique({
-      where: { id: parseInt(courseId) },
-    });
+    const requestedProgramId = programId ? parseInt(String(programId), 10) : null;
+    const requestedCourseId = courseId ? parseInt(String(courseId), 10) : null;
+
+    const course = requestedCourseId
+      ? await prisma.course.findUnique({
+          where: { id: requestedCourseId },
+        })
+      : requestedProgramId
+        ? await resolveProgramCourse(requestedProgramId)
+        : null;
 
     if (!course) {
       return NextResponse.json(
-        { error: "Course not found" },
+        { error: "Program schedule course could not be resolved" },
         { status: 404 }
       );
     }
@@ -94,7 +145,7 @@ export async function PATCH(
     const timetable = await prisma.timetable.update({
       where: { id: parseInt(params.id) },
       data: {
-        courseId: parseInt(courseId),
+        courseId: course.id,
         dayOfWeek,
         startTime,
         endTime,
@@ -105,6 +156,7 @@ export async function PATCH(
       include: {
         course: {
           include: {
+            programRef: { select: { id: true, title: true, slug: true } },
             teacher: { include: { user: { select: { firstName: true, lastName: true } } } },
           },
         },

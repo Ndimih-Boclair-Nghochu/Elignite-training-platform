@@ -4,6 +4,52 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
+async function resolveProgramCourse(programIdValue: number) {
+  const program = await prisma.program.findUnique({
+    where: { id: programIdValue },
+    select: { id: true, title: true, slug: true, programCode: true },
+  });
+
+  if (!program) {
+    return { program: null, course: null };
+  }
+
+  const existingCourse = await prisma.course.findFirst({
+    where: {
+      OR: [
+        { programId: program.id },
+        { program: program.slug },
+      ],
+    },
+    orderBy: [{ level: "asc" }, { code: "asc" }],
+  });
+
+  if (existingCourse) {
+    return { program, course: existingCourse };
+  }
+
+  const safeCodeBase = (program.programCode || program.slug || `PRG${program.id}`)
+    .replace(/[^A-Za-z0-9]/g, "")
+    .slice(0, 8)
+    .toUpperCase();
+
+  const fallbackCourse = await prisma.course.create({
+    data: {
+      code: `${safeCodeBase || "PROGRAM"}TT`,
+      title: `${program.title} Schedule`,
+      description: `General timetable anchor for ${program.title}`,
+      credits: 0,
+      program: program.slug,
+      programId: program.id,
+      level: 1,
+      semester: "Semester 1",
+      year: new Date().getFullYear(),
+    },
+  });
+
+  return { program, course: fallbackCourse };
+}
+
 export async function GET() {
   try {
     await ensureRuntimeSchema();
@@ -21,6 +67,7 @@ export async function GET() {
         include: {
           course: {
             include: {
+              programRef: { select: { id: true, title: true, slug: true } },
               teacher: { include: { user: { select: { firstName: true, lastName: true } } } },
             },
           },
@@ -42,6 +89,7 @@ export async function GET() {
         include: {
           course: {
             include: {
+              programRef: { select: { id: true, title: true, slug: true } },
               teacher: { include: { user: { select: { firstName: true, lastName: true } } } },
             },
           },
@@ -69,6 +117,7 @@ export async function GET() {
         include: {
           course: {
             include: {
+              programRef: { select: { id: true, title: true, slug: true } },
               teacher: { include: { user: { select: { firstName: true, lastName: true } } } },
             },
           },
@@ -83,6 +132,8 @@ export async function GET() {
     const formatted = timetables.map((timetable) => ({
       id: timetable.id,
       courseId: timetable.courseId,
+      programId: timetable.course.programRef?.id ?? null,
+      programTitle: timetable.course.programRef?.title ?? timetable.course.program,
       courseCode: timetable.course.code,
       courseTitle: timetable.course.title,
       program: timetable.course.program,
@@ -117,23 +168,29 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { courseId, dayOfWeek, startTime, endTime, room, semester, year } = body;
+    const { courseId, programId, dayOfWeek, startTime, endTime, room, semester, year } = body;
 
-    if (!courseId || !dayOfWeek || !startTime || !endTime || !semester || !year) {
+    if ((!courseId && !programId) || !dayOfWeek || !startTime || !endTime || !semester || !year) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // Check if course exists
-    const course = await prisma.course.findUnique({
-      where: { id: parseInt(courseId) },
-    });
+    const requestedProgramId = programId ? parseInt(String(programId), 10) : null;
+    const requestedCourseId = courseId ? parseInt(String(courseId), 10) : null;
+
+    const course = requestedCourseId
+      ? await prisma.course.findUnique({
+          where: { id: requestedCourseId },
+        })
+      : requestedProgramId
+        ? (await resolveProgramCourse(requestedProgramId)).course
+        : null;
 
     if (!course) {
       return NextResponse.json(
-        { error: "Course not found" },
+        { error: "Program schedule course could not be resolved" },
         { status: 404 }
       );
     }
@@ -176,7 +233,7 @@ export async function POST(req: Request) {
 
     const timetable = await prisma.timetable.create({
       data: {
-        courseId: parseInt(courseId),
+        courseId: course.id,
         dayOfWeek,
         startTime,
         endTime,
@@ -187,6 +244,7 @@ export async function POST(req: Request) {
       include: {
         course: {
           include: {
+            programRef: { select: { id: true, title: true, slug: true } },
             teacher: { include: { user: { select: { firstName: true, lastName: true } } } },
           },
         },

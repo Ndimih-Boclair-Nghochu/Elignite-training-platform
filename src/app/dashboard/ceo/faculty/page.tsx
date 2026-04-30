@@ -125,15 +125,28 @@ export default function CeoStaffPage() {
   }
 
   async function handleExportAll() {
-    setExporting(true);
-    const res = await fetch("/api/teachers/export-pdf");
-    if (res.ok) {
+    try {
+      setExporting(true);
+      const res = await fetch("/api/teachers/export-pdf");
+      if (!res.ok) {
+        throw new Error("Export failed");
+      }
+
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a"); a.href = url; a.download = `staff-list-${new Date().toISOString().split("T")[0]}.pdf`; a.click();
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `staff-list-${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } else { toast({ title: "Export failed", variant: "destructive" }); }
-    setExporting(false);
+      toast({ title: "Staff report downloaded" });
+    } catch (error) {
+      toast({ title: "Export failed", variant: "destructive" });
+    } finally {
+      setExporting(false);
+    }
   }
 
   return (
