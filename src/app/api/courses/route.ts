@@ -2,8 +2,10 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 export async function GET(req: NextRequest) {
+  await ensureRuntimeSchema();
   const session = await getSession();
   if (!session.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -31,6 +33,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    await ensureRuntimeSchema();
     const session = await getSession();
     if (!session.userId || !["ceo", "teacher"].includes(session.role || "")) {
       return NextResponse.json({ error: "Unauthorized - Only CEO or teachers can create courses" }, { status: 403 });

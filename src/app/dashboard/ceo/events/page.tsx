@@ -39,6 +39,15 @@ const emptyForm = {
   isPublished: true,
 };
 
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function CeoEventsPage() {
   const { toast } = useToast();
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -47,6 +56,9 @@ export default function CeoEventsPage() {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   async function fetchEvents() {
     setLoading(true);
@@ -91,6 +103,60 @@ export default function CeoEventsPage() {
       isPublished: event.isPublished,
     });
     setOpen(true);
+  }
+
+  async function handleCoverUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingCover(true);
+      const dataUrl = await readFileAsDataUrl(file);
+      setForm((current) => ({ ...current, coverImageUrl: dataUrl }));
+      toast({ title: "Cover image uploaded" });
+    } catch {
+      toast({ title: "Failed to upload cover image", variant: "destructive" });
+    } finally {
+      setUploadingCover(false);
+      event.target.value = "";
+    }
+  }
+
+  async function handleGalleryUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    try {
+      setUploadingGallery(true);
+      const urls = await Promise.all(files.map(readFileAsDataUrl));
+      setForm((current) => ({
+        ...current,
+        galleryItems: [current.galleryItems, ...urls].filter(Boolean).join("\n"),
+      }));
+      toast({ title: "Gallery media uploaded" });
+    } catch {
+      toast({ title: "Failed to upload gallery images", variant: "destructive" });
+    } finally {
+      setUploadingGallery(false);
+      event.target.value = "";
+    }
+  }
+
+  async function handleVideoUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingVideo(true);
+      const dataUrl = await readFileAsDataUrl(file);
+      setForm((current) => ({ ...current, videoUrl: dataUrl }));
+      toast({ title: "Video uploaded" });
+    } catch {
+      toast({ title: "Failed to upload video", variant: "destructive" });
+    } finally {
+      setUploadingVideo(false);
+      event.target.value = "";
+    }
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -201,10 +267,14 @@ export default function CeoEventsPage() {
               <div className="space-y-2">
                 <Label>Cover Image URL *</Label>
                 <Input value={form.coverImageUrl} onChange={(e) => setForm((current) => ({ ...current, coverImageUrl: e.target.value }))} placeholder="https://..." required />
+                <Input type="file" accept="image/*" onChange={handleCoverUpload} disabled={uploadingCover} />
+                {uploadingCover ? <p className="text-xs text-slate-500">Uploading cover image...</p> : null}
               </div>
               <div className="space-y-2">
                 <Label>Video URL</Label>
                 <Input value={form.videoUrl} onChange={(e) => setForm((current) => ({ ...current, videoUrl: e.target.value }))} placeholder="Direct video file URL or hosted media URL" />
+                <Input type="file" accept="video/*" onChange={handleVideoUpload} disabled={uploadingVideo} />
+                {uploadingVideo ? <p className="text-xs text-slate-500">Uploading video...</p> : null}
               </div>
               <div className="space-y-2">
                 <Label>Gallery Image URLs</Label>
@@ -214,6 +284,8 @@ export default function CeoEventsPage() {
                   rows={4}
                   placeholder={"One image URL per line"}
                 />
+                <Input type="file" accept="image/*" multiple onChange={handleGalleryUpload} disabled={uploadingGallery} />
+                {uploadingGallery ? <p className="text-xs text-slate-500">Uploading gallery media...</p> : null}
               </div>
               <div className="flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3">
                 <div>

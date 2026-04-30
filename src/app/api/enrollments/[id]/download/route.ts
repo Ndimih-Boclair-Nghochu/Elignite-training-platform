@@ -2,15 +2,16 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import PDFDocument from "pdfkit";
-import path from "path";
 import QRCode from "qrcode";
 import { getSession } from "@/lib/session";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    await ensureRuntimeSchema();
     const session = await getSession();
     const { searchParams } = new URL(req.url);
     const token = searchParams.get("token");
@@ -61,11 +62,7 @@ async function generateEnrollmentPDF(enrollment: any, school: any): Promise<Buff
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    const fontPath = path.join(process.cwd(), "public/fonts/Roboto-Regular.ttf");
-    const logoPath = path.join(process.cwd(), "public/logo.png");
     const schoolName = school?.schoolName || "ELIGNITE";
-
-    doc.font(fontPath);
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     const verificationUrl = `${baseUrl}/verify/${enrollment.id}`;
@@ -76,18 +73,6 @@ async function generateEnrollmentPDF(enrollment: any, school: any): Promise<Buff
 
     // ================= HEADER =================
     // Use school logo from DB if available, else fallback to logo.png
-    try {
-      if (school?.schoolLogoUrl?.startsWith("data:")) {
-        const base64Data = school.schoolLogoUrl.split(",")[1];
-        const logoBuffer = Buffer.from(base64Data, "base64");
-        doc.image(logoBuffer, 50, 40, { width: 60 });
-      } else {
-        doc.image(logoPath, 50, 40, { width: 60 });
-      }
-    } catch {
-      // Skip logo if it fails to render
-    }
-
     doc.fontSize(20).fillColor(headerColor).text(schoolName, 120, 50);
     doc.fontSize(12).fillColor("#666").text("Enrollment Application Form", 120, 75);
     doc.moveDown(2);

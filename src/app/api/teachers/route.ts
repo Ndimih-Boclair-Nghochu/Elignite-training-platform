@@ -2,8 +2,10 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 export async function GET() {
+  await ensureRuntimeSchema();
   const session = await getSession();
   if (!session.userId || session.role !== "ceo") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -39,6 +41,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  await ensureRuntimeSchema();
   const session = await getSession();
   if (!session.userId || session.role !== "ceo") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -68,7 +71,13 @@ export async function POST(req: NextRequest) {
 
   const teacher = await prisma.teacher.create({
     data: {
-      teacherId, matricle, userId: user.id, status: "inactive",
+      teacherId,
+      matricle,
+      userId: user.id,
+      department: "Technology Training",
+      occupation: "Instructor",
+      profession: "Technology Educator",
+      status: "inactive",
       ...(specialization && { specialization }),
       ...(qualifications && { qualifications }),
       ...(office && { office }),

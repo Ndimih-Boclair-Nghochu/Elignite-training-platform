@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 // PATCH: Update timetable entry (CEO only)
 export async function PATCH(
@@ -9,6 +10,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    await ensureRuntimeSchema();
     const session = await getSession();
 
     if (!session?.userId || session.role !== "ceo") {
@@ -125,6 +127,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    await ensureRuntimeSchema();
     const session = await getSession();
 
     if (!session?.userId || session.role !== "ceo") {

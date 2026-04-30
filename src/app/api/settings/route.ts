@@ -3,9 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { syncPlatformCountersFromDatabase } from "@/lib/platform-metrics";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 export async function GET() {
   try {
+    await ensureRuntimeSchema();
     let settings = await prisma.settings.findFirst();
 
     if (!settings) {
@@ -32,6 +34,7 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   try {
+    await ensureRuntimeSchema();
     const session = await getSession();
     
     // Only CEO can update settings

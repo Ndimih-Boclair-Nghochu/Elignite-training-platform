@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { z } from "zod";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 const programSchema = z.object({
   title: z.string().min(3),
@@ -19,6 +20,7 @@ const programSchema = z.object({
 
 export async function GET() {
   try {
+    await ensureRuntimeSchema();
     const programs = await prisma.program.findMany({
       orderBy: { title: "asc" },
       include: {
@@ -34,6 +36,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    await ensureRuntimeSchema();
     const session = await getSession();
     if (!session?.userId || session.role !== "ceo") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

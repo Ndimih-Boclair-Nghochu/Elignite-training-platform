@@ -4,8 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { addDivider, addKeyValueLines, addPdfHeader, addSectionTitle, createPdfDocument } from "@/lib/pdf";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  await ensureRuntimeSchema();
   const session = await getSession();
   if (!session.userId || session.role !== "ceo") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

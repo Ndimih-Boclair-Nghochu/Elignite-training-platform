@@ -2,8 +2,10 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  await ensureRuntimeSchema();
   const session = await getSession();
   if (!session.userId || session.role !== "ceo") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -56,6 +58,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  await ensureRuntimeSchema();
   const session = await getSession();
   if (!session.userId || session.role !== "ceo") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

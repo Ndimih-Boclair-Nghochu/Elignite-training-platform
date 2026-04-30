@@ -10,6 +10,7 @@ import { SectionHeading } from "@/components/marketing/section-heading";
 import { PhoneShowcase } from "@/components/marketing/phone-showcase";
 import { TestimonialsCarousel } from "@/components/marketing/testimonials-carousel";
 import { ProgramJumpSelect } from "@/components/marketing/program-jump-select";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 import { faqs, learningSteps, partnerLogos, techPrograms } from "@/lib/site-content";
 import { programDetailSlug, programSelectOptions, toMarketingProgram, truncateWords } from "@/lib/programs";
 import {
@@ -27,6 +28,8 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  await ensureRuntimeSchema();
+
   let programs = techPrograms.slice(0, 6);
   let allProgramOptions = programSelectOptions(techPrograms);
   let featuredEvents: Array<{
@@ -54,7 +57,7 @@ export default async function HomePage() {
   let sessionLabel = "Current Session";
 
   try {
-    const [dbPrograms, dbTestimonials, dbEvents, settings, studentCount, programCount, issuedGraduateCount] = await Promise.all([
+    const [programsResult, testimonialsResult, eventsResult, settingsResult, studentCountResult, programCountResult, issuedGraduateCountResult] = await Promise.allSettled([
       prisma.program.findMany({
         where: { status: "published" },
         orderBy: { createdAt: "desc" },
@@ -93,6 +96,14 @@ export default async function HomePage() {
       prisma.program.count(),
       prisma.certificate.count({ where: { status: "issued" } }),
     ]);
+
+    const dbPrograms = programsResult.status === "fulfilled" ? programsResult.value : [];
+    const dbTestimonials = testimonialsResult.status === "fulfilled" ? testimonialsResult.value : [];
+    const dbEvents = eventsResult.status === "fulfilled" ? eventsResult.value : [];
+    const settings = settingsResult.status === "fulfilled" ? settingsResult.value : null;
+    const studentCount = studentCountResult.status === "fulfilled" ? studentCountResult.value : 0;
+    const programCount = programCountResult.status === "fulfilled" ? programCountResult.value : dbPrograms.length;
+    const issuedGraduateCount = issuedGraduateCountResult.status === "fulfilled" ? issuedGraduateCountResult.value : 0;
 
     platformProgramCount = programCount;
     featuredEvents = dbEvents;

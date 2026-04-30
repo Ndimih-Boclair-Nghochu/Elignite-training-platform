@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { recordStudentCreated } from "@/lib/platform-metrics";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 // Utility function to generate unique matricle
 function generateMatricle(): string {
@@ -32,6 +33,7 @@ async function getUniqueMatricle(): Promise<string> {
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    await ensureRuntimeSchema();
     const session = await getSession();
     
     // Only CEO can approve/reject enrollments
@@ -76,21 +78,23 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       },
     });
 
-    // If approved, create a Student record automatically
+    // If approved, create or link the student record automatically
     if (status === "approved" && matricle) {
-      // Check if student already exists
-      const existingStudent = await prisma.student.findFirst({
-        where: { matricle },
+      const primaryProgram = await prisma.program.findUnique({
+        where: { slug: enrollment.program },
+        select: { id: true, slug: true },
       });
 
-      if (!existingStudent) {
-        // Create a User record for the student with temporary password (not activated yet)
-        // Student will set their own password upon account activation
+      let user = await prisma.user.findUnique({
+        where: { email: enrollment.email },
+      });
+
+      if (!user) {
         const { default: bcrypt } = await import("bcryptjs");
-        const tempPassword = Math.random().toString(36).slice(-10); // Random temporary password
+        const tempPassword = Math.random().toString(36).slice(-10);
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-        const user = await prisma.user.create({
+        user = await prisma.user.create({
           data: {
             firstName: enrollment.firstName,
             lastName: enrollment.lastName,
@@ -99,12 +103,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             role: "student",
             phone: enrollment.phone,
             photoUrl: null,
-            isActivated: false, // Account not activated yet
+            isActivated: false,
           },
         });
+      }
 
-        // Create Student record
-        await prisma.student.create({
+      let student = await prisma.student.findFirst({
+        where: {
+          OR: [{ matricle }, { userId: user.id }],
+        },
+      });
+
+      if (!student) {
+        student = await prisma.student.create({
           data: {
             studentId: `STU${Date.now().toString().slice(-6)}`,
             matricle,
@@ -121,6 +132,49 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         });
 
         await recordStudentCreated();
+      } else {
+        student = await prisma.student.update({
+          where: { id: student.id },
+          data: {
+            matricle,
+            program: primaryProgram?.slug || enrollment.program,
+            gender: enrollment.gender,
+            dateOfBirth: enrollment.dob,
+            address: enrollment.address,
+            parentName: enrollment.parentName,
+            parentPhone: enrollment.parentPhone,
+            status: "active",
+          },
+        });
+      }
+
+      if (primaryProgram) {
+        await prisma.studentProgram.upsert({
+          where: {
+            studentId_programId: {
+              studentId: student.id,
+              programId: primaryProgram.id,
+            },
+          },
+          update: {
+            isPrimary: true,
+          },
+          create: {
+            studentId: student.id,
+            programId: primaryProgram.id,
+            isPrimary: true,
+          },
+        });
+
+        await prisma.studentProgram.updateMany({
+          where: {
+            studentId: student.id,
+            programId: { not: primaryProgram.id },
+          },
+          data: {
+            isPrimary: false,
+          },
+        });
       }
     }
 
@@ -139,6 +193,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    await ensureRuntimeSchema();
     const session = await getSession();
     const { searchParams } = new URL(req.url);
     const token = searchParams.get("token");

@@ -2,12 +2,14 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    await ensureRuntimeSchema();
     const session = await getSession();
     if (!session.userId) {
       return NextResponse.json({ error: "Unauthorized - Please login first" }, { status: 401 });
@@ -74,6 +76,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    await ensureRuntimeSchema();
     const session = await getSession();
     if (!session.userId) {
       return NextResponse.json({ error: "Unauthorized - Please login first" }, { status: 401 });

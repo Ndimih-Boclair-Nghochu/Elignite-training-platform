@@ -4,9 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { slugifyProgramValue } from "@/lib/programs";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 export async function GET() {
   try {
+    await ensureRuntimeSchema();
     const session = await getSession();
     const isCeo = !!session.userId && session.role === "ceo";
 
@@ -23,6 +25,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    await ensureRuntimeSchema();
     const session = await getSession();
     if (!session.userId || session.role !== "ceo") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

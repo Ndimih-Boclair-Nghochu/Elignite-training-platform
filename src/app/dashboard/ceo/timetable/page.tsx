@@ -42,6 +42,7 @@ export default function CeoTimetablePage() {
     startTime: "",
     endTime: "",
     room: "",
+    semester: "",
     year: new Date().getFullYear().toString(),
   });
 
@@ -143,6 +144,7 @@ export default function CeoTimetablePage() {
       startTime: "",
       endTime: "",
       room: "",
+      semester: "",
       year: new Date().getFullYear().toString(),
     });
     setEditingId(null);
@@ -156,9 +158,19 @@ export default function CeoTimetablePage() {
       startTime: entry.startTime,
       endTime: entry.endTime,
       room: entry.room || "",
+      semester: entry.semester,
       year: entry.year.toString(),
     });
     setOpenDialog(true);
+  }
+
+  function handleCourseChange(value: string) {
+    const course = courses.find((item) => item.id.toString() === value);
+    setForm((current) => ({
+      ...current,
+      courseId: value,
+      semester: course?.semester || current.semester,
+    }));
   }
 
   function handleAdd() {
@@ -198,7 +210,7 @@ export default function CeoTimetablePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Course *</Label>
-                <Select value={form.courseId} onValueChange={(value) => setForm((f) => ({ ...f, courseId: value }))}>
+                <Select value={form.courseId} onValueChange={handleCourseChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a course" />
                   </SelectTrigger>
@@ -261,6 +273,19 @@ export default function CeoTimetablePage() {
                   placeholder="e.g., Room 101"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Semester *</Label>
+              <Select value={form.semester} onValueChange={(value) => setForm((f) => ({ ...f, semester: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select semester" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Semester 1">Semester 1</SelectItem>
+                  <SelectItem value="Semester 2">Semester 2</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

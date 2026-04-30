@@ -12,6 +12,7 @@ import {
   ensurePdfSpace,
   formatCurrency,
 } from "@/lib/pdf";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 type StudentExportRow = {
   studentId: string;
@@ -42,6 +43,7 @@ type StudentExportRow = {
 
 export async function POST(req: NextRequest) {
   try {
+    await ensureRuntimeSchema();
     const session = await getSession();
     if (!session.userId || session.role !== "ceo") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

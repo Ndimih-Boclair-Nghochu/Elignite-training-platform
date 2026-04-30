@@ -61,22 +61,25 @@ function EnrollForm() {
   });
 
   useEffect(() => {
-    Promise.all([
+    Promise.allSettled([
       fetch("/api/settings", { cache: "no-store" }).then((r) => readJson<Settings>(r)),
       fetch("/api/programs", { cache: "no-store" }).then((r) => readJson<Array<{ id: number; slug: string; title: string }>>(r)),
     ])
-      .then(([settingsData, programsData]) => {
-        setSettings(settingsData);
-        setPrograms(Array.isArray(programsData) ? programsData : []);
-      })
-      .catch((err) => {
-        console.error(err);
-        toast({
-          title: "We could not load the application form",
-          description: "Please refresh the page or try again in a moment.",
-          variant: "destructive",
-        });
-        setPrograms([]);
+      .then(([settingsResult, programsResult]) => {
+        setSettings(settingsResult.status === "fulfilled" ? settingsResult.value : { applicationsOpen: true, applicationYear: "Current Intake" });
+        setPrograms(
+          programsResult.status === "fulfilled" && Array.isArray(programsResult.value)
+            ? programsResult.value
+            : []
+        );
+
+        if (settingsResult.status === "rejected" || programsResult.status === "rejected") {
+          toast({
+            title: "Some application data could not be loaded",
+            description: "You can still continue if the form fields you need are visible.",
+            variant: "destructive",
+          });
+        }
       })
       .finally(() => {
         setLoadingSettings(false);
@@ -233,7 +236,7 @@ export default function EnrollPage() {
       .then(setSettings)
       .catch((error) => {
         console.error(error);
-        setSettings(null);
+        setSettings({ applicationsOpen: true, applicationYear: "Current Intake" });
       })
       .finally(() => setLoadingSettings(false));
   }, []);
