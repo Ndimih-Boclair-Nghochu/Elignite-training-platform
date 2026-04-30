@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { recordStudentGraduated } from "@/lib/platform-metrics";
 
 // Generate unique certificate number
 function generateCertNo(): string {
@@ -101,6 +102,10 @@ export async function POST(req: NextRequest) {
         issuedDate: status === "issued" ? new Date() : null,
       },
     });
+
+    if (status === "issued") {
+      await recordStudentGraduated(studentId);
+    }
 
     return NextResponse.json(certificate, { status: 201 });
   } catch (error) {

@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { recordStudentCreated } from "@/lib/platform-metrics";
 
 export async function GET() {
   const session = await getSession();
@@ -101,6 +102,8 @@ export async function POST(req: NextRequest) {
     data: validIds.map((pid, i) => ({ studentId: student.id, programId: pid, isPrimary: i === 0 })),
     skipDuplicates: true,
   });
+
+  await recordStudentCreated();
 
   return NextResponse.json({ ...student, firstName, lastName, email }, { status: 201 });
 }

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { recordStudentCreated } from "@/lib/platform-metrics";
 
 // GET all users (CEO only)
 export async function GET() {
@@ -47,6 +48,7 @@ export async function POST(req: NextRequest) {
     await prisma.student.create({
       data: { studentId: `STU${Date.now().toString().slice(-6)}`, userId: user.id, program: "", level: 1 },
     });
+    await recordStudentCreated();
   } else if (role === "teacher") {
     await prisma.teacher.create({
       data: { teacherId: `TCH${Date.now().toString().slice(-6)}`, userId: user.id, department: "" },

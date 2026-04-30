@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { recordStudentCreated } from "@/lib/platform-metrics";
 
 export async function POST(req: NextRequest) {
   try {
@@ -161,6 +162,7 @@ export async function POST(req: NextRequest) {
         },
       });
       studentId = student.id;
+      await recordStudentCreated();
     }
 
     const session = await getSession();

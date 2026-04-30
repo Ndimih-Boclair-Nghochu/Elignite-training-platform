@@ -44,6 +44,7 @@ model Student {
     parentName     String?
     parentPhone    String?
     status         String   @default("active") // active | inactive | graduated
+    graduationCounted Boolean @default(false)
     enrollmentDate DateTime @default(now())
 
     results              Result[]
@@ -285,6 +286,23 @@ model Gallery {
     createdAt DateTime @default(now())
 }
 
+model Event {
+    id            Int      @id @default(autoincrement())
+    title         String
+    slug          String   @unique
+    category      String
+    excerpt       String
+    description   String
+    eventDate     DateTime
+    location      String?
+    coverImageUrl String
+    videoUrl      String?
+    galleryItems  Json?
+    isPublished   Boolean  @default(true)
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+}
+
 model Service {
     id          Int      @id @default(autoincrement())
     name        String
@@ -345,6 +363,9 @@ model Settings {
     applicationsOpen Boolean  @default(true)
     applicationYear  String   @default("2024/2025")
     maintenanceMode  Boolean  @default(false)
+    sessionStudentCount Int   @default(0)
+    lifetimeStudentCount Int  @default(0)
+    lifetimeGraduateCount Int @default(0)
     updatedAt        DateTime @updatedAt
     updatedBy        Int?
 }

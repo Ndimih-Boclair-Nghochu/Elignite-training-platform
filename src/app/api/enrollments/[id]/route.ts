@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { recordStudentCreated } from "@/lib/platform-metrics";
 
 // Utility function to generate unique matricle
 function generateMatricle(): string {
@@ -118,6 +119,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             status: "active",
           },
         });
+
+        await recordStudentCreated();
       }
     }
 

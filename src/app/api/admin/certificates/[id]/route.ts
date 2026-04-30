@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { recordStudentGraduated } from "@/lib/platform-metrics";
 
 export async function PATCH(
   req: NextRequest,
@@ -42,6 +43,10 @@ export async function PATCH(
         ...(status === "issued" && { issuedDate: new Date() }),
       },
     });
+
+    if (status === "issued") {
+      await recordStudentGraduated(updated.studentId);
+    }
 
     return NextResponse.json(updated);
   } catch (error) {

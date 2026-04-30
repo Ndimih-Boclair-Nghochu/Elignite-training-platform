@@ -29,6 +29,16 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   let programs = techPrograms.slice(0, 6);
   let allProgramOptions = programSelectOptions(techPrograms);
+  let featuredEvents: Array<{
+    id: number;
+    title: string;
+    category: string;
+    excerpt: string;
+    eventDate: Date;
+    location: string | null;
+    coverImageUrl: string;
+    videoUrl: string | null;
+  }> = [];
   let approvedTestimonials: Array<{
     id: number;
     name: string;
@@ -37,13 +47,14 @@ export default async function HomePage() {
     rating: number;
   }> = [];
 
-  let studentCount = 0;
-  let programCount = 0;
+  let sessionStudentCount = 0;
+  let lifetimeStudentCount = 0;
   let activeProgramCount = 0;
   let graduateCount = 0;
+  let sessionLabel = "Current Session";
 
   try {
-    const [dbPrograms, dbTestimonials, sCount, pCount, activePrograms, gCount] = await Promise.all([
+    const [dbPrograms, dbTestimonials, dbEvents, settings, sCount, activePrograms, gCount] = await Promise.all([
       prisma.program.findMany({
         where: { status: "published" },
         orderBy: { createdAt: "desc" },
@@ -54,18 +65,44 @@ export default async function HomePage() {
         take: 6,
         select: { id: true, name: true, program: true, text: true, rating: true },
       }),
+      prisma.event.findMany({
+        where: { isPublished: true },
+        orderBy: { eventDate: "desc" },
+        take: 3,
+        select: {
+          id: true,
+          title: true,
+          category: true,
+          excerpt: true,
+          eventDate: true,
+          location: true,
+          coverImageUrl: true,
+          videoUrl: true,
+        },
+      }),
+      prisma.settings.findUnique({
+        where: { id: 1 },
+        select: {
+          applicationYear: true,
+          sessionStudentCount: true,
+          lifetimeStudentCount: true,
+          lifetimeGraduateCount: true,
+        },
+      }),
       prisma.student.count(),
-      prisma.program.count({ where: { status: "published" } }),
       prisma.student.findMany({ select: { program: true }, distinct: ["program"] }),
       prisma.student.count({
         where: { certificates: { some: { status: "issued" } } },
       }),
     ]);
 
-    studentCount = sCount;
-    programCount = pCount;
     activeProgramCount = activePrograms.length;
     graduateCount = gCount;
+    featuredEvents = dbEvents;
+    sessionLabel = settings?.applicationYear || "Current Session";
+    sessionStudentCount = settings?.sessionStudentCount || sCount;
+    lifetimeStudentCount = settings?.lifetimeStudentCount || sCount;
+    graduateCount = settings?.lifetimeGraduateCount || gCount;
 
     if (dbPrograms.length > 0) {
       allProgramOptions = programSelectOptions(dbPrograms);
@@ -105,10 +142,10 @@ export default async function HomePage() {
         ];
 
   const liveStats = [
-    { label: "Students Enrolled", value: studentCount.toString() },
-    { label: "Published Programs", value: programCount.toString() },
-    { label: "Active Programs", value: activeProgramCount.toString() },
-    { label: "Graduates", value: graduateCount.toString() },
+    { label: `${sessionLabel} Students`, value: sessionStudentCount.toString() },
+    { label: "Students Ever Enrolled", value: lifetimeStudentCount.toString() },
+    { label: "Live Training Tracks", value: activeProgramCount.toString() },
+    { label: "Graduates Through ELIGNITE", value: graduateCount.toString() },
   ];
 
   return (
@@ -342,6 +379,73 @@ export default async function HomePage() {
               </Button>
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      <section className="border-y border-blue-100 bg-blue-50/45 px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <Reveal>
+            <SectionHeading
+              eyebrow="Events"
+              title="Graduations, showcases, and community moments presented with the same care as the training itself."
+              description="Keep visitors close to the life of the platform with structured event highlights, photo moments, and recorded memories from ELIGNITE programmes and celebrations."
+              className="[&_h2]:text-slate-950 [&_p]:text-slate-600"
+            />
+          </Reveal>
+
+          {featuredEvents.length === 0 ? (
+            <Reveal delay={90}>
+              <div className="mt-12 surface-card p-10 text-center text-slate-500">
+                Event highlights will appear here as soon as the first graduation, workshop, or showcase is published.
+              </div>
+            </Reveal>
+          ) : (
+            <>
+              <div className="mt-12 grid gap-6 lg:grid-cols-3">
+                {featuredEvents.map((event, index) => (
+                  <Reveal key={event.id} delay={index * 80}>
+                    <article className="surface-card-strong hover-lift h-full overflow-hidden">
+                      <div className="relative h-56">
+                        <img src={event.coverImageUrl} alt={event.title} className="h-full w-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/15 to-transparent" />
+                        <div className="absolute left-4 top-4 flex items-center gap-2">
+                          <Badge className="border-white/15 bg-white/92 text-blue-700">{event.category}</Badge>
+                          {event.videoUrl ? (
+                            <span className="rounded-full border border-white/20 bg-white/90 px-3 py-1 text-xs text-slate-700">
+                              Photo + video
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      <div className="p-6">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+                          {new Date(event.eventDate).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                          {event.location ? ` • ${event.location}` : ""}
+                        </p>
+                        <h3 className="mt-3 text-xl font-semibold text-slate-950">{event.title}</h3>
+                        <p className="mt-3 text-sm leading-7 text-slate-600">{truncateWords(event.excerpt, 20)}</p>
+                      </div>
+                    </article>
+                  </Reveal>
+                ))}
+              </div>
+
+              <Reveal delay={120}>
+                <div className="mt-10 flex justify-center">
+                  <Button asChild size="lg" variant="outline" className="border-blue-200 bg-white text-slate-900 hover:bg-blue-50">
+                    <Link href="/events">
+                      View All Events
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </Reveal>
+            </>
+          )}
         </div>
       </section>
 
