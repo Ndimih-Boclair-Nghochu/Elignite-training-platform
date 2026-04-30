@@ -16,9 +16,10 @@ interface AuthUser {
   email: string;
   firstName: string;
   lastName: string;
-  role: "ceo" | "teacher" | "student";
+  role: "ceo" | "teacher" | "student" | "partner";
   teacherId?: number;
   studentId?: number;
+  partnerProfileId?: number;
   phone?: string;
   photoUrl?: string;
 }

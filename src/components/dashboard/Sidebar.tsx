@@ -20,6 +20,7 @@ import {
   Clock,
   CreditCard,
   CalendarDays,
+  Building2,
   FileText,
   Globe,
   GraduationCap,
@@ -89,6 +90,13 @@ const teacherNav = [
   { href: "/dashboard/teacher/settings", label: "Settings", icon: Settings },
 ];
 
+const partnerNav = [
+  { href: "/dashboard/partner", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard/partner/profile", label: "School Profile", icon: Building2 },
+  { href: "/dashboard/partner/programs", label: "Programs", icon: GraduationCap },
+  { href: "/dashboard/partner/applications", label: "Applications", icon: ClipboardList },
+];
+
 export function DashboardSidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -96,8 +104,22 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void }) {
   const [collapsed, setCollapsed] = useState(false);
 
   const normalizedRole = normalizeRole(user?.role);
-  const nav = normalizedRole === "ceo" ? ceoNav : normalizedRole === "teacher" ? teacherNav : studentNav;
-  const roleLabel = normalizedRole === "ceo" ? "Executive" : normalizedRole === "teacher" ? "Faculty" : "Student";
+  const nav =
+    normalizedRole === "ceo"
+      ? ceoNav
+      : normalizedRole === "teacher"
+        ? teacherNav
+        : normalizedRole === "partner"
+          ? partnerNav
+          : studentNav;
+  const roleLabel =
+    normalizedRole === "ceo"
+      ? "Executive"
+      : normalizedRole === "teacher"
+        ? "Faculty"
+        : normalizedRole === "partner"
+          ? "Admissions"
+          : "Student";
 
   const activeSection = useMemo(() => {
     return nav.find((item) => pathname === item.href)?.label || "Dashboard";

@@ -11,12 +11,13 @@ import { Loader2, Menu } from "lucide-react";
 const roleDashboardRoot: Record<string, string> = {
   ceo: "/dashboard/ceo",
   teacher: "/dashboard/teacher",
+  partner: "/dashboard/partner",
   student: "/dashboard/student",
 };
 
 function titleFromPath(pathname: string) {
   const last = pathname.split("/").filter(Boolean).pop() || "dashboard";
-  if (last === "ceo" || last === "teacher" || last === "student" || last === "dashboard") {
+  if (last === "ceo" || last === "teacher" || last === "student" || last === "partner" || last === "dashboard") {
     return "Overview";
   }
 
@@ -51,6 +52,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const role = normalizeRole(user?.role);
     if (role === "ceo") return "Executive Workspace";
     if (role === "teacher") return "Faculty Workspace";
+    if (role === "partner") return "Admissions Workspace";
     return "Student Workspace";
   }, [user?.role]);
 

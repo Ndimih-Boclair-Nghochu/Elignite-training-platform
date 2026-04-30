@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     // (pre-created accounts have an unknown random temp password, so bcrypt would
     // always fail and hide the real reason they can't log in)
     if (
-      (normalizedRole === "student" || normalizedRole === "teacher") &&
+      (normalizedRole === "student" || normalizedRole === "teacher" || normalizedRole === "partner") &&
       !user.isActivated
     ) {
       return NextResponse.json(
@@ -88,6 +88,7 @@ export async function POST(req: NextRequest) {
 
     let teacherId: number | undefined;
     let studentId: number | undefined;
+    let partnerProfileId: number | undefined;
 
     if (normalizedRole === "teacher") {
       const teacher = await prisma.teacher.findUnique({
@@ -103,6 +104,13 @@ export async function POST(req: NextRequest) {
       studentId = student?.id;
     }
 
+    if (normalizedRole === "partner") {
+      const partnerProfile = await prisma.schoolPartnerProfile.findUnique({
+        where: { userId: user.id },
+      });
+      partnerProfileId = partnerProfile?.id;
+    }
+
     const session = await getSession();
     session.userId = user.id;
     session.email =
@@ -112,6 +120,7 @@ export async function POST(req: NextRequest) {
     session.role = normalizedRole;
     session.teacherId = teacherId;
     session.studentId = studentId;
+    session.partnerProfileId = partnerProfileId;
 
     await session.save();
 
@@ -124,6 +133,7 @@ export async function POST(req: NextRequest) {
         role: normalizedRole,
         teacherId,
         studentId,
+        partnerProfileId,
       },
     });
   } catch (error) {

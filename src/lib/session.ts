@@ -1,6 +1,6 @@
 import { getIronSession, IronSession } from "iron-session";
 import { cookies } from "next/headers";
-import { isCeoRole } from "@/lib/roles";
+import { isCeoRole, isPartnerRole } from "@/lib/roles";
 
 /* -------------------- TYPES -------------------- */
 
@@ -9,9 +9,10 @@ export interface SessionData {
   email: string;
   firstName: string;
   lastName: string;
-  role: "ceo" | "teacher" | "student";
+  role: "ceo" | "teacher" | "student" | "partner";
   teacherId?: number;
   studentId?: number;
+  partnerProfileId?: number;
   phone?: string;
   photoUrl?: string;
 }
@@ -65,6 +66,16 @@ export async function requireCEO(): Promise<IronSession<SessionData>> {
 
   if (!isCeoRole(session.role)) {
     throw new Error("Unauthorized - CEO only");
+  }
+
+  return session;
+}
+
+export async function requirePartner(): Promise<IronSession<SessionData>> {
+  const session = await requireAuth();
+
+  if (!isPartnerRole(session.role)) {
+    throw new Error("Unauthorized - Partner only");
   }
 
   return session;

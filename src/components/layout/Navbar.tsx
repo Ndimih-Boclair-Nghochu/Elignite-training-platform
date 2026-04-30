@@ -39,6 +39,7 @@ export function Navbar() {
     if (!user) return null;
     if (user.role === "ceo") return "/dashboard/ceo";
     if (user.role === "teacher") return "/dashboard/teacher";
+    if (user.role === "partner") return "/dashboard/partner";
     return "/dashboard/student";
   }, [user]);
 

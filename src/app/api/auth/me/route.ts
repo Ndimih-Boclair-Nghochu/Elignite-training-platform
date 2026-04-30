@@ -30,6 +30,7 @@ export async function GET() {
   // Fetch teacher or student ID if applicable
   let teacherId: number | undefined;
   let studentId: number | undefined;
+  let partnerProfileId: number | undefined;
 
   const normalizedRole = normalizeRole(user.role);
 
@@ -43,6 +44,11 @@ export async function GET() {
       where: { userId: user.id },
     });
     studentId = student?.id;
+  } else if (normalizedRole === "partner") {
+    const partnerProfile = await prisma.schoolPartnerProfile.findUnique({
+      where: { userId: user.id },
+    });
+    partnerProfileId = partnerProfile?.id;
   }
 
   return NextResponse.json({
@@ -51,6 +57,7 @@ export async function GET() {
       role: normalizedRole,
       teacherId,
       studentId,
+      partnerProfileId,
     },
   });
 }

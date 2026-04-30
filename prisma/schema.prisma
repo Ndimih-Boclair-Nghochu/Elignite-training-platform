@@ -15,7 +15,7 @@ model User {
     password    String
     firstName   String?
     lastName    String?
-    role        String   @default("student") // "ceo" | "teacher" | "student"
+    role        String   @default("student") // "ceo" | "teacher" | "student" | "partner"
     phone       String?
     photoUrl    String?
     isActivated Boolean  @default(false)
@@ -24,6 +24,7 @@ model User {
 
     student             Student?
     teacher             Teacher?
+    partnerProfile      SchoolPartnerProfile?
     announcements       Announcement[]
     approvedEnrollments Enrollment[]
     testimonies         Testimony[]  @relation("UserTestimonies")
@@ -284,6 +285,72 @@ model Gallery {
     category  String
     url       String
     createdAt DateTime @default(now())
+}
+
+model SchoolPartnerProfile {
+    id                   Int      @id @default(autoincrement())
+    userId               Int      @unique
+    user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    institutionName      String
+    logoUrl              String?
+    country              String?
+    city                 String?
+    address              String?
+    website              String?
+    contactPerson        String?
+    contactEmail         String?
+    contactPhone         String?
+    description          String?
+    accreditationInfo    String?
+    verificationDocuments Json?
+    verificationStatus   String   @default("pending") // pending | verified | rejected
+    profileCompletion    Int      @default(0)
+    createdAt            DateTime @default(now())
+    updatedAt            DateTime @updatedAt
+
+    programs             PartnerProgram[]
+}
+
+model PartnerProgram {
+    id                    Int      @id @default(autoincrement())
+    ownerId               Int
+    owner                 SchoolPartnerProfile @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+    title                 String
+    slug                  String   @unique
+    description           String
+    degreeType            String
+    duration              String
+    tuitionFee            Float
+    currency              String   @default("USD")
+    intakeDates           String?
+    admissionRequirements String?
+    requiredDocuments     String?
+    languageRequirements  String?
+    applicationDeadline   DateTime?
+    availableSeats        Int?
+    status                String   @default("draft") // draft | pending_review | approved | rejected | closed
+    createdAt             DateTime @default(now())
+    updatedAt             DateTime @updatedAt
+
+    applications          PartnerApplication[]
+}
+
+model PartnerApplication {
+    id                    Int      @id @default(autoincrement())
+    partnerProgramId      Int
+    partnerProgram        PartnerProgram @relation(fields: [partnerProgramId], references: [id], onDelete: Cascade)
+    studentUserId         Int?
+    applicantFullName     String
+    applicantEmail        String
+    applicantPhone        String?
+    applicantCountry      String?
+    studentProfileSummary String?
+    submittedDocuments    Json?
+    status                String   @default("pending") // pending | documents_requested | under_review | accepted | rejected
+    requestMessage        String?
+    partnerNotes          String?
+    createdAt             DateTime @default(now())
+    updatedAt             DateTime @updatedAt
 }
 
 model Event {

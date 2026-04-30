@@ -62,6 +62,7 @@ export default function LoginPage() {
       const role = data.user.role;
       if (role === "ceo") router.push("/dashboard/ceo");
       else if (role === "teacher") router.push("/dashboard/teacher");
+      else if (role === "partner") router.push("/dashboard/partner");
       else router.push("/dashboard/student");
     } catch {
       toast({
