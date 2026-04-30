@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 export async function ensureSettingsRow() {
+  await ensureRuntimeSchema();
   return prisma.settings.upsert({
     where: { id: 1 },
     update: {},
@@ -11,6 +13,7 @@ export async function ensureSettingsRow() {
 }
 
 export async function syncPlatformCountersFromDatabase() {
+  await ensureRuntimeSchema();
   await ensureSettingsRow();
 
   const [currentStudents, issuedCertificates, settings] = await Promise.all([
@@ -40,6 +43,7 @@ export async function syncPlatformCountersFromDatabase() {
 }
 
 export async function recordStudentCreated() {
+  await ensureRuntimeSchema();
   await ensureSettingsRow();
   await prisma.settings.update({
     where: { id: 1 },
@@ -51,6 +55,7 @@ export async function recordStudentCreated() {
 }
 
 export async function recordStudentGraduated(studentId: number) {
+  await ensureRuntimeSchema();
   const student = await prisma.student.findUnique({
     where: { id: studentId },
     select: { graduationCounted: true, status: true },

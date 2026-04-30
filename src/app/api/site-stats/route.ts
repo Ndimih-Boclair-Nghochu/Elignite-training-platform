@@ -2,9 +2,11 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { syncPlatformCountersFromDatabase } from "@/lib/platform-metrics";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 export async function GET() {
   try {
+    await ensureRuntimeSchema();
     const [settings, facultyCount, programCount] = await Promise.all([
       syncPlatformCountersFromDatabase(),
       prisma.teacher.count({ where: { status: "active" } }),

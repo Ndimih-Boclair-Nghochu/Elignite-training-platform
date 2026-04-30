@@ -2,11 +2,13 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { ensureRuntimeSchema } from "@/lib/runtime-schema";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { studentId: string } }
 ) {
+  await ensureRuntimeSchema();
   const session = await getSession();
   if (!session.userId || !["teacher", "ceo"].includes(session.role || "")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
