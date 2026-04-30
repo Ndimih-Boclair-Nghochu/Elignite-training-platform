@@ -35,10 +35,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Get all students with attendance for this course
+    const matchedStudentPrograms =
+      course.programId !== null
+        ? await prisma.studentProgram.findMany({
+            where: { programId: course.programId },
+            select: { studentId: true },
+          })
+        : [];
+
+    const linkedStudentIds = Array.from(new Set(matchedStudentPrograms.map((entry) => entry.studentId)));
+
     const students = await prisma.student.findMany({
       where: {
         OR: [
+          ...(linkedStudentIds.length > 0 ? [{ id: { in: linkedStudentIds } }] : []),
+          ...(course.program ? [{ program: course.program }] : []),
           {
             results: {
               some: { courseId: parseInt(courseId) },

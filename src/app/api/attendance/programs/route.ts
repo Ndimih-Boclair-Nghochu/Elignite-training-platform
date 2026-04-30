@@ -10,19 +10,67 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Get all distinct programs from students
-    const programs = await prisma.student.findMany({
-      distinct: ["program"],
-      select: {
-        program: true,
-      },
-      where: {
-        program: { not: "" },
-      },
-      orderBy: { program: "asc" },
+    if (session.role === "ceo") {
+      const programs = await prisma.program.findMany({
+        orderBy: { title: "asc" },
+        include: {
+          _count: {
+            select: {
+              students: true,
+              courses: true,
+            },
+          },
+        },
+      });
+
+      return NextResponse.json(
+        programs.map((program) => ({
+          id: program.id,
+          title: program.title,
+          slug: program.slug,
+          programCode: program.programCode,
+          studentCount: program._count.students,
+          courseCount: program._count.courses,
+        }))
+      );
+    }
+
+    const teacher = await prisma.teacher.findUnique({
+      where: { userId: session.userId },
+      select: { id: true },
     });
 
-    return NextResponse.json(programs.map((p) => p.program));
+    if (!teacher) {
+      return NextResponse.json([]);
+    }
+
+    const programs = await prisma.teacherProgram.findMany({
+      where: { teacherId: teacher.id },
+      include: {
+        program: {
+          include: {
+            _count: {
+              select: {
+                students: true,
+                courses: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { program: { title: "asc" } },
+    });
+
+    return NextResponse.json(
+      programs.map(({ program }) => ({
+        id: program.id,
+        title: program.title,
+        slug: program.slug,
+        programCode: program.programCode,
+        studentCount: program._count.students,
+        courseCount: program._count.courses,
+      }))
+    );
   } catch (error) {
     console.error("Error fetching programs:", error);
     return NextResponse.json(

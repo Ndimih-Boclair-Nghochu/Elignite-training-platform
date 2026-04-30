@@ -10,6 +10,35 @@ export async function ensureSettingsRow() {
   });
 }
 
+export async function syncPlatformCountersFromDatabase() {
+  await ensureSettingsRow();
+
+  const [currentStudents, issuedCertificates, settings] = await Promise.all([
+    prisma.student.count(),
+    prisma.certificate.count({
+      where: {
+        status: "issued",
+      },
+    }),
+    prisma.settings.findUnique({
+      where: { id: 1 },
+      select: {
+        lifetimeStudentCount: true,
+        lifetimeGraduateCount: true,
+      },
+    }),
+  ]);
+
+  return prisma.settings.update({
+    where: { id: 1 },
+    data: {
+      sessionStudentCount: currentStudents,
+      lifetimeStudentCount: Math.max(settings?.lifetimeStudentCount ?? 0, currentStudents),
+      lifetimeGraduateCount: Math.max(settings?.lifetimeGraduateCount ?? 0, issuedCertificates),
+    },
+  });
+}
+
 export async function recordStudentCreated() {
   await ensureSettingsRow();
   await prisma.settings.update({

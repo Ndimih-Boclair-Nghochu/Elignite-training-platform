@@ -1,19 +1,22 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { syncPlatformCountersFromDatabase } from "@/lib/platform-metrics";
 
 export async function GET() {
   try {
-    const studentCount = await prisma.student.count();
-    const graduateCount = await prisma.student.count({ where: { status: "graduated" } });
-    const facultyCount = await prisma.teacher.count({ where: { status: "active" } });
-    const programCount = await prisma.program.count({ where: { status: "published" } });
+    const [settings, facultyCount, programCount] = await Promise.all([
+      syncPlatformCountersFromDatabase(),
+      prisma.teacher.count({ where: { status: "active" } }),
+      prisma.program.count({ where: { status: "published" } }),
+    ]);
 
     return NextResponse.json({
-      studentCount,
+      studentCount: settings.sessionStudentCount,
       programCount,
       facultyCount,
-      graduateCount,
+      graduateCount: settings.lifetimeGraduateCount,
+      lifetimeStudentCount: settings.lifetimeStudentCount,
     });
   } catch (error) {
     console.error("Error fetching site stats:", error);

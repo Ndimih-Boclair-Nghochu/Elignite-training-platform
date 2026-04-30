@@ -26,14 +26,24 @@ interface Student {
   attendances: any[];
 }
 
+interface ProgramOption {
+  id: number;
+  title: string;
+  slug: string;
+  programCode: string;
+  studentCount: number;
+  courseCount: number;
+}
+
 interface ProgramData {
   program: string;
+  programId: number;
   students: Student[];
 }
 
 export default function CEOAttendancePage() {
-  const [programs, setPrograms] = useState<string[]>([]);
-  const [selectedProgram, setSelectedProgram] = useState<string>("");
+  const [programs, setPrograms] = useState<ProgramOption[]>([]);
+  const [selectedProgramId, setSelectedProgramId] = useState<string>("");
   const [programData, setProgramData] = useState<ProgramData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -46,19 +56,19 @@ export default function CEOAttendancePage() {
 
   // Fetch program data when selected program changes
   useEffect(() => {
-    if (selectedProgram) {
+    if (selectedProgramId) {
       fetchProgramData();
     }
-  }, [selectedProgram]);
+  }, [selectedProgramId]);
 
   async function fetchPrograms() {
     try {
       const res = await fetch("/api/attendance/programs");
       if (res.ok) {
-        const data = await res.json();
+        const data: ProgramOption[] = await res.json();
         setPrograms(data);
         if (data.length > 0) {
-          setSelectedProgram(data[0]);
+          setSelectedProgramId(String(data[0].id));
         }
       }
     } catch (error) {
@@ -71,7 +81,7 @@ export default function CEOAttendancePage() {
   async function fetchProgramData() {
     try {
       setLoading(true);
-      const res = await fetch(`/api/programs/students?program=${encodeURIComponent(selectedProgram)}`);
+      const res = await fetch(`/api/programs/students?programId=${encodeURIComponent(selectedProgramId)}`);
       if (res.ok) {
         const data = await res.json();
         setProgramData(data);
@@ -130,14 +140,15 @@ export default function CEOAttendancePage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Program</Label>
-            <Select value={selectedProgram} onValueChange={setSelectedProgram}>
+            <Select value={selectedProgramId} onValueChange={setSelectedProgramId}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a program..." />
               </SelectTrigger>
               <SelectContent>
                 {programs.map((program) => (
-                  <SelectItem key={program} value={program}>
-                    {program}
+                  <SelectItem key={program.id} value={String(program.id)}>
+                    <span className="mr-2 font-mono text-xs text-gray-500">{program.programCode}</span>
+                    {program.title}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -202,7 +213,7 @@ export default function CEOAttendancePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Students in {selectedProgram}
+              Students in {programData.program}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -234,7 +245,8 @@ export default function CEOAttendancePage() {
                           studentId={student.id}
                           studentName={`${student.user.firstName} ${student.user.lastName}`}
                           studentIdNum={student.studentId}
-                          program={selectedProgram}
+                          program={programs.find((program) => String(program.id) === selectedProgramId)?.slug || ""}
+                          programId={Number(selectedProgramId)}
                         />
                       </td>
                     </tr>
@@ -248,7 +260,7 @@ export default function CEOAttendancePage() {
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-gray-500">
-              {selectedProgram
+              {selectedProgramId
                 ? "No students found in this program."
                 : "Select a program to view students."}
             </p>

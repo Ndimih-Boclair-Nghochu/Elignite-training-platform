@@ -22,6 +22,7 @@ interface StudentAttendanceModalProps {
   studentName: string;
   studentIdNum: string;
   program: string;
+  programId?: number;
 }
 
 interface AttendanceHistory {
@@ -39,6 +40,7 @@ export function StudentAttendanceModal({
   studentName,
   studentIdNum,
   program,
+  programId,
 }: StudentAttendanceModalProps) {
   const { toast } = useToast();
   const [openTakeAttendance, setOpenTakeAttendance] = useState(false);
@@ -68,7 +70,8 @@ export function StudentAttendanceModal({
   async function fetchCourses() {
     try {
       setLoading(true);
-      const res = await fetch(`/api/courses?program=${encodeURIComponent(program)}`);
+      const query = programId ? `programId=${programId}` : `program=${encodeURIComponent(program)}`;
+      const res = await fetch(`/api/courses?${query}`);
       if (res.ok) {
         const data = await res.json();
         setCourses(data);
@@ -86,7 +89,8 @@ export function StudentAttendanceModal({
   async function fetchAttendanceHistory() {
     try {
       setLoading(true);
-      const res = await fetch(`/api/attendance/student/${studentId}?program=${encodeURIComponent(program)}`);
+      const query = programId ? `programId=${programId}` : `program=${encodeURIComponent(program)}`;
+      const res = await fetch(`/api/attendance/student/${studentId}?${query}`);
       if (res.ok) {
         const data = await res.json();
         setHistory(data);

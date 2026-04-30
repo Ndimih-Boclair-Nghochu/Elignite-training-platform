@@ -49,12 +49,12 @@ export default async function HomePage() {
 
   let sessionStudentCount = 0;
   let lifetimeStudentCount = 0;
-  let activeProgramCount = 0;
+  let platformProgramCount = 0;
   let graduateCount = 0;
   let sessionLabel = "Current Session";
 
   try {
-    const [dbPrograms, dbTestimonials, dbEvents, settings, sCount, activePrograms, gCount] = await Promise.all([
+    const [dbPrograms, dbTestimonials, dbEvents, settings, studentCount, programCount, issuedGraduateCount] = await Promise.all([
       prisma.program.findMany({
         where: { status: "published" },
         orderBy: { createdAt: "desc" },
@@ -90,19 +90,16 @@ export default async function HomePage() {
         },
       }),
       prisma.student.count(),
-      prisma.student.findMany({ select: { program: true }, distinct: ["program"] }),
-      prisma.student.count({
-        where: { certificates: { some: { status: "issued" } } },
-      }),
+      prisma.program.count(),
+      prisma.certificate.count({ where: { status: "issued" } }),
     ]);
 
-    activeProgramCount = activePrograms.length;
-    graduateCount = gCount;
+    platformProgramCount = programCount;
     featuredEvents = dbEvents;
     sessionLabel = settings?.applicationYear || "Current Session";
-    sessionStudentCount = settings?.sessionStudentCount || sCount;
-    lifetimeStudentCount = settings?.lifetimeStudentCount || sCount;
-    graduateCount = settings?.lifetimeGraduateCount || gCount;
+    sessionStudentCount = studentCount;
+    lifetimeStudentCount = Math.max(settings?.lifetimeStudentCount ?? 0, studentCount);
+    graduateCount = Math.max(settings?.lifetimeGraduateCount ?? 0, issuedGraduateCount);
 
     if (dbPrograms.length > 0) {
       allProgramOptions = programSelectOptions(dbPrograms);
@@ -144,7 +141,7 @@ export default async function HomePage() {
   const liveStats = [
     { label: `${sessionLabel} Students`, value: sessionStudentCount.toString() },
     { label: "Students Ever Enrolled", value: lifetimeStudentCount.toString() },
-    { label: "Live Training Tracks", value: activeProgramCount.toString() },
+    { label: "Programs on the Platform", value: platformProgramCount.toString() },
     { label: "Graduates Through ELIGNITE", value: graduateCount.toString() },
   ];
 

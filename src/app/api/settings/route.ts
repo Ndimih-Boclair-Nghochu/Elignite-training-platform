@@ -2,12 +2,12 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { syncPlatformCountersFromDatabase } from "@/lib/platform-metrics";
 
 export async function GET() {
   try {
     let settings = await prisma.settings.findFirst();
-    
-    // Create default settings if none exist
+
     if (!settings) {
       settings = await prisma.settings.create({
         data: {
@@ -17,6 +17,8 @@ export async function GET() {
         },
       });
     }
+
+    settings = await syncPlatformCountersFromDatabase();
     
     return NextResponse.json(settings);
   } catch (error) {
@@ -44,7 +46,7 @@ export async function PATCH(req: NextRequest) {
     const { applicationsOpen, applicationYear, maintenanceMode } = body;
     
     let settings = await prisma.settings.findFirst();
-    
+
     if (!settings) {
       settings = await prisma.settings.create({
         data: {
@@ -65,6 +67,8 @@ export async function PATCH(req: NextRequest) {
         },
       });
     }
+
+    settings = await syncPlatformCountersFromDatabase();
     
     return NextResponse.json(settings);
   } catch (error) {
