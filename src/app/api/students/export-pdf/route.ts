@@ -3,6 +3,15 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import {
+  addDivider,
+  addPdfHeader,
+  addPdfStatRow,
+  addSectionTitle,
+  createPdfDocument,
+  ensurePdfSpace,
+  formatCurrency,
+} from "@/lib/pdf";
 
 type StudentExportRow = {
   studentId: string;
@@ -38,7 +47,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { program, search } = await req.json();
+    const { program, search, reportType } = await req.json();
+    const mode = reportType === "directory" ? "directory" : "full";
 
     const studentsRaw = await prisma.student.findMany({
       include: {
@@ -70,10 +80,7 @@ export async function POST(req: NextRequest) {
     });
 
     let students = studentsRaw.filter((student) => {
-      if (!program || program === "all") {
-        return true;
-      }
-
+      if (!program || program === "all") return true;
       return student.studentPrograms.some((entry) => String(entry.program.id) === program);
     });
 
@@ -95,15 +102,20 @@ export async function POST(req: NextRequest) {
     }
 
     const school = await prisma.schoolSettings.findFirst();
-    const html = renderReportHtml(students, school?.schoolName || "ELIGNITE Training Platform", {
-      selectedProgram: program,
-      search,
-    });
+    const pdf = await buildStudentReportPdf(
+      students,
+      school?.schoolName || "ELIGNITE Training Platform",
+      { selectedProgram: program, search, reportType: mode }
+    );
 
-    return new Response(html, {
+    const today = new Date().toISOString().split("T")[0];
+    const filename =
+      mode === "directory" ? `student-directory-${today}.pdf` : `students-report-${today}.pdf`;
+
+    return new Response(new Uint8Array(pdf), {
       headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Content-Disposition": `attachment; filename="students-report-${new Date().toISOString().split("T")[0]}.html"`,
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${filename}"`,
       },
     });
   } catch (error) {
@@ -112,11 +124,21 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function renderReportHtml(
+async function buildStudentReportPdf(
   students: StudentExportRow[],
   schoolName: string,
-  filters: { selectedProgram?: string; search?: string }
+  filters: { selectedProgram?: string; search?: string; reportType: "full" | "directory" }
 ) {
+  const { doc, done } = createPdfDocument(
+    filters.reportType === "directory" ? "Student Directory Report" : "Student Master Report"
+  );
+
+  const today = new Date().toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
   const totalPaid = students.reduce(
     (sum, student) => sum + student.payments.reduce((paymentTotal, payment) => paymentTotal + payment.amount, 0),
     0
@@ -129,117 +151,148 @@ function renderReportHtml(
   const activeCount = students.filter((student) => student.status === "active").length;
   const activatedCount = students.filter((student) => student.user.isActivated).length;
 
-  const rows = students
-    .map((student, index) => {
+  addPdfHeader(
+    doc,
+    `${schoolName} ${filters.reportType === "directory" ? "Student Directory" : "Student Master Report"}`,
+    `Generated ${today}`
+  );
+
+  doc
+    .font("Helvetica")
+    .fontSize(10)
+    .fillColor("#475569")
+    .text(
+      `Filter: ${
+        filters.selectedProgram && filters.selectedProgram !== "all"
+          ? `Program ID ${filters.selectedProgram}`
+          : "All programs"
+      } | Search: ${filters.search?.trim() ? filters.search.trim() : "none"}`,
+      40,
+      doc.y,
+      { width: 515 }
+    );
+  doc.moveDown(1);
+
+  const statItems =
+    filters.reportType === "directory"
+      ? [
+          { label: "Students", value: String(students.length) },
+          { label: "Active", value: String(activeCount) },
+          { label: "Activated", value: String(activatedCount) },
+        ]
+      : [
+          { label: "Students", value: String(students.length) },
+          { label: "Active", value: String(activeCount) },
+          { label: "Activated", value: String(activatedCount) },
+          { label: "Outstanding", value: formatCurrency(totalBalance) },
+        ];
+
+  addPdfStatRow(doc, statItems);
+
+  students.forEach((student, index) => {
+    const programLabel =
+      student.studentPrograms.length > 0
+        ? student.studentPrograms
+            .map((entry) => `${entry.program.programCode} - ${entry.program.title}`)
+            .join(", ")
+        : "Not assigned";
+    const durationLabel =
+      student.studentPrograms.length > 0
+        ? student.studentPrograms.map((entry) => entry.program.duration).join(" / ")
+        : "Not set";
+
+    ensurePdfSpace(doc, filters.reportType === "directory" ? 120 : 180);
+    doc.roundedRect(40, doc.y, 515, filters.reportType === "directory" ? 112 : 165, 12).fillAndStroke("#ffffff", "#dbeafe");
+    const blockTop = doc.y + 14;
+
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(12)
+      .fillColor("#0f172a")
+      .text(`${index + 1}. ${student.user.firstName || ""} ${student.user.lastName || ""}`.trim() || "Unnamed", 54, blockTop, {
+        width: 340,
+      });
+    doc
+      .font("Helvetica")
+      .fontSize(9)
+      .fillColor("#64748b")
+      .text(student.studentId, 54, blockTop + 18);
+
+    let y = blockTop + 38;
+    const leftRows = [
+      `Email: ${student.user.email || "No email"}`,
+      `Phone: ${student.user.phone || "No phone"}`,
+      `Programs: ${programLabel}`,
+      `Duration: ${durationLabel}`,
+      `Level ${student.level} | Status: ${student.status} | ${student.user.isActivated ? "Activated" : "Pending activation"}`,
+      `Gender: ${student.gender || "Not set"}`,
+      `Address: ${student.address || "No address"}`,
+    ];
+
+    leftRows.forEach((line) => {
+      doc.font("Helvetica").fontSize(9.5).fillColor("#334155").text(line, 54, y, { width: 487 });
+      y += 14;
+    });
+
+    if (filters.reportType === "full") {
       const paidAmount = student.payments.reduce((sum, payment) => sum + payment.amount, 0);
       const invoiceAmount = student.fees.reduce((sum, fee) => sum + fee.amount, 0);
       const balance = Math.max(invoiceAmount - paidAmount, 0);
-      const programLabel =
-        student.studentPrograms.length > 0
-          ? student.studentPrograms
-              .map((entry) => `${escapeHtml(entry.program.programCode)} - ${escapeHtml(entry.program.title)}`)
-              .join("<br />")
-          : "Not assigned";
-      const durationLabel =
-        student.studentPrograms.length > 0
-          ? student.studentPrograms.map((entry) => escapeHtml(entry.program.duration)).join(" / ")
-          : "Not set";
 
-      return `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${escapeHtml(student.studentId)}</td>
-          <td>
-            <strong>${escapeHtml(`${student.user.firstName || ""} ${student.user.lastName || ""}`.trim() || "Unnamed")}</strong><br />
-            <span class="muted">${escapeHtml(student.user.email || "No email")}</span><br />
-            <span class="muted">${escapeHtml(student.user.phone || "No phone")}</span>
-          </td>
-          <td>${programLabel}</td>
-          <td>${durationLabel}</td>
-          <td>Level ${student.level}<br /><span class="muted">${escapeHtml(student.status)}</span></td>
-          <td>${student.user.isActivated ? "Activated" : "Pending activation"}</td>
-          <td>${invoiceAmount.toLocaleString()} XAF<br /><span class="muted">Paid ${paidAmount.toLocaleString()} XAF</span><br /><strong>${balance.toLocaleString()} XAF due</strong></td>
-          <td>
-            ${escapeHtml(student.address || "No address")}<br />
-            <span class="muted">${escapeHtml(student.parentName || "No guardian")} | ${escapeHtml(student.parentPhone || "No guardian phone")}</span>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(10)
+        .fillColor("#1e3a8a")
+        .text("Finance Snapshot", 54, y + 4);
+      doc
+        .font("Helvetica")
+        .fontSize(9.5)
+        .fillColor("#334155")
+        .text(
+          `Assigned: ${formatCurrency(invoiceAmount)} | Paid: ${formatCurrency(paidAmount)} | Outstanding: ${formatCurrency(balance)}`,
+          54,
+          y + 20,
+          { width: 487 }
+        );
+      y += 48;
 
-  return `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Student Master Report</title>
-    <style>
-      body { font-family: Arial, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 32px; }
-      .sheet { max-width: 1400px; margin: 0 auto; background: #ffffff; border: 1px solid #dbeafe; border-radius: 20px; padding: 28px; box-shadow: 0 24px 80px -48px rgba(37,99,235,0.35); }
-      .hero { background: linear-gradient(135deg, #1d4ed8, #2563eb); color: white; border-radius: 18px; padding: 24px 28px; }
-      .hero h1 { margin: 0; font-size: 28px; }
-      .hero p { margin: 8px 0 0; color: rgba(255,255,255,0.86); }
-      .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 24px 0; }
-      .stat { border: 1px solid #dbeafe; background: #eff6ff; border-radius: 16px; padding: 18px; }
-      .stat .label { color: #475569; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
-      .stat .value { margin-top: 10px; font-size: 24px; font-weight: 700; color: #0f172a; }
-      .meta { display: flex; justify-content: space-between; gap: 12px; margin-top: 20px; color: #475569; font-size: 13px; }
-      table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 13px; }
-      th { background: #dbeafe; color: #1e3a8a; text-align: left; padding: 12px; border-bottom: 1px solid #bfdbfe; }
-      td { padding: 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
-      tr:nth-child(even) td { background: #f8fafc; }
-      .muted { color: #64748b; font-size: 12px; }
-      @media print { body { background: white; padding: 0; } .sheet { box-shadow: none; border: none; padding: 0; } }
-    </style>
-  </head>
-  <body>
-    <div class="sheet">
-      <div class="hero">
-        <h1>${escapeHtml(schoolName)} Student Master Report</h1>
-        <p>Generated ${escapeHtml(
-          new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })
-        )}</p>
-      </div>
-      <div class="meta">
-        <div>Filter: ${escapeHtml(filters.selectedProgram && filters.selectedProgram !== "all" ? `Program ID ${filters.selectedProgram}` : "All programs")}</div>
-        <div>${escapeHtml(filters.search ? `Search: ${filters.search}` : "Search: none")}</div>
-      </div>
-      <div class="stats">
-        <div class="stat"><div class="label">Students</div><div class="value">${students.length}</div></div>
-        <div class="stat"><div class="label">Active</div><div class="value">${activeCount}</div></div>
-        <div class="stat"><div class="label">Activated</div><div class="value">${activatedCount}</div></div>
-        <div class="stat"><div class="label">Outstanding</div><div class="value">${totalBalance.toLocaleString()} XAF</div></div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Student ID</th>
-            <th>Learner</th>
-            <th>Programs</th>
-            <th>Duration</th>
-            <th>Status</th>
-            <th>Account</th>
-            <th>Finance</th>
-            <th>Guardian / Address</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows || `<tr><td colspan="9" style="text-align:center;padding:24px;color:#64748b;">No students matched the selected filters.</td></tr>`}
-        </tbody>
-      </table>
-      <p class="muted" style="margin-top:18px;">Total invoiced: ${totalInvoiced.toLocaleString()} XAF | Total paid: ${totalPaid.toLocaleString()} XAF</p>
-    </div>
-  </body>
-</html>`;
-}
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(10)
+        .fillColor("#1e3a8a")
+        .text("Guardian Details", 54, y);
+      doc
+        .font("Helvetica")
+        .fontSize(9.5)
+        .fillColor("#334155")
+        .text(
+          `Name: ${student.parentName || "No guardian"} | Phone: ${student.parentPhone || "No guardian phone"}`,
+          54,
+          y + 16,
+          { width: 487 }
+        );
+    }
 
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    doc.y = blockTop + (filters.reportType === "directory" ? 112 : 165);
+    doc.moveDown(0.3);
+  });
+
+  if (filters.reportType === "full") {
+    addSectionTitle(doc, "Financial Totals");
+    doc
+      .font("Helvetica")
+      .fontSize(10)
+      .fillColor("#334155")
+      .text(
+        `Total invoiced: ${formatCurrency(totalInvoiced)} | Total paid: ${formatCurrency(totalPaid)} | Outstanding: ${formatCurrency(totalBalance)}`,
+        40,
+        doc.y,
+        { width: 515 }
+      );
+  }
+
+  addDivider(doc);
+  doc.font("Helvetica").fontSize(8).fillColor("#94a3b8").text(`Generated by ${schoolName}`, 40, doc.y);
+  doc.end();
+  return done;
 }

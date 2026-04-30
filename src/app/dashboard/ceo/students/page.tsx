@@ -62,6 +62,7 @@ export default function CeoStudentsPage() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [exportingDirectory, setExportingDirectory] = useState(false);
   const [selectedProgramIds, setSelectedProgramIds] = useState<number[]>([]);
   const [editProgramIds, setEditProgramIds] = useState<number[]>([]);
   const [form, setForm] = useState({ ...BLANK_FORM });
@@ -198,13 +199,17 @@ export default function CeoStudentsPage() {
     setLoading(false);
   }
 
-  async function handleExportReport() {
+  async function handleExportReport(reportType: "full" | "directory") {
     try {
-      setExporting(true);
+      if (reportType === "full") {
+        setExporting(true);
+      } else {
+        setExportingDirectory(true);
+      }
       const response = await fetch("/api/students/export-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ program: programFilter, search }),
+        body: JSON.stringify({ program: programFilter, search, reportType }),
       });
 
       if (!response.ok) {
@@ -217,13 +222,19 @@ export default function CeoStudentsPage() {
       anchor.href = url;
       const disposition = response.headers.get("Content-Disposition");
       const matchedFilename = disposition?.match(/filename="?([^"]+)"?/i)?.[1];
-      anchor.download = matchedFilename || `students-report-${new Date().toISOString().split("T")[0]}.html`;
+      anchor.download =
+        matchedFilename ||
+        (reportType === "directory"
+          ? `student-directory-${new Date().toISOString().split("T")[0]}.pdf`
+          : `students-report-${new Date().toISOString().split("T")[0]}.pdf`);
       document.body.appendChild(anchor);
       anchor.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(anchor);
 
-      toast({ title: "Student report downloaded" });
+      toast({
+        title: reportType === "directory" ? "Student directory downloaded" : "Student report downloaded",
+      });
     } catch (error) {
       toast({
         title: "Error exporting report",
@@ -232,6 +243,7 @@ export default function CeoStudentsPage() {
       });
     } finally {
       setExporting(false);
+      setExportingDirectory(false);
     }
   }
 
@@ -500,7 +512,25 @@ export default function CeoStudentsPage() {
                   onChange={(event) => setSearch(event.target.value)}
                 />
               </div>
-              <Button size="sm" variant="outline" onClick={handleExportReport} disabled={exporting}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleExportReport("directory")}
+                disabled={exportingDirectory}
+              >
+                {exportingDirectory ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Download Directory PDF
+                  </>
+                )}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleExportReport("full")} disabled={exporting}>
                 {exporting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

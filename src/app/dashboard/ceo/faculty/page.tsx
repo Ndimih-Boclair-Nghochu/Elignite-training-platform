@@ -130,7 +130,7 @@ export default function CeoStaffPage() {
     if (res.ok) {
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a"); a.href = url; a.download = `staff-list-${new Date().toISOString().split("T")[0]}.html`; a.click();
+      const a = document.createElement("a"); a.href = url; a.download = `staff-list-${new Date().toISOString().split("T")[0]}.pdf`; a.click();
       URL.revokeObjectURL(url);
     } else { toast({ title: "Export failed", variant: "destructive" }); }
     setExporting(false);

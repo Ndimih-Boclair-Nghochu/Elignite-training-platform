@@ -1,61 +1,77 @@
 export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { addDivider, addKeyValueLines, addPdfHeader, addSectionTitle, createPdfDocument } from "@/lib/pdf";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getSession();
   if (!session.userId || session.role !== "ceo") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
-  const studentId = parseInt(params.id);
+
+  const studentId = parseInt(params.id, 10);
   const s = await prisma.student.findUnique({
     where: { id: studentId },
     include: {
-      user: { select: { firstName: true, lastName: true, email: true, phone: true } },
+      user: { select: { firstName: true, lastName: true, email: true, phone: true, isActivated: true } },
       studentPrograms: { include: { program: { select: { title: true, programCode: true, duration: true } } } },
     },
   });
+
   if (!s) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const school = await prisma.schoolSettings.findFirst();
   const schoolName = school?.schoolName || "Training Platform";
-  const programs = s.studentPrograms.map((sp) => `${sp.program.programCode} — ${sp.program.title} (${sp.program.duration})`).join(", ");
+  const programs =
+    s.studentPrograms.map((sp) => `${sp.program.programCode} - ${sp.program.title} (${sp.program.duration})`).join(", ") ||
+    s.program ||
+    "Not assigned";
 
-  const logoHtml = school?.schoolLogoUrl
-    ? `<img src="${school.schoolLogoUrl}" alt="Logo" style="height:60px;width:auto;object-fit:contain;" />`
-    : `<div style="font-size:48px">🎓</div>`;
+  const { doc, done } = createPdfDocument(`Student ${s.studentId}`);
+  addPdfHeader(
+    doc,
+    `${schoolName} Student Profile`,
+    `Generated ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}`
+  );
 
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Student Profile</title>
-<style>body{font-family:Arial,sans-serif;padding:40px;color:#333}h1{color:#1e3a8a;border-bottom:3px solid #1e3a8a;padding-bottom:10px}
-.row{display:flex;gap:20px;margin-bottom:8px}.label{font-weight:bold;min-width:160px;color:#555}.value{color:#222}
-.header{text-align:center;margin-bottom:30px}.school{font-size:22px;font-weight:bold;color:#1e3a8a}
-</style></head><body>
-<div class="header">${logoHtml}<div class="school">${schoolName}</div>
-<p style="color:#666;margin:4px 0">Student Profile Document</p></div>
-<h1>Student Information</h1>
-${[
-  ["Student ID", s.studentId],
-  ["Matricle", s.matricle || "—"],
-  ["Full Name", `${s.user.firstName} ${s.user.lastName}`],
-  ["Email", s.user.email || "—"],
-  ["Phone", s.user.phone || "—"],
-  ["Gender", s.gender || "—"],
-  ["Date of Birth", s.dateOfBirth || "—"],
-  ["Address", s.address || "—"],
-  ["Programs", programs || s.program || "—"],
-  ["Status", s.status],
-  ["Enrollment Date", new Date(s.enrollmentDate).toLocaleDateString()],
-  ["Parent Name", s.parentName || "—"],
-  ["Parent Phone", s.parentPhone || "—"],
-].map(([l, v]) => `<div class="row"><span class="label">${l}:</span><span class="value">${v}</span></div>`).join("")}
-<p style="margin-top:40px;font-size:12px;color:#999">Generated on ${new Date().toLocaleDateString()} · ${schoolName}</p>
-</body></html>`;
+  addSectionTitle(doc, "Identity");
+  addKeyValueLines(doc, [
+    { label: "Student ID", value: s.studentId },
+    { label: "Matricle", value: s.matricle || "-" },
+    { label: "Full Name", value: `${s.user.firstName || ""} ${s.user.lastName || ""}`.trim() || "Unnamed" },
+    { label: "Email", value: s.user.email || "-" },
+    { label: "Phone", value: s.user.phone || "-" },
+    { label: "Gender", value: s.gender || "-" },
+    { label: "Date of Birth", value: s.dateOfBirth || "-" },
+  ]);
 
-  return new Response(html, {
+  addDivider(doc);
+  addSectionTitle(doc, "Enrollment");
+  addKeyValueLines(doc, [
+    { label: "Programs", value: programs },
+    { label: "Status", value: s.status },
+    { label: "Level", value: String(s.level) },
+    { label: "Enrollment Date", value: new Date(s.enrollmentDate).toLocaleDateString("en-GB") },
+    { label: "Account Activation", value: s.user.isActivated ? "Activated" : "Pending activation" },
+  ]);
+
+  addDivider(doc);
+  addSectionTitle(doc, "Contact and Guardian");
+  addKeyValueLines(doc, [
+    { label: "Address", value: s.address || "-" },
+    { label: "Parent Name", value: s.parentName || "-" },
+    { label: "Parent Phone", value: s.parentPhone || "-" },
+  ]);
+
+  doc.end();
+  const pdf = await done;
+
+  return new Response(new Uint8Array(pdf), {
     headers: {
-      "Content-Type": "text/html;charset=utf-8",
-      "Content-Disposition": `attachment; filename="student-${s.studentId}.html"`,
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="student-${s.studentId}.pdf"`,
     },
   });
 }
